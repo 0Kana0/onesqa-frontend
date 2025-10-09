@@ -1,0 +1,249 @@
+"use client";
+
+import { useAuth } from "../../context/AuthContext";
+import { useState } from "react";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { useRouter, usePathname } from "next/navigation";
+import { LOGOUT } from "@/graphql/auth/mutations";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
+  ListItemIcon,
+  IconButton,
+  Badge
+} from "@mui/material";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import LogoutIcon from "@mui/icons-material/Logout";
+import Swal from "sweetalert2";
+
+export default function Header() {
+  const router = useRouter();
+  const { user, logoutContext } = useAuth();
+  console.log(user);
+
+  const pathname = usePathname(); // ✅ ได้ path ปัจจุบัน เช่น "/login", "/dashboard"
+  console.log("📍 current path:", pathname);
+
+  const [logout] = useMutation(LOGOUT);
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const pageNameCheck = () => {
+    if (pathname.startsWith("/onesqa/dashboard")) return "Dashboard";
+    else if (pathname.startsWith("/onesqa/chat")) return "AI Chatbot";
+    else if (pathname.startsWith("/onesqa/users")) return "จัดการผู้ใช้งาน";
+    else if (pathname.startsWith("/onesqa/reports")) return "รายงาน";
+    else if (pathname.startsWith("/onesqa/settings")) return "ตั้งค่าระบบ";
+    else if (pathname.startsWith("/onesqa/logs")) return "ระบบ Logs";
+  };
+
+  const handleClick = (event) => setAnchorEl(event.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  const handleProfile = () => {
+    console.log("👤 ไปที่โปรไฟล์");
+    router.push(`/onesqa/detail`);
+    handleClose();
+  };
+
+  const handleThemeToggle = () => {
+    console.log("🌓 เปลี่ยนธีม");
+    handleClose();
+  };
+
+  const handleLogout = async () => {
+    handleClose();
+    try {
+      const result = await Swal.fire({
+        title: "ต้องการออกจากระบบ",
+        text: "ท่านแน่ใจว่าต้องการออกจากระบบ",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "ยืนยัน",
+        cancelButtonText: "ยกเลิก",
+        confirmButtonColor: "#3E8EF7", // พื้นขาว
+        cancelButtonColor: "#d33",
+        customClass: {
+          title: "swal-title-red",
+          icon: "swal-icon-red",
+          confirmButton: "swal-confirm-white",
+        },
+      });
+
+      if (result.isConfirmed) {
+        // ✅ เรียก API logout
+        const logoutResult = await logout();
+        console.log(logoutResult);
+
+        logoutContext();
+        console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+
+        // Swal.fire({
+        //   title: "ออกจากระบบสำเร็จ",
+        //   icon: "success",
+        //   timer: 1500,
+        //   showConfirmButton: false,
+        // });
+      }
+    } catch (error) {
+      console.error("❌ Logout failed:", error);
+    }
+  };
+
+  if (pathname.startsWith("/auth")) {
+    return (
+      <AppBar
+        position="static"
+        sx={{
+          bgcolor: "white", // พื้นหลังขาว
+          color: "black", // ตัวหนังสือดำ
+        }}
+      >
+        <Toolbar>
+          {/* รูปโลโก้ */}
+          <Box
+            component="img"
+            src="/images/logo.png" // ✅ ใส่ path รูป (เช่น public/logo.png)
+            alt="Logo"
+            sx={{
+              width: 48,
+              height: 48,
+              mr: 1, // margin ขวา
+              ml: 1,
+            }}
+          />
+
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            ONESQA AI Chatbot
+          </Typography>
+        </Toolbar>
+      </AppBar>
+    );
+  } else {
+    return (
+      <AppBar
+        position="static"
+        sx={{
+          bgcolor: "white",
+          color: "black",
+          boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+          px: 3,
+        }}
+      >
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+          {/* ด้านซ้าย: ชื่อหน้า */}
+          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            {pageNameCheck()}
+          </Typography>
+
+          {/* ด้านขวา: โปรไฟล์ */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            <IconButton
+              sx={{
+                color: "#3E8EF7", // 🔵 สีฟ้า
+                position: "relative",
+              }}
+            >
+              <Badge
+                variant="dot"
+                overlap="circular"
+                sx={{
+                  "& .MuiBadge-dot": {
+                    backgroundColor: "#E53935", // 🔴 สีแดง
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    top: 4,
+                    right: 4,
+                  },
+                }}
+              >
+                <NotificationsNoneIcon />
+              </Badge>
+            </IconButton>{" "}
+            <Avatar
+              alt="User"
+              //src="/profile.png"
+              sx={{ width: 45, height: 45, borderRadius: "10px" }}
+            />
+            <Box sx={{ textAlign: "left", lineHeight: 1 }}>
+              <Typography
+                variant="body1"
+                sx={{ fontWeight: 600, color: "#1E1E1E" }}
+              >
+                {user?.username}
+              </Typography>
+              <Typography variant="body2" sx={{ color: "gray" }}>
+                {user?.role_name}
+              </Typography>
+            </Box>
+            <KeyboardArrowDownIcon
+              onClick={handleClick}
+              sx={{ color: "gray", cursor: "pointer" }}
+            />
+          </Box>
+
+          {/* ✅ เมนู dropdown */}
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            PaperProps={{
+              elevation: 3,
+              sx: {
+                borderRadius: 2,
+                mt: 1,
+                minWidth: 190,
+              },
+            }}
+          >
+            {/* ดูโปรไฟล์ */}
+            <MenuItem onClick={handleProfile}>
+              <ListItemIcon>
+                <AccountCircleIcon fontSize="small" sx={{ color: "#3E8EF7" }} />
+              </ListItemIcon>
+              ดูโปรไฟล์
+            </MenuItem>
+
+            {/* เปลี่ยนธีม */}
+            <MenuItem onClick={handleThemeToggle}>
+              <ListItemIcon>
+                <Brightness4Icon fontSize="small" sx={{ color: "#3E8EF7" }} />
+              </ListItemIcon>
+              เปลี่ยนธีม
+            </MenuItem>
+
+            {/* เส้นคั่น */}
+            <Divider sx={{ my: 0.5 }} />
+
+            {/* ออกจากระบบ */}
+            <MenuItem onClick={handleLogout} sx={{ color: "red" }}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" sx={{ color: "red" }} />
+              </ListItemIcon>
+              ออกจากระบบ
+            </MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
+    );
+  }
+}

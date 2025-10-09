@@ -1,0 +1,28 @@
+"use client";
+
+import { Box, Typography } from "@mui/material";
+
+export default function Footer() {
+    // วันที่ปัจจุบัน 
+  const now = new Date();
+  // เเสดงเวลาตามประเทศไทย 
+  const thaiTime = now.toLocaleString("sv-SE", { timeZone: "Asia/Bangkok" }).replace(" ", "T");
+  const year = new Date(thaiTime).getFullYear();
+
+  return (
+    <Box
+      component="footer"
+      sx={{
+        py: 2,
+        textAlign: "center",
+        bgcolor: "background.paper",
+        borderColor: "divider",
+        mt: "auto",
+      }}
+    >
+      <Typography variant="body2">
+        © สงวนลิขสิทธิ์ {year+543} สำนักงานรับรองมาตรฐานและประเมินคุณภาพการศึกษา (องค์การมหาชน)
+      </Typography>
+    </Box>
+  );
+}
