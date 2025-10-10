@@ -49,14 +49,14 @@ const DashboardPage = () => {
   };
 
   return (
-    <div>
+    <Box sx={{ p: 3 }}>
       <Box
         sx={{
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
           borderRadius: 4,
-          p: 2,
-          bgcolor: "white",
+          p: 3,
+          bgcolor: "background.paper",
           mb: 2,
         }}
       >
@@ -72,11 +72,12 @@ const DashboardPage = () => {
           display: "flex",
           gap: 2,
           flexWrap: "wrap",
-          p: 2,
+          p: 3,
+          mb: 2,
           borderRadius: 4,
           border: "1px solid #E5E7EB", // ✅ เส้นขอบรอบนอกเหมือนภาพ
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
-          bgcolor: "white",
+          bgcolor: "background.paper",
         }}
       >
         <DashboardStatCard
@@ -84,7 +85,7 @@ const DashboardPage = () => {
           value="156"
           percentChange={15}
           icon={<ChatIcon />}
-          bgColor="#F3F4FF"
+          bgColor="primary.minor"
         />
 
         <DashboardStatCard
@@ -92,7 +93,7 @@ const DashboardPage = () => {
           value="25,600"
           percentChange={8}
           icon={<SmartToyIcon />}
-          bgColor="#F3F4FF"
+          bgColor="primary.minor"
         />
 
         <DashboardStatCard
@@ -100,16 +101,11 @@ const DashboardPage = () => {
           value="12"
           percentChange={-3}
           icon={<GroupIcon />}
-          bgColor="#F3F4FF"
+          bgColor="primary.minor"
         />
       </Box>
 
-      <Box
-        sx={{
-          p: 2,
-          mb: 5,
-        }}
-      >
+      <Box>
         <TokensChart data={sampleData} title="สถิติการใช้ Tokens รายวัน" />
       </Box>
 
@@ -118,8 +114,8 @@ const DashboardPage = () => {
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
           borderRadius: 4,
-          p: 2,
-          bgcolor: "white",
+          p: 3,
+          bgcolor: "background.paper",
           mb: 2,
         }}
       >
@@ -135,8 +131,8 @@ const DashboardPage = () => {
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
           borderRadius: 4,
-          p: 2,
-          bgcolor: "white",
+          p: 3,
+          bgcolor: "background.paper",
           mb: 4,
         }}
       >
@@ -155,7 +151,7 @@ const DashboardPage = () => {
           </li>
         ))}
       </ul> */}
-    </div>
+    </Box>
   );
 };
 

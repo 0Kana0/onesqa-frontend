@@ -53,17 +53,19 @@ export function AuthProvider({ children }) {
     });
   };
 
-  const userContext = (userData) => {
-    console.log("userData", userData);
+  const userContext = (userData, locale) => {
+    console.log("userData", userData, locale);
 
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("locale", locale);
   };
 
   const logoutContext = () => {
     setUser(null);
     deleteCookie("accessToken", { path: "/" });
     localStorage.removeItem("user");
+    localStorage.removeItem("locale");
     router.push("/auth/login");
   };
 

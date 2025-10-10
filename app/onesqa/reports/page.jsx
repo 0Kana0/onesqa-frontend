@@ -201,7 +201,7 @@ const ReportPage = () => {
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 4,
           p: 2,
-          bgcolor: "white",
+          bgcolor: "background.paper",
           mb: 2,
         }}
       >
@@ -267,13 +267,14 @@ const ReportPage = () => {
       </Box>
 
       {/* 🧾 ตารางข้อมูล */}
-      <Paper
+      <Box
         sx={{
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 3,
           p: 2,
           mb: 2,
+          bgcolor: "background.paper",
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
@@ -285,7 +286,7 @@ const ReportPage = () => {
 
         <TableContainer>
           <Table>
-            <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+            <TableHead sx={{ bgcolor: "background.default" }}>
               <TableRow>
                 <TableCell>
                   <b>วันที่</b>
@@ -343,16 +344,16 @@ const ReportPage = () => {
             color="primary"
           />
         </Box>
-      </Paper>
+      </Box>
 
       <Box sx={{ display: "flex" }}>
-        <Paper
+        <Box
           sx={{
             border: "1px solid #E5E7EB",
             boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
             borderRadius: 4,
             p: 3,
-            bgcolor: "white",
+            bgcolor: "background.paper",
             flex: 1,
           }}
         >
@@ -375,7 +376,7 @@ const ReportPage = () => {
                   justifyContent: "space-between",
                   p: 1.5,
                   borderRadius: 3,
-                  bgcolor: "#F6F6F6",
+                  bgcolor: "primary.minor",
                   border: "1px solid #F0F0F0",
                 }}
               >
@@ -413,12 +414,12 @@ const ReportPage = () => {
               </Box>
             ))}
           </Stack>
-        </Paper>
+        </Box>
 
         <Box
           sx={{
             p: 3,
-            bgcolor: "white",
+            bgcolor: "background.default",
             flex: 1,
           }}
         >

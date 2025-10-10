@@ -14,7 +14,7 @@ export default function AlertCard({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        bgcolor: "#FFF9EE",
+        bgcolor: "primary.alert",
         border: "1px solid #FFCC80",
         borderRadius: 2,
         p: 2,
@@ -25,7 +25,7 @@ export default function AlertCard({
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <WarningAmberIcon sx={{ fontSize: 28, color: "#FB8C00" }} />
         <Box>
-          <Typography variant="subtitle1" fontWeight="bold" color="inherit" sx={{ color: "#000000" }}>
+          <Typography variant="subtitle1" fontWeight="bold" color="inherit" sx={{ color: "background.text" }}>
             {title}
           </Typography>
           <Typography variant="body2" sx={{ color: "#F57C00" }}>

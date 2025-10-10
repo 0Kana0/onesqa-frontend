@@ -1,5 +1,14 @@
 "use client";
+
 import React from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  LinearProgress,
+  Divider,
+} from "@mui/material";
 import {
   LineChart,
   Line,
@@ -23,15 +32,28 @@ export default function TokensChart({
   height = 350,
 }) {
   return (
-    <div style={{ width: "100%", height }}>
-      <div>
-        <h3 style={{ fontWeight: "bold", fontSize: "18px", color: "#222" }}>
-          {title}
-        </h3>
-      </div>
-
-      <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+    <Box
+      elevation={3}
+      sx={{
+        border: "1px solid #E5E7EB",
+        borderRadius: 3,
+        p: 3,
+        mb: 2,
+        boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
+        bgcolor: "background.paper",
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        สถิติ
+      </Typography>
+      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+        {title}
+      </Typography>
+      <ResponsiveContainer width="100%" height={height}>
+        <LineChart
+          data={data}
+          margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+        >
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
           <XAxis dataKey="date" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} />
@@ -85,6 +107,6 @@ export default function TokensChart({
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </Box>
   );
 }

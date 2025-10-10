@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
   Box,
@@ -10,18 +12,28 @@ import {
 } from "@mui/material";
 
 export default function TokenUsageCardSetting({
-  title,
-  used,
-  total,
-  today,
-  average,
+  title = "Gemini 2.5 Pro",
+  used = 1500000,
+  total = 2000000,
+  today = 2500,
+  average = 1800,
   enabled = false,
   onToggle = () => {},
   defaultLimit = 1000000,
 }) {
   // ✅ เก็บค่า limit ใน state
   const [limit, setLimit] = useState(defaultLimit);
+
+  // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
   const percent = Math.min((used / total) * 100, 100);
+
+  // ✅ เปลี่ยนสีตามระดับการใช้งาน
+  let progressColor = "#3E8EF7"; // 🔵 ปกติ
+  if (percent >= 70 && percent <= 85) {
+    progressColor = "#FFA726"; // 🟠 เตือน
+  } else if (percent > 85) {
+    progressColor = "#E53935"; // 🔴 เตือนมาก
+  }
 
   return (
     <Card
@@ -32,6 +44,7 @@ export default function TokenUsageCardSetting({
         p: 2,
       }}
     >
+      {/* 🔹 หัวข้อ + ปุ่มเปิด/ปิด */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6" fontWeight={700}>
           {title}
@@ -64,7 +77,7 @@ export default function TokenUsageCardSetting({
             ใช้งานแล้ว
           </Typography>
           <Typography variant="body2">
-            {Math.round(used / 1000000)}M / {Math.round(total / 1000000)}M Tokens
+            {Math.round(used / 1_000_000)}M / {Math.round(total / 1_000_000)}M Tokens
           </Typography>
         </Box>
 
@@ -76,7 +89,7 @@ export default function TokenUsageCardSetting({
             borderRadius: 5,
             my: 1,
             bgcolor: "#e3f2fd",
-            "& .MuiLinearProgress-bar": { bgcolor: "#2196f3" },
+            "& .MuiLinearProgress-bar": { bgcolor: progressColor },
           }}
         />
 

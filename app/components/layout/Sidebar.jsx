@@ -49,7 +49,7 @@ export default function Sidebar() {
           width: open ? 240 : 80,
           boxSizing: "border-box",
           //transition: "width 0.3s ease",
-          background: "linear-gradient(to bottom, #3E8EF7, #1E61C2)",
+          background: (theme) => `linear-gradient(to bottom, ${theme.palette.primary.main}, #1E61C2)`,
           color: "white",
           border: "none",
           overflowX: "hidden",

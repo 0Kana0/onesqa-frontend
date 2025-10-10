@@ -1,0 +1,9 @@
+{
+  "HomePage": {
+    "title": "สวัสดี"
+  },
+  "LoginPage": {
+    "title1": "เข้าสู่ระบบ",
+    "title2": "เข้าสู่ระบบเพื่อใช้งาน ONESQA AI Chatbot"
+  }
+}

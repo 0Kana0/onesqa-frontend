@@ -11,6 +11,14 @@ export default function TokenUsageDashboardBar({
   const remaining = total - used;
   const percent = Math.min((used / total) * 100, 100);
 
+  // 🎨 กำหนดสีตามระดับการใช้งาน
+  let progressColor = "#3E8EF7"; // 🔵 ปกติ
+  if (percent >= 70 && percent <= 85) {
+    progressColor = "#FFA726"; // 🟠 เตือน
+  } else if (percent > 85) {
+    progressColor = "#E53935"; // 🔴 เตือนมาก
+  }
+
   return (
     <Box>
       {/* หัวข้อ */}
@@ -21,7 +29,7 @@ export default function TokenUsageDashboardBar({
         {subtitle}
       </Typography>
 
-      {/* ข้อความบน progress bar */}
+      {/* 🔹 ข้อความบน progress bar */}
       <Box
         sx={{
           display: "flex",
@@ -37,21 +45,21 @@ export default function TokenUsageDashboardBar({
         </Typography>
       </Box>
 
-      {/* Progress Bar */}
+      {/* 🔹 Progress Bar */}
       <LinearProgress
         variant="determinate"
         value={percent}
         sx={{
           height: 10,
           borderRadius: 5,
-          backgroundColor: "#E3F2FD",
+          backgroundColor: "#e3f2fd",
           "& .MuiLinearProgress-bar": {
-            backgroundColor: "#3E8EF7",
+            backgroundColor: progressColor,
           },
         }}
       />
 
-      {/* ค่าด้านล่าง */}
+      {/* 🔹 ค่าด้านล่าง */}
       <Box
         sx={{
           display: "flex",

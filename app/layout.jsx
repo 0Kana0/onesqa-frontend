@@ -4,7 +4,7 @@ import Providers from "./providers";
 export default function RootLayout({ children }) {
   return (
     <html lang="th" suppressHydrationWarning> 
-      <body style={{ background: "#ffffff" }}>
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>

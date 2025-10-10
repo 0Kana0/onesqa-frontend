@@ -21,6 +21,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import Swal from "sweetalert2";
+import { useTheme } from "next-themes";
 
 const LogPage = () => {
   const [logFilter, setLogFilter] = useState("หัวข้อการ Logs แก้ไข");
@@ -28,6 +29,7 @@ const LogPage = () => {
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const rowsPerPage = 5; // ✅ แสดง 5 แถวต่อหน้า
+  const { theme } = useTheme();
 
   const [logRows, setLogRows] = useState([
     {
@@ -73,8 +75,7 @@ const LogPage = () => {
   // 🔹 ฟังก์ชันกรองข้อมูล
   const filteredUsers = logRows.filter((user) => {
     const matchesLog =
-      logFilter === "หัวข้อการ Logs แก้ไข" ||
-      user.topic.includes(logFilter);
+      logFilter === "หัวข้อการ Logs แก้ไข" || user.topic.includes(logFilter);
 
     // --- แปลงวันที่ใน record ---
     const userDate = new Date(user.time);
@@ -108,26 +109,57 @@ const LogPage = () => {
 
   // ✅ ฟังก์ชันลบทั้งหมดพร้อม SweetAlert2
   const handleDeleteAll = () => {
-    Swal.fire({
-      title: "ยืนยันการลบ?",
-      text: "คุณต้องการลบประวัติการแก้ไขทั้งหมดหรือไม่?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",     // สีแดงสำหรับปุ่มยืนยัน
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "ลบข้อมูล",
-      cancelButtonText: "ยกเลิก",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
-        Swal.fire({
-          title: "ลบเรียบร้อย!",
-          text: "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว",
-          icon: "success",
-          confirmButtonColor: "#3085d6",
-        });
-      }
-    });
+    if (theme === "dark") {
+      Swal.fire({
+        title: "ยืนยันการลบ?",
+        text: "คุณต้องการลบประวัติการแก้ไขทั้งหมดหรือไม่?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
+        cancelButtonColor: "#3E8EF7",
+        confirmButtonText: "ลบข้อมูล",
+        cancelButtonText: "ยกเลิก",
+        background: "#2F2F30", // สีพื้นหลังดำ
+        color: "#fff", // สีข้อความเป็นขาว
+        titleColor: "#fff", // สี title เป็นขาว
+        textColor: "#fff", // สี text เป็นขาว
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
+          Swal.fire({
+            title: "ลบเรียบร้อย!",
+            text: "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว",
+            icon: "success",
+            confirmButtonColor: "#3E8EF7",
+            background: "#2F2F30", // สีพื้นหลังดำ
+            color: "#fff", // สีข้อความเป็นขาว
+            titleColor: "#fff", // สี title เป็นขาว
+            textColor: "#fff", // สี text เป็นขาว
+          });
+        }
+      });
+    } else {
+      Swal.fire({
+        title: "ยืนยันการลบ?",
+        text: "คุณต้องการลบประวัติการแก้ไขทั้งหมดหรือไม่?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
+        cancelButtonColor: "#3E8EF7",
+        confirmButtonText: "ลบข้อมูล",
+        cancelButtonText: "ยกเลิก",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
+          Swal.fire({
+            title: "ลบเรียบร้อย!",
+            text: "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว",
+            icon: "success",
+            confirmButtonColor: "#3E8EF7",
+          });
+        }
+      });
+    }
   };
 
   return (
@@ -146,7 +178,7 @@ const LogPage = () => {
             boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
             borderRadius: 4,
             p: 2,
-            bgcolor: "white",
+            bgcolor: "background.paper",
             mb: 2,
           }}
         >
@@ -209,14 +241,14 @@ const LogPage = () => {
           </Box>
         </Box>
 
-        <Paper
+        <Box
           elevation={1}
           sx={{
             border: "1px solid #E5E7EB",
             boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
             borderRadius: 3,
             p: 2,
-            bgcolor: "#fff",
+            bgcolor: "background.paper",
           }}
         >
           {/* Header */}
@@ -251,7 +283,7 @@ const LogPage = () => {
           <TableContainer>
             <Table>
               <TableHead>
-                <TableRow sx={{ bgcolor: "#f9fafb" }}>
+                <TableRow sx={{ bgcolor: "background.default" }}>
                   <TableCell sx={{ fontWeight: 600 }}>เวลา</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>ชื่อ</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>หัวข้อ</TableCell>
@@ -291,7 +323,7 @@ const LogPage = () => {
               color="primary"
             />
           </Box>
-        </Paper>
+        </Box>
       </Box>
     </div>
   );

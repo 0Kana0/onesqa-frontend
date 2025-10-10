@@ -22,7 +22,7 @@ export default function ActionBar({
         p: 1.5,
         border: "1px solid #E0E0E0",
         borderRadius: 3,
-        bgcolor: "white",
+        bgcolor: "background.paper",
         mb: 2,
       }}
     >

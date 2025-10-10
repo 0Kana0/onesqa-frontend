@@ -255,7 +255,7 @@ export default function UserPage() {
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 4,
           p: 2,
-          bgcolor: "white",
+          bgcolor: "background.paper",
           mb: 2
         }}
       >
@@ -315,7 +315,7 @@ export default function UserPage() {
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 4,
           p: 2,
-          bgcolor: "white",
+          bgcolor: "background.paper",
         }}
       >
         {/* 🔹 ตารางผู้ใช้งาน */}

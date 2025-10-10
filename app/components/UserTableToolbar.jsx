@@ -21,7 +21,8 @@ export default function UserTableToolbar({ onRefresh, onExport, onClearFilters }
         borderRadius: 3,
         bgcolor: "#fff",
         boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
-        mb: 2
+        mb: 2,
+        bgcolor: "background.paper"
       }}
     >
       {pathname.startsWith("/onesqa/users") ? (

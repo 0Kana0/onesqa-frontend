@@ -16,12 +16,12 @@ export default function UserInfoCard({ user }) {
   if (!user) return null;
 
   return (
-    <Card
+    <Box
       sx={{
         borderRadius: 3,
         p: 2,
         boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
-        bgcolor: "white",
+        bgcolor: "background.paper",
         width: "100%",
       }}
     >
@@ -35,7 +35,8 @@ export default function UserInfoCard({ user }) {
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 4,
           p: 2,
-          mb: 1,
+          mb: 2,
+          bgcolor: "background.paper"
         }}
       >
         <Box>
@@ -93,15 +94,17 @@ export default function UserInfoCard({ user }) {
       </Card>
 
       {/* 🔹 สถานะ + สิทธิ์ */}
-      <Stack
-        direction="column"
-        justifyContent="space-between"
-        spacing={2}
+      <Box
         sx={{
+          display: "flex",
+          flexDirection: "column", // ✅ เรียงในแนวตั้ง
+          justifyContent: "space-between",
+          gap: 2,
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 4,
           p: 2,
+          bgcolor: "background.paper"
         }}
       >
         <Box
@@ -144,7 +147,7 @@ export default function UserInfoCard({ user }) {
             }}
           />
         </Box>
-      </Stack>
-    </Card>
+      </Box>
+    </Box>
   );
 }

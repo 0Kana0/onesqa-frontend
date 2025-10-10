@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Box, Typography, LinearProgress, Paper } from "@mui/material";
+import { Box, Typography, LinearProgress } from "@mui/material";
 
 export default function TokenUsageCard({
   title = "Gemini 2.5 Pro",
@@ -12,6 +12,14 @@ export default function TokenUsageCard({
 }) {
   // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
   const percent = Math.min((used / total) * 100, 100);
+
+  // ✅ กำหนดสีตามระดับการใช้งาน
+  let progressColor = "#3E8EF7"; // 🔵 ปกติ
+  if (percent >= 70 && percent <= 85) {
+    progressColor = "#FFA726"; // 🟠 เตือน
+  } else if (percent > 85) {
+    progressColor = "#E53935"; // 🔴 เตือนมาก
+  }
 
   return (
     <Box
@@ -24,6 +32,7 @@ export default function TokenUsageCard({
         boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
         p: 2,
         gap: 1.2,
+        bgcolor: "background.paper",
       }}
     >
       {/* 🔹 ชื่อโมเดล */}
@@ -54,9 +63,9 @@ export default function TokenUsageCard({
         sx={{
           height: 10,
           borderRadius: 5,
-          backgroundColor: "#E3F2FD",
+          backgroundColor: "#e3f2fd",
           "& .MuiLinearProgress-bar": {
-            backgroundColor: "#3E8EF7",
+            backgroundColor: progressColor,
           },
         }}
       />

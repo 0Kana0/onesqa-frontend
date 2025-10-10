@@ -125,7 +125,7 @@ const SettingPage = () => {
               border: "1px solid #E5E7EB",
               boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
               borderRadius: 3,
-              bgcolor: "#fff",
+              bgcolor: "background.paper",
               p: 3,
             }}
           >
@@ -167,7 +167,7 @@ const SettingPage = () => {
               border: "1px solid #E5E7EB",
               boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
               borderRadius: 3,
-              bgcolor: "#fff",
+              bgcolor: "background.paper",
               p: 3,
               display: "flex", // ใช้ flex layout
               flexDirection: "column", // ✅ เรียงในแนวตั้ง
@@ -285,7 +285,7 @@ const SettingPage = () => {
             alignItems: "center",
             gap: 2,
             p: 1,
-            bgcolor: "#ffffff",
+            bgcolor: "background.paper",
             borderRadius: 3,
             border: "1px solid #E5E7EB",
             boxShadow: "0 3px 8px rgba(0,0,0,0.04)",

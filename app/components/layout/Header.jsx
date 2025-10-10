@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "../../context/AuthContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useRouter, usePathname } from "next/navigation";
 import { LOGOUT } from "@/graphql/auth/mutations";
@@ -16,14 +16,17 @@ import {
   Divider,
   ListItemIcon,
   IconButton,
-  Badge
+  Badge,
 } from "@mui/material";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
 import LogoutIcon from "@mui/icons-material/Logout";
 import Swal from "sweetalert2";
+import ThemeToggle from "../ui/ThemeToggle";
+import { useTheme } from "next-themes";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 
 export default function Header() {
   const router = useRouter();
@@ -38,6 +41,13 @@ export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // ✅ ป้องกัน hydration mismatch
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
   const pageNameCheck = () => {
     if (pathname.startsWith("/onesqa/dashboard")) return "Dashboard";
     else if (pathname.startsWith("/onesqa/chat")) return "AI Chatbot";
@@ -45,6 +55,7 @@ export default function Header() {
     else if (pathname.startsWith("/onesqa/reports")) return "รายงาน";
     else if (pathname.startsWith("/onesqa/settings")) return "ตั้งค่าระบบ";
     else if (pathname.startsWith("/onesqa/logs")) return "ระบบ Logs";
+    else if (pathname.startsWith("/onesqa/detail")) return "รายละเอียด";
   };
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
@@ -58,42 +69,59 @@ export default function Header() {
 
   const handleThemeToggle = () => {
     console.log("🌓 เปลี่ยนธีม");
+    setTheme(theme === "dark" ? "light" : "dark");
     handleClose();
   };
 
   const handleLogout = async () => {
+    console.log(theme);
+
     handleClose();
     try {
-      const result = await Swal.fire({
-        title: "ต้องการออกจากระบบ",
-        text: "ท่านแน่ใจว่าต้องการออกจากระบบ",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "ยืนยัน",
-        cancelButtonText: "ยกเลิก",
-        confirmButtonColor: "#3E8EF7", // พื้นขาว
-        cancelButtonColor: "#d33",
-        customClass: {
-          title: "swal-title-red",
-          icon: "swal-icon-red",
-          confirmButton: "swal-confirm-white",
-        },
-      });
+      if (theme === "dark") {
+        const result = await Swal.fire({
+          title: "ต้องการออกจากระบบ",
+          text: "ท่านแน่ใจว่าต้องการออกจากระบบ",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "ยืนยัน",
+          cancelButtonText: "ยกเลิก",
+          confirmButtonColor: "#3E8EF7", // พื้นขาว
+          cancelButtonColor: "#d33",
+          background: "#2F2F30", // สีพื้นหลังดำ
+          color: "#fff", // สีข้อความเป็นขาว
+          titleColor: "#fff", // สี title เป็นขาว
+          textColor: "#fff", // สี text เป็นขาว
+        });
 
-      if (result.isConfirmed) {
-        // ✅ เรียก API logout
-        const logoutResult = await logout();
-        console.log(logoutResult);
+        if (result.isConfirmed) {
+          // ✅ เรียก API logout
+          const logoutResult = await logout();
+          console.log(logoutResult);
 
-        logoutContext();
-        console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+          logoutContext();
+          console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+        }
+      } else {
+        const result = await Swal.fire({
+          title: "ต้องการออกจากระบบ",
+          text: "ท่านแน่ใจว่าต้องการออกจากระบบ",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "ยืนยัน",
+          cancelButtonText: "ยกเลิก",
+          confirmButtonColor: "#3E8EF7", // พื้นขาว
+          cancelButtonColor: "#d33",
+        });
 
-        // Swal.fire({
-        //   title: "ออกจากระบบสำเร็จ",
-        //   icon: "success",
-        //   timer: 1500,
-        //   showConfirmButton: false,
-        // });
+        if (result.isConfirmed) {
+          // ✅ เรียก API logout
+          const logoutResult = await logout();
+          console.log(logoutResult);
+
+          logoutContext();
+          console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+        }
       }
     } catch (error) {
       console.error("❌ Logout failed:", error);
@@ -105,8 +133,8 @@ export default function Header() {
       <AppBar
         position="static"
         sx={{
-          bgcolor: "white", // พื้นหลังขาว
-          color: "black", // ตัวหนังสือดำ
+          bgcolor: "background.paper", // พื้นหลังขาว
+          color: "background.text",
         }}
       >
         <Toolbar>
@@ -134,10 +162,10 @@ export default function Header() {
       <AppBar
         position="static"
         sx={{
-          bgcolor: "white",
-          color: "black",
+          bgcolor: "background.paper",
           boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
           px: 3,
+          color: "background.text",
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -183,13 +211,10 @@ export default function Header() {
               sx={{ width: 45, height: 45, borderRadius: "10px" }}
             />
             <Box sx={{ textAlign: "left", lineHeight: 1 }}>
-              <Typography
-                variant="body1"
-                sx={{ fontWeight: 600, color: "#1E1E1E" }}
-              >
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>
                 {user?.username}
               </Typography>
-              <Typography variant="body2" sx={{ color: "gray" }}>
+              <Typography variant="body2" color="text.secondary">
                 {user?.role_name}
               </Typography>
             </Box>
@@ -224,9 +249,13 @@ export default function Header() {
             </MenuItem>
 
             {/* เปลี่ยนธีม */}
-            <MenuItem onClick={handleThemeToggle}>
+            <MenuItem onClick={() => handleThemeToggle()}>
               <ListItemIcon>
-                <Brightness4Icon fontSize="small" sx={{ color: "#3E8EF7" }} />
+                {theme === "dark" ? (
+                  <Brightness7Icon fontSize="small" sx={{ color: "#3E8EF7" }} />
+                ) : (
+                  <Brightness4Icon fontSize="small" sx={{ color: "#3E8EF7" }} />
+                )}
               </ListItemIcon>
               เปลี่ยนธีม
             </MenuItem>

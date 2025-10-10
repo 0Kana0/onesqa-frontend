@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Box,
@@ -19,12 +21,22 @@ export default function GroupTokenTable({
   modelOptions = [],
   onChange = () => {},
 }) {
+  // 🔹 ฟังก์ชันเรนเดอร์แถบความคืบหน้า
   const renderProgress = (usage) => {
-    const percent = (usage.used / usage.total) * 100;
+    const percent = Math.min((usage.used / usage.total) * 100, 100);
+
+    // ✅ กำหนดสีตามระดับการใช้งาน
+    let progressColor = "#3E8EF7"; // 🔵 ปกติ
+    if (percent >= 70 && percent <= 85) {
+      progressColor = "#FFA726"; // 🟠 เตือน
+    } else if (percent > 85) {
+      progressColor = "#E53935"; // 🔴 เตือนมาก
+    }
+
     return (
       <Box>
         <Typography variant="body2" fontWeight={600}>
-          {usage.used / 1000000}M / {usage.total / 1000000}M Tokens
+          {usage.used / 1_000_000}M / {usage.total / 1_000_000}M Tokens
         </Typography>
         <LinearProgress
           variant="determinate"
@@ -34,20 +46,19 @@ export default function GroupTokenTable({
             height: 8,
             borderRadius: 5,
             bgcolor: "#e3f2fd",
-            "& .MuiLinearProgress-bar": { bgcolor: "#2196f3" },
+            "& .MuiLinearProgress-bar": { bgcolor: progressColor },
           }}
         />
       </Box>
     );
   };
 
+  // 🔹 ส่วนของตาราง
   return (
     <Paper
       elevation={0}
       sx={{
         p: 2,
-        borderRadius: 3,
-        border: "1px solid #e0e0e0",
         overflowX: "auto",
       }}
     >
@@ -83,7 +94,7 @@ export default function GroupTokenTable({
                   <Typography fontWeight={600}>{row.group}</Typography>
                 </TableCell>
 
-                {/* Tokens */}
+                {/* 🔸 Tokens */}
                 <TableCell>
                   <TextField
                     type="number"
@@ -99,7 +110,7 @@ export default function GroupTokenTable({
                   />
                 </TableCell>
 
-                {/* Default Model */}
+                {/* 🔸 Default Model */}
                 <TableCell>
                   <TextField
                     select
@@ -118,7 +129,7 @@ export default function GroupTokenTable({
                   </TextField>
                 </TableCell>
 
-                {/* แสดง progress ของแต่ละ model */}
+                {/* 🔸 Progress ของแต่ละโมเดล */}
                 {modelOptions.map((model) => (
                   <TableCell key={model}>
                     {row.models?.[model]

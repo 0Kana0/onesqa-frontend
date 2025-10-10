@@ -74,7 +74,7 @@ export default function PrivateLayout({ children }) {
 
   return (
     <section>
-      <div style={{ display: "flex", background: "#ffffff" }}>
+      <div style={{ display: "flex" }}>
         <Sidebar />
         <div style={{ flexGrow: 1 }}>
           <Header />

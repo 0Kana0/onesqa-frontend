@@ -3,24 +3,9 @@
 import React, { useState } from "react";
 import {
   Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Select,
-  MenuItem,
-  LinearProgress,
-  Chip,
-  TextField,
 } from "@mui/material";
 import UserInfoCard from "@/app/components/UserInfoCard";
-import TokenLimitCard from "@/app/components/TokenLimitCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
-import ActionBar from "@/app/components/ActionBar";
 
 export default function DetailPage() {
   // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
@@ -32,33 +17,6 @@ export default function DetailPage() {
     phone: "022163955",
     status: "active",
     role: "หัวหน้ากลุ่มงาน",
-  };
-
-  const users = [
-    {
-      id: 48095,
-      name: "นายสมพล จารุรนท์ศักดิ์ฑูร",
-      position: "หัวหน้าฝ่ายการกิจ",
-      phone: "022163955",
-      email: "sompol@onesqa.or.th",
-      status: "ใช้งานอยู่",
-      role: "หัวหน้าภารกิจ",
-      chatgpt5Limit: 1000000,
-      geminiLimit: 1000000,
-      chatgpt5Used: 1500000,
-      geminiUsed: 1500000,
-      chatgpt5Max: 2000000,
-      geminiMax: 2000000,
-    },
-  ];
-
-  const [geminiTokens, setGeminiTokens] = useState(1000000);
-  const [chatgptTokens, setChatgptTokens] = useState(1000000);
-  const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
-
-  const handleViewChange = (mode) => {
-    setViewMode(mode);
-    console.log("🟢 เปลี่ยนโหมดเป็น:", mode);
   };
 
   return (
@@ -82,7 +40,7 @@ export default function DetailPage() {
               left: 0,
               width: "100%",
               height: "33%", // ✅ แสดงแค่ 1/3 ของพื้นที่
-              bgcolor: "#3E8EF7",
+              bgcolor: "primary.main",
               zIndex: 0,
             },
           }}
@@ -102,7 +60,7 @@ export default function DetailPage() {
               gap: 2,
               borderRadius: 3,
               boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
-              bgcolor: "white",
+              bgcolor: "background.paper",
               p: 2,
               position: "relative",
               zIndex: 1,

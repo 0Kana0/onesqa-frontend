@@ -20,6 +20,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client/react";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslations } from 'next-intl';
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import { SIGNIN, SIGNIN_WITH_ID, VERIFY_SIGNIN_WITH_ID } from "@/graphql/auth/mutations";
@@ -29,6 +30,7 @@ export default function LoginPage() {
   useRedirectIfAuthed()
   const router = useRouter();
   const { accessTokenContext, userContext } = useAuth();
+  const t = useTranslations('LoginPage');
 
   const [signin] = useMutation(SIGNIN);
   const [signinWithIdennumber] = useMutation(SIGNIN_WITH_ID);
@@ -83,7 +85,7 @@ export default function LoginPage() {
 
         // Step 2: บันทึก token
         accessTokenContext(loginResult?.data?.signin?.token || null);
-        userContext(loginResult?.data?.signin?.user);
+        userContext(loginResult?.data?.signin?.user, "th");
 
 
         // Step 4: Redirect
@@ -172,7 +174,7 @@ export default function LoginPage() {
 
       // Step 2: บันทึก token
       accessTokenContext(loginResult?.data?.verifySigninWithIdennumber?.token || null);
-      userContext(loginResult?.data?.verifySigninWithIdennumber?.user);
+      userContext(loginResult?.data?.verifySigninWithIdennumber?.user, "th");
 
       // Step 4: Redirect
       router.push("/onesqa/dashboard");
@@ -188,7 +190,8 @@ export default function LoginPage() {
         display: "flex",
         flexDirection: "column",
         bgcolor: "transparent",
-        background: "linear-gradient(to bottom, #3E8EF7 50%, #ffffff 50%)",
+        background: (theme) =>
+          `linear-gradient(to bottom, ${theme.palette.primary.main} 50%, ${theme.palette.background.default} 50%)`,
       }}
     >
       {/* Header */}
@@ -225,12 +228,12 @@ export default function LoginPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          mb: 5
+          mb: 5,
         }}
       >
-        <Paper
+        <Box
           elevation={3}
-          sx={{ p: 4, width: "100%", textAlign: "center", borderRadius: 5 }}
+          sx={{ p: 4, width: "100%", textAlign: "center", borderRadius: 5, bgcolor: "background.paper", }}
         >
           {/* เลือก role */}
           <ToggleButtonGroup
@@ -240,19 +243,17 @@ export default function LoginPage() {
             fullWidth
             sx={{
               mb: 3,
-              bgcolor: "white",
             }}
           >
             <ToggleButton
               value="staff"
               sx={{
                 flex: 1,
-                bgcolor: "white",
                 border: "none",
                 borderRadius: 0,
                 fontSize: "1.2rem", // ✅ ขนาดใหญ่ขึ้น
                 fontWeight: 600, // ✅ หนาขึ้น
-                color: role === "staff" ? "#3E8EF7" : "black",
+                color: role === "staff" ? "#3E8EF7" : "background.text",
                 position: "relative",
                 "&::after": {
                   content: '""',
@@ -261,15 +262,15 @@ export default function LoginPage() {
                   bottom: 0,
                   width: role === "staff" ? "100%" : "0%",
                   height: "2px",
-                  bgcolor: "#3E8EF7",
+                  bgcolor: "primary.main",
                   transition: "width 0.3s ease-in-out", // ✅ animation
                 },
                 "&.Mui-selected": {
-                  bgcolor: "white",
+                  bgcolor: "background.paper",
                   color: "#3E8EF7",
                 },
                 "&:hover": {
-                  bgcolor: "white",
+                  bgcolor: "background.paper",
                 },
               }}
             >
@@ -280,12 +281,11 @@ export default function LoginPage() {
               value="external"
               sx={{
                 flex: 1,
-                bgcolor: "white",
                 border: "none",
                 borderRadius: 0,
                 fontSize: "1.2rem", // ✅ ขนาดใหญ่ขึ้น
                 fontWeight: 600, // ✅ หนาขึ้น
-                color: role === "external" ? "#3E8EF7" : "black",
+                color: role === "external" ? "#3E8EF7" : "background.text",
                 position: "relative",
                 "&::after": {
                   content: '""',
@@ -294,15 +294,15 @@ export default function LoginPage() {
                   bottom: 0,
                   width: role === "external" ? "100%" : "0%",
                   height: "2px",
-                  bgcolor: "#3E8EF7",
+                  bgcolor: "primary.main",
                   transition: "width 0.3s ease-in-out", // ✅ animation
                 },
                 "&.Mui-selected": {
-                  bgcolor: "white",
+                  bgcolor: "background.paper",
                   color: "#3E8EF7",
                 },
                 "&:hover": {
-                  bgcolor: "white",
+                  bgcolor: "background.paper",
                 },
               }}
             >
@@ -336,9 +336,8 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 variant="contained"
-                color="primary"
                 fullWidth
-                sx={{ mt: 2 }}
+                sx={{ mt: 2, bgcolor: "#3E8EF7" }}
               >
                 เข้าสู่ระบบ
               </Button>
@@ -415,9 +414,8 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   variant="contained"
-                  color="primary"
                   fullWidth
-                  sx={{ mt: 2 }}
+                  sx={{ mt: 2, bgcolor: "#3E8EF7" }}
                 >
                   ยืนยัน
                 </Button>
@@ -463,7 +461,7 @@ export default function LoginPage() {
                     //color="secondary"
                     fullWidth
                     onClick={(e) => handleOtpSubmit(e)}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 2, bgcolor: "#3E8EF7" }}
                   >
                     เข้าสู่ระบบ
                   </Button>
@@ -471,7 +469,7 @@ export default function LoginPage() {
               )}
             </Box>
           )}
-        </Paper>
+        </Box>
       </Container>
 
       {/* Footer */}

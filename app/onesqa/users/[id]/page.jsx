@@ -50,7 +50,7 @@ export default function UserDetailPage() {
       chatgpt5Limit: 1000000,
       geminiLimit: 1000000,
       chatgpt5Used: 1500000,
-      geminiUsed: 1500000,
+      geminiUsed: 150000,
       chatgpt5Max: 2000000,
       geminiMax: 2000000,
     },
@@ -67,11 +67,11 @@ export default function UserDetailPage() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <ActionBar 
+      <ActionBar
         onSubmit={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
         onClearData={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
-        viewMode={viewMode} 
-        onViewChange={handleViewChange} 
+        viewMode={viewMode}
+        onViewChange={handleViewChange}
       />
       {viewMode === "card" ? (
         <Box
@@ -92,7 +92,7 @@ export default function UserDetailPage() {
               left: 0,
               width: "100%",
               height: "33%", // ✅ แสดงแค่ 1/3 ของพื้นที่
-              bgcolor: "#3E8EF7",
+              bgcolor: "primary.main",
               zIndex: 0,
             },
           }}
@@ -112,7 +112,7 @@ export default function UserDetailPage() {
               gap: 2,
               borderRadius: 3,
               boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
-              bgcolor: "white",
+              bgcolor: "background.paper",
               p: 2,
               position: "relative",
               zIndex: 1,
@@ -141,7 +141,7 @@ export default function UserDetailPage() {
               gap: 2,
               borderRadius: 3,
               boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
-              bgcolor: "white",
+              bgcolor: "background.paper",
               p: 2,
               position: "relative",
               zIndex: 1,
@@ -182,7 +182,7 @@ export default function UserDetailPage() {
           >
             <Table stickyHeader>
               {/* ✅ ให้หัวตารางค้างไว้เมื่อเลื่อน */}
-              <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+              <TableHead>
                 <TableRow>
                   <TableCell>
                     <b>ชื่อผู้ใช้</b>
@@ -303,6 +303,20 @@ export default function UserDetailPage() {
                         <LinearProgress
                           variant="determinate"
                           value={(user.chatgpt5Used / user.chatgpt5Max) * 100}
+                          sx={{
+                            bgcolor: "#e3f2fd",
+                            "& .MuiLinearProgress-bar": {
+                              bgcolor:
+                                (user.chatgpt5Used / user.chatgpt5Max) * 100 >=
+                                86
+                                  ? "#E53935" // สีแดงเมื่อเปอร์เซ็นต์ >= 86%
+                                  : (user.chatgpt5Used / user.chatgpt5Max) *
+                                      100 >=
+                                    70
+                                  ? "#FFA726" // สีส้มเมื่อเปอร์เซ็นต์อยู่ในช่วง 70% - 85%
+                                  : "#3E8EF7", // สีฟ้าตามปกติ
+                            },
+                          }}
                         />
                       </Box>
                     </TableCell>
@@ -317,7 +331,18 @@ export default function UserDetailPage() {
                         <LinearProgress
                           variant="determinate"
                           value={(user.geminiUsed / user.geminiMax) * 100}
-                          color="info"
+                          sx={{
+                            bgcolor: "#e3f2fd",
+                            "& .MuiLinearProgress-bar": {
+                              bgcolor:
+                                (user.geminiUsed / user.geminiMax) * 100 >= 86
+                                  ? "#E53935" // สีแดงเมื่อเปอร์เซ็นต์ >= 86%
+                                  : (user.geminiUsed / user.geminiMax) * 100 >=
+                                    70
+                                  ? "#FFA726" // สีส้มเมื่อเปอร์เซ็นต์อยู่ในช่วง 70% - 85%
+                                  : "#3E8EF7", // สีฟ้าตามปกติ
+                            },
+                          }}
                         />
                       </Box>
                     </TableCell>
