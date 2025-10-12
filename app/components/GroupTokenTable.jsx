@@ -15,12 +15,14 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
+import { useTranslations } from "next-intl";
 
 export default function GroupTokenTable({
   rows = [],
   modelOptions = [],
   onChange = () => {},
 }) {
+  const t = useTranslations('GroupTokenTable');
   // 🔹 ฟังก์ชันเรนเดอร์แถบความคืบหน้า
   const renderProgress = (usage) => {
     const percent = Math.min((usage.used / usage.total) * 100, 100);
@@ -66,17 +68,17 @@ export default function GroupTokenTable({
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>กลุ่มงาน</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('tablecell1')}</TableCell>
               <TableCell sx={{ fontWeight: 600, width: 180 }}>
-                Tokens
+                {t('tablecell2')}
                 <Typography variant="body2" color="text.secondary">
-                  กำหนด Tokens ให้ผู้ใช้งาน
+                  {t('tablecell2sub')}
                 </Typography>
               </TableCell>
               <TableCell sx={{ fontWeight: 600, width: 200 }}>
-                โมเดลเริ่มต้น
+                {t('tablecell3')}
                 <Typography variant="body2" color="text.secondary">
-                  กำหนดโมเดลเริ่มต้นให้ผู้ใช้งาน
+                  {t('tablecell3sub')}
                 </Typography>
               </TableCell>
               {modelOptions.map((model) => (

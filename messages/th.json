@@ -1,9 +1,188 @@
 {
-  "HomePage": {
-    "title": "สวัสดี"
+  "Header": {
+    "dashboard": "Dashboard",
+    "chat": "AI Chatbot",
+    "users": "จัดการผู้ใช้งาน",
+    "reports": "รายงาน",
+    "settings": "ตั้งค่าระบบ",
+    "logs": "ระบบ Logs",
+    "detail": "รายละเอียด",
+    "profile": "ดูโปรไฟล์",
+    "theme": "เปลี่ยนธีม",
+    "logout": "ออกจากระบบ"
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "chat": "AI Chatbot",
+    "users": "จัดการผู้ใช้งาน",
+    "reports": "รายงาน",
+    "settings": "ตั้งค่าระบบ",
+    "logs": "ระบบ Logs"
+  },
+  "Footer": {
+    "title1": "© สงวนลิขสิทธิ์",
+    "title2": "สำนักงานรับรองมาตรฐานและประเมินคุณภาพการศึกษา (องค์การมหาชน)"
   },
   "LoginPage": {
     "title1": "เข้าสู่ระบบ",
-    "title2": "เข้าสู่ระบบเพื่อใช้งาน ONESQA AI Chatbot"
+    "title2": "เข้าสู่ระบบเพื่อใช้งาน ONESQA AI Chatbot",
+    "role1": "เจ้าหน้าที่ สมศ.",
+    "role2": "ผู้ประเมินภายนอก",
+    "label1": "ชื่อผู้ใช้",
+    "placeholder1": "กรอกชื่อผู้ใช้",
+    "label2": "รหัสผ่าน",
+    "placeholder2": "กรอกรหัสผ่าน",
+    "button1": "เข้าสู่ระบบ",
+    "label3": "หมายเลขบัตรประจำตัวประชาชน",
+    "title3": "เลือกช่องทางรับรหัสผ่าน",
+    "button2": "ยืนยัน",
+    "title4p1": "ระบบได้ส่งข้อความไปที่เบอร์",
+    "title4p2": "เรียบร้อยแล้ว กรุณากรอกรหัส (OTP) 6 หลัก ที่ท่านได้รับ",
+    "otp1": "กรอกรหัส OTP",
+    "otp2": "ระบุ OTP 6 หลัก",
+    "recheck1": "ยังไม่ได้รับ OTP ใช่หรือไม่? ",
+    "recheck2": "ส่งใหม่"
+  },
+  "DashboardPage": {
+    "title1": "แจ้งเตือนการใช้งาน Token",
+    "message1p1": "การใช้งาน Token อยู่ที่",
+    "message1p2": "กรุณาติดตามการใช้งานอย่างใกล้ชิด",
+    "card1": "การสนทนาทั้งหมด",
+    "card2": "Tokens ที่ใช้",
+    "card3": "ออนไลน์",
+    "subtitle2": "สถิติ",
+    "title2": "สถิติการใช้ Tokens รายวัน",
+    "title3": "สถานะระบบ",
+    "subtitle1": "ติดตามการใช้งานระบบ",
+    "title4": "การใช้งาน Tokens",
+    "subtitle3": "ติดตามการใช้งาน Tokens ประจำเดือน"
+  },
+  "LogPage": {
+    "filter1": "ค้นหาและกรอง Logs",
+    "filter2": "ค้นหาและกรองข้อมูล Logs ตามเงื่อนไขต่างๆ",
+    "startDate": "ช่วงวันที่เริ่มต้น",
+    "endDate": "ช่วงวันที่สิ้นสุด",
+    "table1": "หัวข้อ Logs",
+    "table2": "ประวัติการดำเนินการและเหตุการณ์ในระบบ",
+    "button1": "ลบประวัติการแก้ไข",
+    "tablecell1": "เวลา",
+    "tablecell2": "ชื่อ",
+    "tablecell3": "หัวข้อ",
+    "tablecell4": "ข้อมูลเดิม",
+    "tablecell5": "ข้อมูลที่เปลี่ยนแปลง"
+  },
+  "ReportPage": {
+    "filter1": "ค้นหาและกรองข้อมูล",
+    "startDate": "เริ่มต้น",
+    "endDate": "สิ้นสุด",
+    "title1": "รายละเอียดการใช้งาน",
+    "subtitle1": "ข้อมูลการใช้งาน AI Chatbot รายผู้ใช้",
+    "tablecell1": "วันที่",
+    "tablecell2": "ผู้ใช้งาน",
+    "tablecell3": "แผนก",
+    "tablecell4": "การสนทนา",
+    "tablecell5": "Tokens",
+    "title2": "ผู้ใช้งานอันดับต้น",
+    "subtitle2": "ผู้ใช้งานที่มีการใช้งานสูงสุดในเดือนนี้",
+    "conversations": "การสนทนา",
+    "title3": "การใช้งาน Tokens"
+  },  
+  "UserPage": {
+    "filter1": "ค้นหาและกรองข้อมูล",
+    "title1": "รายชื่อผู้ใช้งาน",
+    "subtitle1": "ข้อมูลและสิทธิ์ผู้ใช้งานระบบ",
+    "tablecell1": "ชื่อ - นามสกุล",
+    "tablecell2": "บทบาท",
+    "tablecell3": "แผนก",
+    "tablecell4": "สถานะ",
+    "tablecell5": "AI Access",
+    "tablecell6": "ลงชื่อเข้าใช้ล่าสุด",
+    "tablecell7": "ดูรายละเอียด"
+  },
+  "UserDetailPage": {
+    "label1": "กำหนด Tokens ให้ผู้ใช้งาน",
+    "tablecell1": "ชื่อผู้ใช้",
+    "tablecell2": "ชื่อ - นามสกุล",
+    "tablecell3": "ตำแหน่ง",
+    "tablecell4": "โทรศัพท์มือถือ",
+    "tablecell5": "สถานะ",
+    "tablecell6": "สิทธิ์การใช้งาน"
+  },
+  "SettingPage": {
+    "button1": "กำหนด Tokens รายกลุ่ม",
+    "aititle1": "การตั้งค่า AI Chatbot",
+    "aisubtitle1": "กำหนดแนวทางการตั้งคำถาม (สูงสุด 5 คำถาม)"
+  },
+  "AlertCard": {
+    "button1": "ดูรายละเอียด"
+  },
+  "DashboardStatCard": {
+    "title1": "จากเดือนที่แล้ว"
+  },
+  "TokensChart": {
+    "all": "รวม"
+  },
+  "SystemStatusCard": {
+    "online": "ปกติ",
+    "fail": "ผิดพลาด"
+  },
+  "TokenUsageDashboardBar": {
+    "used": "ใช้งานแล้ว",
+    "remaining": "คงเหลือ"
+  },
+  "UserTableToolbar": {
+    "sync": "เชื่อมต่อข้อมูลผู้ใช้งาน",
+    "export": "ส่งออก",
+    "clear": "ล้างตัวกรอง"
+  },
+  "TokenUsageCard": {
+    "used": "ใช้งานแล้ว",
+    "today": "วันนี้",
+    "average": "เฉลี่ยต่อวัน"
+  },
+  "ActionBar": {
+    "save": "บันทึก",
+    "reset": "คืนค่า"
+  },
+  "UserInfoCard": {
+    "usage": "การใช้งาน",
+    "username": "ชื่อผู้ใช้",
+    "name": "ชื่อ - นามสกุล",
+    "position": "ตำแหน่ง",
+    "email": "อีเมล",
+    "phone": "โทรศัพท์",
+    "status": "สถานะ",
+    "permissions": "สิทธิ์การใช้งาน"
+  },
+  "TokenUsageCardSetting": {
+    "settoken": "กำหนด Tokens",
+    "used": "ใช้งานแล้ว",
+    "today": "วันนี้",
+    "average": "เฉลี่ยต่อวัน"
+  },
+  "UserGroupSettingCard": {
+    "settoken": "กำหนด Tokens ให้ผู้ใช้งาน",
+    "default": "กำหนด Default Model"
+  },
+  "GroupTokenTable": {
+    "tablecell1": "กลุ่มงาน",
+    "tablecell2": "Tokens",
+    "tablecell2sub": "กำหนด Tokens ให้ผู้ใช้งาน",
+    "tablecell3": "โมเดลเริ่มต้น",
+    "tablecell3sub": "กำหนดโมเดลเริ่มต้นให้ผู้ใช้งาน"
+  },
+  "LogoutAlert": {
+    "title": "ต้องการออกจากระบบ",
+    "text": "ท่านแน่ใจว่าต้องการออกจากระบบ",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก"
+  },
+  "DeleteAlert": {
+    "title1": "ยืนยันการลบ?",
+    "text1": "คุณต้องการลบประวัติการแก้ไขทั้งหมดหรือไม่?",
+    "confirm": "ลบข้อมูล",
+    "cancel": "ยกเลิก",
+    "title2": "ลบเรียบร้อย!",
+    "text2": "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว"
   }
 }

@@ -3,6 +3,7 @@
 import { Box, Typography } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import { useTranslations } from 'next-intl';
 
 export default function DashboardStatCard({
   title,
@@ -12,6 +13,7 @@ export default function DashboardStatCard({
   bgColor = "#F6F7FE",
 }) {
   const isPositive = percentChange >= 0;
+  const t = useTranslations('DashboardStatCard');
 
   return (
     <Box
@@ -72,7 +74,7 @@ export default function DashboardStatCard({
             {isPositive ? "+" : ""}
             {percentChange}%
           </Typography>{" "}
-          จากเดือนที่แล้ว
+          {t('title1')}
         </Typography>
       </Box>
     </Box>

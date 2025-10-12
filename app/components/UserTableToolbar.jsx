@@ -6,9 +6,11 @@ import { usePathname } from "next/navigation";
 import RefreshIcon from "@mui/icons-material/Autorenew";
 import DownloadIcon from "@mui/icons-material/Download";
 import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
+import { useTranslations } from 'next-intl';
 
 export default function UserTableToolbar({ onRefresh, onExport, onClearFilters }) {
   const pathname = usePathname();
+  const t = useTranslations('UserTableToolbar');
   
   return (
     <Box
@@ -38,7 +40,7 @@ export default function UserTableToolbar({ onRefresh, onExport, onClearFilters }
               "&:hover": { bgcolor: "#1565C0" },
             }}
           >
-            เชื่อมต่อข้อมูลผู้ใช้งาน
+            {t('sync')}
           </Button>
         </Box>
       ) : (
@@ -69,7 +71,7 @@ export default function UserTableToolbar({ onRefresh, onExport, onClearFilters }
             "&:hover": { bgcolor: "#2E7D32" },
           }}
         >
-          ส่งออก
+          {t('export')}
         </Button>
 
         {/* 🔵 ปุ่มล้างตัวกรอง */}
@@ -83,7 +85,7 @@ export default function UserTableToolbar({ onRefresh, onExport, onClearFilters }
             "&:hover": { bgcolor: "#BBDEFB" },
           }}
         >
-          ล้างตัวกรอง
+          {t('clear')}
         </Button>
       </Box>
     </Box>

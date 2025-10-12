@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_ROLES } from "@/graphql/role/queries";
 import { GET_ME } from "@/graphql/auth/queries";
 import { Box } from "@mui/material";
+import { useTranslations } from "next-intl";
 import ChatIcon from "@mui/icons-material/Chat";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import GroupIcon from "@mui/icons-material/Group";
@@ -15,6 +16,7 @@ import SystemStatusCard from "@/app/components/SystemStatusCard";
 import TokenUsageDashboardBar from "@/app/components/TokenUsageDashboardBar";
 
 const DashboardPage = () => {
+  const t = useTranslations("DashboardPage");
   const { data: meData, loading: meLoading, error: meError } = useQuery(GET_ME);
   const { data, loading, error, refetch } = useQuery(GET_ROLES);
 
@@ -40,7 +42,7 @@ const DashboardPage = () => {
   const systemData = [
     { label: "API Connection", status: "ปกติ" },
     { label: "Database", status: "ปกติ" },
-    { label: "AI Service", status: "เตือน" },
+    { label: "AI Service", status: "ผิดพลาด" },
     { label: "SSL Certificate", status: "ผิดพลาด" },
   ];
 
@@ -61,8 +63,8 @@ const DashboardPage = () => {
         }}
       >
         <AlertCard
-          title="แจ้งเตือนการใช้งาน Token"
-          message="การใช้งาน Token อยู่ที่ 75% กรุณาติดตามการใช้งานอย่างใกล้ชิด"
+          title={t("title1")}
+          message={`${t("message1p1")} 75% ${t("message1p2")}`} // ใช้การเชื่อมข้อความแบบ template literal
           onDetailClick={handleDetail}
         />
       </Box>
@@ -81,7 +83,7 @@ const DashboardPage = () => {
         }}
       >
         <DashboardStatCard
-          title="การสนทนาทั้งหมด"
+          title={t("card1")}
           value="156"
           percentChange={15}
           icon={<ChatIcon />}
@@ -89,7 +91,7 @@ const DashboardPage = () => {
         />
 
         <DashboardStatCard
-          title="Tokens ที่ใช้"
+          title={t("card2")}
           value="25,600"
           percentChange={8}
           icon={<SmartToyIcon />}
@@ -97,7 +99,7 @@ const DashboardPage = () => {
         />
 
         <DashboardStatCard
-          title="ออนไลน์"
+          title={t("card3")}
           value="12"
           percentChange={-3}
           icon={<GroupIcon />}
@@ -106,7 +108,7 @@ const DashboardPage = () => {
       </Box>
 
       <Box>
-        <TokensChart data={sampleData} title="สถิติการใช้ Tokens รายวัน" />
+        <TokensChart data={sampleData} subtitle={t("subtitle2")}  title={t("title2")} />
       </Box>
 
       <Box
@@ -120,8 +122,8 @@ const DashboardPage = () => {
         }}
       >
         <SystemStatusCard
-          title="สถานะระบบ"
-          subtitle="ติดตามการใช้งานระบบ"
+          title={t("title3")}
+          subtitle={t("subtitle1")}
           items={systemData}
         />
       </Box>
@@ -136,7 +138,12 @@ const DashboardPage = () => {
           mb: 4,
         }}
       >
-        <TokenUsageDashboardBar used={500} total={2000} />
+        <TokenUsageDashboardBar 
+          title = {t("title4")}
+          subtitle = {t("subtitle3")}
+          used={500} 
+          total={2000} 
+        />
       </Box>
 
       {/* <h1>Roles</h1>

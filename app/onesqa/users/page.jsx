@@ -28,10 +28,11 @@ import { UPDATE_USER } from "@/graphql/user/mutations";
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionIcon from "@mui/icons-material/Description";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
+import { useTranslations } from 'next-intl';
 
 export default function UserPage() {
   const router = useRouter();
-
+  const t = useTranslations('UserPage');
   const { data: usersData, loading: usersLoading, error: usersError } = useQuery(GET_USERS);
   //console.log(usersData);
 
@@ -260,7 +261,7 @@ export default function UserPage() {
         }}
       >
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-          ค้นหาและกรองข้อมูล
+          {t("filter1")}
         </Typography>
         {/* 🔹 ส่วนค้นหาและกรองข้อมูล */}
         <Box
@@ -320,23 +321,23 @@ export default function UserPage() {
       >
         {/* 🔹 ตารางผู้ใช้งาน */}
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-          รายชื่อผู้ใช้งาน
+          {t("title1")}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          ข้อมูลและสิทธิ์ผู้ใช้งานระบบ
+          {t("subtitle1")}
         </Typography>
 
         <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ชื่อ - นามสกุล</TableCell>
-                <TableCell>บทบาท</TableCell>
-                <TableCell>แผนก</TableCell>
-                <TableCell>สถานะ</TableCell>
-                <TableCell>AI Access</TableCell>
-                <TableCell>ลงชื่อเข้าใช้ล่าสุด</TableCell>
-                <TableCell>ดูรายละเอียด</TableCell>
+                <TableCell>{t("tablecell1")}</TableCell>
+                <TableCell>{t("tablecell2")}</TableCell>
+                <TableCell>{t("tablecell3")}</TableCell>
+                <TableCell>{t("tablecell4")}</TableCell>
+                <TableCell>{t("tablecell5")}</TableCell>
+                <TableCell>{t("tablecell6")}</TableCell>
+                <TableCell>{t("tablecell7")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -411,13 +412,13 @@ export default function UserPage() {
               ))}
 
               {/* ถ้าไม่มีข้อมูล */}
-              {paginatedUsers.length === 0 && (
+              {/* {paginatedUsers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     ไม่พบข้อมูลผู้ใช้งาน
                   </TableCell>
                 </TableRow>
-              )}
+              )} */}
             </TableBody>
           </Table>
         </TableContainer>

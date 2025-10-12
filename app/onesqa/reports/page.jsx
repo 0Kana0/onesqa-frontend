@@ -21,8 +21,10 @@ import {
 } from "@mui/material";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
+import { useTranslations } from "next-intl";
 
 const ReportPage = () => {
+  const t = useTranslations("ReportPage");
   const [aiFilter, setAiFilter] = useState("การใช้งาน AI Chatbot");
   const [quickRange, setQuickRange] = useState("เลือกช่วงเวลา");
   const [startDate, setStartDate] = useState("");
@@ -206,7 +208,7 @@ const ReportPage = () => {
         }}
       >
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-          ค้นหาและกรองข้อมูล
+          {t("filter1")}
         </Typography>
         {/* 🔹 ส่วนค้นหาและกรองข้อมูล */}
         <Box
@@ -244,7 +246,7 @@ const ReportPage = () => {
 
           {/* วันที่เริ่มต้น */}
           <TextField
-            label="เริ่มต้น"
+            label={t("startDate")}
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -255,7 +257,7 @@ const ReportPage = () => {
 
           {/* วันที่สิ้นสุด */}
           <TextField
-            label="สิ้นสุด"
+            label={t("endDate")}
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
@@ -278,10 +280,10 @@ const ReportPage = () => {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-          รายละเอียดการใช้งาน
+          {t("title1")}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          ข้อมูลการใช้งาน AI Chatbot รายผู้ใช้
+          {t("subtitle1")}
         </Typography>
 
         <TableContainer>
@@ -289,19 +291,19 @@ const ReportPage = () => {
             <TableHead sx={{ bgcolor: "background.default" }}>
               <TableRow>
                 <TableCell>
-                  <b>วันที่</b>
+                  <b>{t("tablecell1")}</b>
                 </TableCell>
                 <TableCell>
-                  <b>ผู้ใช้งาน</b>
+                  <b>{t("tablecell2")}</b>
                 </TableCell>
                 <TableCell>
-                  <b>แผนก</b>
+                  <b>{t("tablecell3")}</b>
                 </TableCell>
                 <TableCell align="center">
-                  <b>การสนทนา</b>
+                  <b>{t("tablecell4")}</b>
                 </TableCell>
                 <TableCell align="right">
-                  <b>Tokens</b>
+                  <b>{t("tablecell5")}</b>
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -359,10 +361,10 @@ const ReportPage = () => {
         >
           {/* หัวข้อ */}
           <Typography variant="h6" fontWeight="bold">
-            ผู้ใช้งานอันดับต้น
+            {t("title2")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            ผู้ใช้งานที่มีการใช้งานสูงสุดในเดือนนี้
+            {t("subtitle2")}
           </Typography>
 
           {/* ลิสต์ผู้ใช้งาน */}
@@ -397,7 +399,7 @@ const ReportPage = () => {
                   <Box>
                     <Typography fontWeight="bold">{user.name}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {user.chats} การสนทนา
+                      {user.chats} {t("conversations")}
                     </Typography>
                   </Box>
                 </Box>
@@ -425,7 +427,7 @@ const ReportPage = () => {
         >
           {/* หัวข้อ */}
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-            การใช้งาน Tokens
+            {t("title3")}
           </Typography>
 
           <Box

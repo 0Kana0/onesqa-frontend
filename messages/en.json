@@ -1,9 +1,188 @@
 {
-  "HomePage": {
-    "title": "Hello"
+  "Header": {
+    "dashboard": "Dashboard",
+    "chat": "AI Chatbot",
+    "users": "Manage Users",
+    "reports": "Report",
+    "settings": "Settings",
+    "logs": "Log System",
+    "detail": "Detail",
+    "profile": "Profile",
+    "theme": "Theme",
+    "logout": "Logout"
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "chat": "AI Chatbot",
+    "users": "Manage Users",
+    "reports": "Report",
+    "settings": "Settings",
+    "logs": "Log System"
+  },
+  "Footer": {
+    "title1": "Copyright",
+    "title2": "Office for National Education Standards and Quality Assessment (Public Organization)"
   },
   "LoginPage": {
     "title1": "Login",
-    "title2": "Login for use ONESQA AI Chatbot"
+    "title2": "Login for use ONESQA AI Chatbot",
+    "role1": "ONESQA Officer",
+    "role2": "External Assessor",
+    "label1": "Username",
+    "placeholder1": "Username",
+    "label2": "Password",
+    "placeholder2": "Password",
+    "button1": "Login",
+    "label3": "National Identification Number",
+    "title3": "Choose how to receive your OTP",
+    "button2": "Confirm",
+    "title4p1": "A message has been sent to the number",
+    "title4p2": "Please enter the 6-digit OTP you received",
+    "otp1": "Enter 6-digit OTP",
+    "otp2": "Enter 6-digit OTP",
+    "recheck1": "You haven't registered as a user yet ",
+    "recheck2": "Click here"
+  },
+  "DashboardPage": {
+    "title1": "Token Usage Alert",
+    "message1p1": "Token usage is at",
+    "message1p2": "Please monitor usage closely to avoid service interruption",
+    "card1": "Conversations Today",
+    "card2": "Tokens Remaining",
+    "card3": "Online",
+    "subtitle2": "Statistics",
+    "title2": "Daily Token Usage Statistics",
+    "title3": "System Status",
+    "subtitle1": "System Usage Monitoring",
+    "title4": "Token Usage",
+    "subtitle3": "Monthly token usage tracking with real-time updates"
+  },
+  "LogPage": {
+    "filter1": "Search and Filter Logs",
+    "filter2": "Search and filter log data based on various conditions.",
+    "startDate": "Start Date Range",
+    "endDate": "End Date Range",
+    "table1": "Edit logs",
+    "table2": "System Activity and Event Log",
+    "button1": "Clear revision history",
+    "tablecell1": "Times",
+    "tablecell2": "Name",
+    "tablecell3": "Title",
+    "tablecell4": "Old Data",
+    "tablecell5": "Changed Data"
+  },
+  "ReportPage": {
+    "filter1": "Search and filter Data",
+    "startDate": "Start",
+    "endDate": "End",
+    "title1": "Usage details",
+    "subtitle1": "AI Chatbot usage data by user",
+    "tablecell1": "Date",
+    "tablecell2": "User",
+    "tablecell3": "Department",
+    "tablecell4": "Conversations",
+    "tablecell5": "Tokens",
+    "title2": "Top Users",
+    "subtitle2": "Users with highest usage this month",
+    "conversations": "Conversations",
+    "title3": "Token usage"
+  },  
+  "UserPage": {
+    "filter1": "Search and Filter Data",
+    "title1": "User List",
+    "subtitle1": "Manage user data and system permissions",
+    "tablecell1": "Name",
+    "tablecell2": "Role",
+    "tablecell3": "Department",
+    "tablecell4": "Status",
+    "tablecell5": "AI Access",
+    "tablecell6": "Last Login",
+    "tablecell7": "Details"
+  },
+  "UserDetailPage": {
+    "label1": "Assign tokens to users",
+    "tablecell1": "Username",
+    "tablecell2": "Name",
+    "tablecell3": "Position",
+    "tablecell4": "Phone Number",
+    "tablecell5": "Status",
+    "tablecell6": "User permissions"
+  },
+  "SettingPage": {
+    "button1": "Set Tokens by Group",
+    "aititle1": "AI Chatbot Configuration",
+    "aisubtitle1": "Set guidelines for question formulation (Maximum 5 questions)"
+  },
+  "AlertCard": {
+    "button1": "View Details"
+  },
+  "DashboardStatCard": {
+    "title1": "from last month"
+  },
+  "TokensChart": {
+    "all": "all"
+  },
+  "SystemStatusCard": {
+    "online": "Online",
+    "fail": "Fail"
+  },
+  "TokenUsageDashboardBar": {
+    "used": "Used",
+    "remaining": "Remaining"
+  },
+  "UserTableToolbar": {
+    "sync": "Sync data user",
+    "export": "Export",
+    "clear": "Clear filter"
+  },
+  "TokenUsageCard": {
+    "used": "Already in use",
+    "today": "Today",
+    "average": "Average per day"
+  },
+  "ActionBar": {
+    "save": "Save",
+    "reset": "Reset"
+  },
+   "UserInfoCard": {
+    "usage": "Usage",
+    "username": "Username",
+    "name": "Name",
+    "position": "Position",
+    "email": "Email",
+    "phone": "Phone Number",
+    "status": "Status",
+    "permissions": "User permissions"
+  },
+  "TokenUsageCardSetting": {
+    "settoken": "Set Tokens",
+    "used": "Already in use",
+    "today": "Today",
+    "average": "Average per day"
+  },
+  "UserGroupSettingCard": {
+    "settoken": "Set Tokens For User",
+    "default": "Set Default Model"
+  },
+  "GroupTokenTable": {
+    "tablecell1": "Group",
+    "tablecell2": "Tokens",
+    "tablecell2sub": "Set Tokens For User",
+    "tablecell3": "Default Model",
+    "tablecell3sub": "Set Default Model For user"
+  },
+  "LogoutAlert": {
+    "title": "Want to log out",
+    "text": "Are you sure you want to log out?",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "DeleteAlert": {
+    "title1": "Confirm delete?",
+    "text1": "Do you want to delete all editing history?",
+    "confirm": "Delete",
+    "cancel": "Cancel",
+    "title2": "Completely deleted!",
+    "text2": "All edit history has been deleted"
   }
 }

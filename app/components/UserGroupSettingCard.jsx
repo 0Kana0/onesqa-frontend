@@ -7,6 +7,7 @@ import {
   TextField,
   MenuItem,
 } from "@mui/material";
+import { useTranslations } from 'next-intl';
 
 export default function UserGroupSettingCard({
   roleName = "Admin",
@@ -15,6 +16,7 @@ export default function UserGroupSettingCard({
   defaultModel = "Gemini 2.5 Pro",
   onChange,
 }) {
+  const t = useTranslations('UserGroupSettingCard');
   const [limit, setLimit] = useState(defaultLimit);
   const [model, setModel] = useState(defaultModel);
 
@@ -39,7 +41,7 @@ export default function UserGroupSettingCard({
       <CardContent sx={{ p: 0, mt: 1 }}>
         {/* 🔹 จำนวน Tokens */}
         <Typography variant="subtitle2" color="text.secondary">
-          กำหนด Tokens ให้ผู้ใช้งาน
+          {t('settoken')}
         </Typography>
         <TextField
           type="number"
@@ -61,7 +63,7 @@ export default function UserGroupSettingCard({
 
         {/* 🔹 Default Model */}
         <Typography variant="subtitle2" color="text.secondary">
-          กำหนด Default Model
+          {t('default')}
         </Typography>
         <TextField
           select

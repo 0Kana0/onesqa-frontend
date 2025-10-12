@@ -1,8 +1,11 @@
 "use client";
 
 import { Box, Typography } from "@mui/material";
+import { useTranslations } from 'next-intl';
 
 export default function Footer() {
+  const t = useTranslations('Footer');
+
     // วันที่ปัจจุบัน 
   const now = new Date();
   // เเสดงเวลาตามประเทศไทย 
@@ -21,7 +24,7 @@ export default function Footer() {
       }}
     >
       <Typography variant="body2">
-        © สงวนลิขสิทธิ์ {year+543} สำนักงานรับรองมาตรฐานและประเมินคุณภาพการศึกษา (องค์การมหาชน)
+        {t('title1')} {year+543} {t('title2')}
       </Typography>
     </Box>
   );

@@ -22,8 +22,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import Swal from "sweetalert2";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 
 const LogPage = () => {
+  const t = useTranslations("LogPage");
+  const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
+
   const [logFilter, setLogFilter] = useState("หัวข้อการ Logs แก้ไข");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -111,14 +115,14 @@ const LogPage = () => {
   const handleDeleteAll = () => {
     if (theme === "dark") {
       Swal.fire({
-        title: "ยืนยันการลบ?",
-        text: "คุณต้องการลบประวัติการแก้ไขทั้งหมดหรือไม่?",
+        title: tDelete('title1'),
+        text: tDelete('text1'),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
         cancelButtonColor: "#3E8EF7",
-        confirmButtonText: "ลบข้อมูล",
-        cancelButtonText: "ยกเลิก",
+        confirmButtonText: tDelete('confirm'),
+        cancelButtonText: tDelete('cancel'),
         background: "#2F2F30", // สีพื้นหลังดำ
         color: "#fff", // สีข้อความเป็นขาว
         titleColor: "#fff", // สี title เป็นขาว
@@ -127,8 +131,8 @@ const LogPage = () => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
           Swal.fire({
-            title: "ลบเรียบร้อย!",
-            text: "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว",
+            title: tDelete('title2'),
+            text: tDelete('text2'),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
             background: "#2F2F30", // สีพื้นหลังดำ
@@ -140,20 +144,20 @@ const LogPage = () => {
       });
     } else {
       Swal.fire({
-        title: "ยืนยันการลบ?",
-        text: "คุณต้องการลบประวัติการแก้ไขทั้งหมดหรือไม่?",
+        title: tDelete('title1'),
+        text: tDelete('text1'),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
         cancelButtonColor: "#3E8EF7",
-        confirmButtonText: "ลบข้อมูล",
-        cancelButtonText: "ยกเลิก",
+        confirmButtonText: tDelete('confirm'),
+        cancelButtonText: tDelete('cancel'),
       }).then((result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
           Swal.fire({
-            title: "ลบเรียบร้อย!",
-            text: "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว",
+            title: tDelete('title2'),
+            text: tDelete('text2'),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
           });
@@ -183,10 +187,10 @@ const LogPage = () => {
           }}
         >
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-            ค้นหาและกรอง Logs
+            {t("filter1")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            ค้นหาและกรองข้อมูล Logs ตามเงื่อนไขต่างๆ
+            {t("filter2")}
           </Typography>
           {/* 🔹 ส่วนค้นหาและกรองข้อมูล */}
           <Box
@@ -219,7 +223,7 @@ const LogPage = () => {
 
             {/* วันที่เริ่มต้น */}
             <TextField
-              label="ช่วงวันที่เริ่มต้น"
+              label={t("startDate")}
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -230,7 +234,7 @@ const LogPage = () => {
 
             {/* วันที่สิ้นสุด */}
             <TextField
-              label="ช่วงวันที่สิ้นสุด"
+              label={t("endDate")}
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
@@ -262,10 +266,10 @@ const LogPage = () => {
           >
             <Box>
               <Typography variant="h6" fontWeight={700}>
-                หัวข้อ Logs
+                {t("table1")}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                ประวัติการดำเนินการและเหตุการณ์ในระบบ
+                {t("table2")}
               </Typography>
             </Box>
             <Button
@@ -275,7 +279,7 @@ const LogPage = () => {
               sx={{ borderRadius: 2 }}
               onClick={() => handleDeleteAll()}
             >
-              ลบประวัติการแก้ไข
+              {t("button1")}
             </Button>
           </Box>
 
@@ -284,12 +288,12 @@ const LogPage = () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ bgcolor: "background.default" }}>
-                  <TableCell sx={{ fontWeight: 600 }}>เวลา</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>ชื่อ</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>หัวข้อ</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>ข้อมูลเดิม</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell1")}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell2")}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell3")}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell4")}</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>
-                    ข้อมูลที่เปลี่ยนแปลง
+                    {t("tablecell5")}
                   </TableCell>
                 </TableRow>
               </TableHead>

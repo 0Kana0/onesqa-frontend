@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Typography, LinearProgress } from "@mui/material";
+import { useTranslations } from 'next-intl';
 
 export default function TokenUsageDashboardBar({
   title = "การใช้งาน Tokens",
@@ -8,6 +9,7 @@ export default function TokenUsageDashboardBar({
   used = 500, // หน่วย M
   total = 2000, // หน่วย M
 }) {
+  const t = useTranslations('TokenUsageDashboardBar');
   const remaining = total - used;
   const percent = Math.min((used / total) * 100, 100);
 
@@ -38,10 +40,10 @@ export default function TokenUsageDashboardBar({
         }}
       >
         <Typography variant="body2" color="text.primary">
-          ใช้งานแล้ว: {used.toLocaleString()} M Tokens
+          {t('used')}: {used.toLocaleString()} M Tokens
         </Typography>
         <Typography variant="body2" color="text.primary">
-          คงเหลือ: {remaining.toLocaleString()} M Tokens
+          {t('remaining')}: {remaining.toLocaleString()} M Tokens
         </Typography>
       </Box>
 

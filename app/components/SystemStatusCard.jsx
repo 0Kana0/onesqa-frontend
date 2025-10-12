@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Typography, Chip } from "@mui/material";
+import { useTranslations } from "next-intl";
 
 export default function SystemStatusCard({
   title = "สถานะระบบ",
@@ -12,15 +13,17 @@ export default function SystemStatusCard({
     { label: "SSL Certificate", status: "ปกติ" },
   ],
 }) {
+  const t = useTranslations("SystemStatusCard");
+
   // ฟังก์ชันสำหรับคืนค่าสีของสถานะ
   const getStatusColor = (status) => {
     switch (status) {
-      case "ปกติ":
+      case t('online'):
         return { bgcolor: "#2E7D32", color: "white" }; // เขียว
-      case "ผิดพลาด":
+      case t('fail'):
         return { bgcolor: "#D32F2F", color: "white" }; // แดง
-      case "เตือน":
-        return { bgcolor: "#F9A825", color: "black" }; // เหลือง
+      // case "เตือน":
+      //   return { bgcolor: "#F9A825", color: "black" }; // เหลือง
       default:
         return { bgcolor: "#BDBDBD", color: "black" }; // เทา
     }

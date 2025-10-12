@@ -213,10 +213,10 @@ export default function LoginPage() {
       >
         <Box sx={{ textAlign: "left" }}>
           <Typography variant="h5" gutterBottom fontWeight="bold">
-            เข้าสู่ระบบ
+            {t('title1')}
           </Typography>
           <Typography variant="subtitle1" gutterBottom>
-            เข้าสู่ระบบเพื่อใช้งาน ONESQA AI Chatbot
+            {t('title2')}
           </Typography>
         </Box>
       </Box>
@@ -274,7 +274,7 @@ export default function LoginPage() {
                 },
               }}
             >
-              เจ้าหน้าที่ สมศ.
+              {t('role1')}
             </ToggleButton>
 
             <ToggleButton
@@ -306,7 +306,7 @@ export default function LoginPage() {
                 },
               }}
             >
-              ผู้ประเมินภายนอก
+              {t('role2')}
             </ToggleButton>
           </ToggleButtonGroup>
 
@@ -316,8 +316,8 @@ export default function LoginPage() {
               <TextField
                 fullWidth
                 margin="normal"
-                label="ชื่อผู้ใช้"
-                placeholder="กรอกชื่อผู้ใช้"
+                label={t('label1')}
+                placeholder={t('placeholder1')}
                 name="username"
                 value={form.username}
                 onChange={handleChange}
@@ -326,8 +326,8 @@ export default function LoginPage() {
                 fullWidth
                 margin="normal"
                 type="password"
-                label="รหัสผ่าน"
-                placeholder="กรอกรหัสผ่าน"
+                label={t('label2')}
+                placeholder={t('placeholder2')}
                 name="password"
                 value={form.password}
                 onChange={handleChange}
@@ -339,7 +339,7 @@ export default function LoginPage() {
                 fullWidth
                 sx={{ mt: 2, bgcolor: "#3E8EF7" }}
               >
-                เข้าสู่ระบบ
+                {t('button1')}
               </Button>
             </Box>
           )}
@@ -349,7 +349,7 @@ export default function LoginPage() {
               <TextField
                 fullWidth
                 margin="normal"
-                label="หมายเลขบัตรประจำตัวประชาชน"
+                label={t('label3')}
                 placeholder="0-0000-00000-00-0"
                 value={citizenId}
                 onChange={handleCitizenChange}
@@ -361,7 +361,7 @@ export default function LoginPage() {
                 align="left"
                 sx={{ mt: 2, mb: 1, fontWeight: "500" }}
               >
-                เลือกช่องทางรับรหัสผ่าน
+                {t('title3')}
               </Typography>
               <FormControl
                 component="fieldset"
@@ -417,7 +417,7 @@ export default function LoginPage() {
                   fullWidth
                   sx={{ mt: 2, bgcolor: "#3E8EF7" }}
                 >
-                  ยืนยัน
+                  {t('button2')}
                 </Button>
               ) : (
                 <Box sx={{ mt: 1 }}>
@@ -426,14 +426,13 @@ export default function LoginPage() {
                     align="left"
                     sx={{ fontWeight: "500" }}
                   >
-                    ระบบได้ส่งข้อความไปที่เบอร์ 0629088xxx เรียบร้อยแล้ว
-                    กรุณากรอกรหัส (OTP) 6 หลัก ที่ท่านได้รับ
+                    {t('title4p1')} 0629088xxx {t('title4p2')}
                   </Typography>
                   <TextField
                     fullWidth
                     margin="normal"
-                    label="กรอกรหัส OTP"
-                    placeholder="ระบุ OTP 6 หลัก"
+                    label={t('otp1')}
+                    placeholder={t('otp2')}
                     value={otp}
                     sx={{ mb: 2 }}
                     onChange={(e) => {
@@ -443,7 +442,7 @@ export default function LoginPage() {
                     inputProps={{ maxLength: 6, inputMode: "numeric" }}
                   />
                   <Typography variant="body2" align="left" sx={{ fontWeight: "500" }}>
-                    ยังไม่ได้รับ OTP ใช่หรือไม่?{" "}
+                    {t('recheck1')}
                     <Link
                       component="button"
                       variant="body2"
@@ -451,7 +450,7 @@ export default function LoginPage() {
                       sx={{ color: "#3E8EF7", cursor: "pointer" }}
                       onClick={(e) => handleResendOtp(e)}
                     >
-                      ส่งใหม่
+                      {t('recheck2')}
                     </Link>
                   </Typography>
 
@@ -463,7 +462,7 @@ export default function LoginPage() {
                     onClick={(e) => handleOtpSubmit(e)}
                     sx={{ mt: 2, bgcolor: "#3E8EF7" }}
                   >
-                    เข้าสู่ระบบ
+                    {t('button1')}
                   </Button>
                 </Box>
               )}

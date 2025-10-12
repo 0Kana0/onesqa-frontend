@@ -22,10 +22,12 @@ import UserInfoCard from "@/app/components/UserInfoCard";
 import TokenLimitCard from "@/app/components/TokenLimitCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import ActionBar from "@/app/components/ActionBar";
+import { useTranslations } from 'next-intl';
 
 export default function UserDetailPage() {
   const params = useParams();
   const { id } = params;
+  const t = useTranslations('UserDetailPage');
 
   // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
   const user = {
@@ -120,13 +122,13 @@ export default function UserDetailPage() {
           >
             <TokenLimitCard
               title="Gemini 2.5 Pro"
-              label="กำหนด Tokens ให้ผู้ใช้งาน"
+              label={t("label1")}
               value={geminiTokens}
               onChange={setGeminiTokens}
             />
             <TokenLimitCard
               title="ChatGPT 4o"
-              label="กำหนด Tokens ให้ผู้ใช้งาน"
+              label={t("label1")}
               value={chatgptTokens}
               onChange={setChatgptTokens}
             />
@@ -185,22 +187,22 @@ export default function UserDetailPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    <b>ชื่อผู้ใช้</b>
+                    <b>{t("tablecell1")}</b>
                   </TableCell>
                   <TableCell>
-                    <b>ชื่อ - นามสกุล</b>
+                    <b>{t("tablecell2")}</b>
                   </TableCell>
                   <TableCell>
-                    <b>ตำแหน่ง</b>
+                    <b>{t("tablecell3")}</b>
                   </TableCell>
                   <TableCell>
-                    <b>โทรศัพท์มือถือ</b>
+                    <b>{t("tablecell4")}</b>
                   </TableCell>
                   <TableCell>
-                    <b>สถานะ</b>
+                    <b>{t("tablecell5")}</b>
                   </TableCell>
                   <TableCell>
-                    <b>สิทธิ์การใช้งาน</b>
+                    <b>{t("tablecell6")}</b>
                   </TableCell>
                   <TableCell>
                     <b>ChatGPT5</b>

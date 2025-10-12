@@ -10,10 +10,13 @@ import TokenUsageCardSetting from "@/app/components/TokenUsageCardSetting";
 import UserGroupSettingCard from "@/app/components/UserGroupSettingCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import GroupTokenTable from "@/app/components/GroupTokenTable";
+import { useTranslations } from 'next-intl';
 
 const SettingPage = () => {
   const [selected, setSelected] = useState("AI");
   const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
+
+  const t = useTranslations('SettingPage');
 
   // ✅ เก็บสถานะเปิด/ปิดของแต่ละการ์ด
   const [cards, setCards] = useState([
@@ -112,7 +115,7 @@ const SettingPage = () => {
   const buttons = [
     { label: "AI", icon: <SmartToyIcon />, value: "AI" },
     { label: "Model", icon: <AllInclusiveIcon />, value: "Model" },
-    { label: "กำหนด Tokens รายกลุ่ม", icon: <HubIcon />, value: "Tokens" },
+    { label: t('button1'), icon: <HubIcon />, value: "Tokens" },
   ];
 
   // ✅ เนื้อหาที่จะเปลี่ยนตามปุ่ม
@@ -130,10 +133,10 @@ const SettingPage = () => {
             }}
           >
             <Typography variant="h6" fontWeight={600}>
-              การตั้งค่า AI Chatbot
+              {t('aititle1')}
             </Typography>
             <Typography variant="body1" sx={{ mt: 1 }}>
-              กำหนดแนวทางการตั้งคำถาม (สูงสุด 5 คำถาม)
+              {t('aisubtitle1')}
             </Typography>
           </Box>
         );

@@ -5,6 +5,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import ReplayIcon from "@mui/icons-material/Replay";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import GridViewIcon from "@mui/icons-material/GridView";
+import { useTranslations } from 'next-intl';
 
 export default function ActionBar({
   onSubmit,
@@ -13,6 +14,7 @@ export default function ActionBar({
   onViewChange,
   settingMode="Tokens",
 }) {
+  const t = useTranslations('ActionBar');
   return (
     <Box
       sx={{
@@ -39,7 +41,7 @@ export default function ActionBar({
             "&:hover": { bgcolor: "#1565c0" },
           }}
         >
-          บันทึก
+          {t('save')}
         </Button>
 
         <Button
@@ -53,7 +55,7 @@ export default function ActionBar({
             "&:hover": { bgcolor: "#BBDEFB" },
           }}
         >
-          คืนค่า
+          {t('reset')}
         </Button>
       </Box>
 

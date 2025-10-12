@@ -19,6 +19,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslations } from 'next-intl';
 
 /**
  * TokensChart Component
@@ -28,9 +29,11 @@ import {
  */
 export default function TokensChart({
   data = [],
+  subtitle = "สถิติ",
   title = "สถิติการใช้ Tokens รายวัน",
   height = 350,
 }) {
+  const t = useTranslations('TokensChart');
   return (
     <Box
       elevation={3}
@@ -44,7 +47,7 @@ export default function TokensChart({
       }}
     >
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        สถิติ
+        {subtitle}
       </Typography>
       <Typography variant="h6" sx={{ fontWeight: "bold" }}>
         {title}
@@ -99,7 +102,7 @@ export default function TokensChart({
           <Line
             type="monotone"
             dataKey="total"
-            name="รวม"
+            name={t('all')}
             stroke="#c084fc"
             strokeWidth={2}
             dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}

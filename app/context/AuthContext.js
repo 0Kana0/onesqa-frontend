@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     deleteCookie("accessToken", { path: "/" });
     localStorage.removeItem("user");
-    localStorage.removeItem("locale");
+    //localStorage.removeItem("locale");
     router.push("/auth/login");
   };
 

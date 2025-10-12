@@ -24,18 +24,20 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "@mui/icons-material";
+import { useTranslations } from 'next-intl';
 
 export default function Sidebar() {
   const [open, setOpen] = useState(true);
   const pathname = usePathname();
+  const t = useTranslations('Sidebar');
 
   const menuItems = [
-    { text: "Dashboard", icon: <Home />, path: "/onesqa/dashboard" },
-    { text: "AI Chatbot", icon: <Chat />, path: "/onesqa/chat" },
-    { text: "จัดการผู้ใช้งาน", icon: <Group />, path: "/onesqa/users" },
-    { text: "รายงาน", icon: <BarChart />, path: "/onesqa/reports" },
-    { text: "ตั้งค่าระบบ", icon: <Settings />, path: "/onesqa/settings" },
-    { text: "ระบบ Logs", icon: <History />, path: "/onesqa/logs" },
+    { text: t('dashboard'), icon: <Home />, path: "/onesqa/dashboard" },
+    { text: t('chat'), icon: <Chat />, path: "/onesqa/chat" },
+    { text: t('users'), icon: <Group />, path: "/onesqa/users" },
+    { text: t('reports'), icon: <BarChart />, path: "/onesqa/reports" },
+    { text: t('settings'), icon: <Settings />, path: "/onesqa/settings" },
+    { text: t('logs'), icon: <History />, path: "/onesqa/logs" },
   ];
 
   return (

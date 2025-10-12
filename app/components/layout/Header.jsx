@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useRouter, usePathname } from "next/navigation";
+import ReactCountryFlag from "react-country-flag";
 import { LOGOUT } from "@/graphql/auth/mutations";
 import {
   AppBar,
@@ -17,6 +18,8 @@ import {
   ListItemIcon,
   IconButton,
   Badge,
+  Button,
+  useMediaQuery
 } from "@mui/material";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -27,11 +30,17 @@ import ThemeToggle from "../ui/ThemeToggle";
 import { useTheme } from "next-themes";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { useTranslations } from "next-intl";
 
 export default function Header() {
   const router = useRouter();
   const { user, logoutContext } = useAuth();
   console.log(user);
+  const t = useTranslations("LogoutAlert");
+  const th = useTranslations("Header");
+
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
 
   const pathname = usePathname(); // ✅ ได้ path ปัจจุบัน เช่น "/login", "/dashboard"
   console.log("📍 current path:", pathname);
@@ -44,18 +53,20 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  const { handleLanguageChange, locale } = useLanguage();
+
   // ✅ ป้องกัน hydration mismatch
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
   const pageNameCheck = () => {
-    if (pathname.startsWith("/onesqa/dashboard")) return "Dashboard";
-    else if (pathname.startsWith("/onesqa/chat")) return "AI Chatbot";
-    else if (pathname.startsWith("/onesqa/users")) return "จัดการผู้ใช้งาน";
-    else if (pathname.startsWith("/onesqa/reports")) return "รายงาน";
-    else if (pathname.startsWith("/onesqa/settings")) return "ตั้งค่าระบบ";
-    else if (pathname.startsWith("/onesqa/logs")) return "ระบบ Logs";
-    else if (pathname.startsWith("/onesqa/detail")) return "รายละเอียด";
+    if (pathname.startsWith("/onesqa/dashboard")) return th("dashboard");
+    else if (pathname.startsWith("/onesqa/chat")) return th("chat");
+    else if (pathname.startsWith("/onesqa/users")) return th("users");
+    else if (pathname.startsWith("/onesqa/reports")) return th("reports");
+    else if (pathname.startsWith("/onesqa/settings")) return th("settings");
+    else if (pathname.startsWith("/onesqa/logs")) return th("logs");
+    else if (pathname.startsWith("/onesqa/detail")) return th("detail");
   };
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
@@ -80,12 +91,12 @@ export default function Header() {
     try {
       if (theme === "dark") {
         const result = await Swal.fire({
-          title: "ต้องการออกจากระบบ",
-          text: "ท่านแน่ใจว่าต้องการออกจากระบบ",
+          title: t("title"),
+          text: t("text"),
           icon: "warning",
           showCancelButton: true,
-          confirmButtonText: "ยืนยัน",
-          cancelButtonText: "ยกเลิก",
+          confirmButtonText: t("confirm"),
+          cancelButtonText: t("cancel"),
           confirmButtonColor: "#3E8EF7", // พื้นขาว
           cancelButtonColor: "#d33",
           background: "#2F2F30", // สีพื้นหลังดำ
@@ -104,12 +115,12 @@ export default function Header() {
         }
       } else {
         const result = await Swal.fire({
-          title: "ต้องการออกจากระบบ",
-          text: "ท่านแน่ใจว่าต้องการออกจากระบบ",
+          title: t("title"),
+          text: t("text"),
           icon: "warning",
           showCancelButton: true,
-          confirmButtonText: "ยืนยัน",
-          cancelButtonText: "ยกเลิก",
+          confirmButtonText: t("confirm"),
+          cancelButtonText: t("cancel"),
           confirmButtonColor: "#3E8EF7", // พื้นขาว
           cancelButtonColor: "#d33",
         });
@@ -182,6 +193,38 @@ export default function Header() {
               gap: 1.5,
             }}
           >
+            {locale === "th" ? (
+              <Button
+                startIcon={
+                  <ReactCountryFlag
+                    countryCode="TH"
+                    svg
+                    style={{ width: "1.2em", height: "1.2em" }}
+                  />
+                }
+                onClick={() => handleLanguageChange("en")}
+                sx={{
+                  minWidth: 0,
+                  padding: 0,
+                }}
+              />
+            ) : (
+              <Button
+                startIcon={
+                  <ReactCountryFlag
+                    countryCode="GB"
+                    svg
+                    style={{ width: "1.2em", height: "1.2em" }}
+                  />
+                }
+                onClick={() => handleLanguageChange("th")}
+                sx={{
+                  minWidth: 0,
+                  padding: 0,
+                }}
+              />
+            )}
+
             <IconButton
               sx={{
                 color: "#3E8EF7", // 🔵 สีฟ้า
@@ -204,7 +247,7 @@ export default function Header() {
               >
                 <NotificationsNoneIcon />
               </Badge>
-            </IconButton>{" "}
+            </IconButton>
             <Avatar
               alt="User"
               //src="/profile.png"
@@ -245,7 +288,7 @@ export default function Header() {
               <ListItemIcon>
                 <AccountCircleIcon fontSize="small" sx={{ color: "#3E8EF7" }} />
               </ListItemIcon>
-              ดูโปรไฟล์
+              {th("profile")}
             </MenuItem>
 
             {/* เปลี่ยนธีม */}
@@ -257,7 +300,7 @@ export default function Header() {
                   <Brightness4Icon fontSize="small" sx={{ color: "#3E8EF7" }} />
                 )}
               </ListItemIcon>
-              เปลี่ยนธีม
+              {th("theme")}
             </MenuItem>
 
             {/* เส้นคั่น */}
@@ -268,7 +311,7 @@ export default function Header() {
               <ListItemIcon>
                 <LogoutIcon fontSize="small" sx={{ color: "red" }} />
               </ListItemIcon>
-              ออกจากระบบ
+              {th("logout")}
             </MenuItem>
           </Menu>
         </Toolbar>

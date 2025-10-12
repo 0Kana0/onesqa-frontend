@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Box, Typography, LinearProgress } from "@mui/material";
+import { useTranslations } from "next-intl";
 
 export default function TokenUsageCard({
   title = "Gemini 2.5 Pro",
@@ -10,6 +11,7 @@ export default function TokenUsageCard({
   today = 2500,
   average = 1800,
 }) {
+  const t = useTranslations("TokenUsageCard");
   // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
   const percent = Math.min((used / total) * 100, 100);
 
@@ -49,7 +51,7 @@ export default function TokenUsageCard({
         }}
       >
         <Typography color="text.secondary" fontSize={14}>
-          ใช้งานแล้ว
+          {t('used')}
         </Typography>
         <Typography fontWeight="bold" fontSize={14}>
           {used.toLocaleString()} / {total.toLocaleString()} Tokens
@@ -80,7 +82,7 @@ export default function TokenUsageCard({
       >
         <Box>
           <Typography color="text.secondary" fontSize={14}>
-            วันนี้
+            {t('today')}
           </Typography>
           <Typography fontWeight="bold">
             {today.toLocaleString()} Tokens
@@ -88,7 +90,7 @@ export default function TokenUsageCard({
         </Box>
         <Box>
           <Typography color="text.secondary" fontSize={14}>
-            เฉลี่ยต่อวัน
+            {t('average')}
           </Typography>
           <Typography fontWeight="bold">
             {average.toLocaleString()} Tokens

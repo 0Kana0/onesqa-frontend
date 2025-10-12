@@ -10,6 +10,7 @@ import {
   Switch,
   TextField,
 } from "@mui/material";
+import { useTranslations } from 'next-intl';
 
 export default function TokenUsageCardSetting({
   title = "Gemini 2.5 Pro",
@@ -21,6 +22,7 @@ export default function TokenUsageCardSetting({
   onToggle = () => {},
   defaultLimit = 1000000,
 }) {
+  const t = useTranslations('TokenUsageCardSetting');
   // ✅ เก็บค่า limit ใน state
   const [limit, setLimit] = useState(defaultLimit);
 
@@ -55,7 +57,7 @@ export default function TokenUsageCardSetting({
       <CardContent sx={{ p: 0, pt: 1 }}>
         {/* 🔹 ฟิลด์กรอกข้อมูล Tokens */}
         <Typography variant="subtitle2" color="text.secondary">
-          กำหนด Tokens
+          {t('settoken')}
         </Typography>
         <TextField
           type="number"
@@ -74,7 +76,7 @@ export default function TokenUsageCardSetting({
         {/* 🔹 แถบการใช้งาน */}
         <Box display="flex" justifyContent="space-between">
           <Typography variant="body2" fontWeight={600}>
-            ใช้งานแล้ว
+            {t('used')}
           </Typography>
           <Typography variant="body2">
             {Math.round(used / 1_000_000)}M / {Math.round(total / 1_000_000)}M Tokens
@@ -97,7 +99,7 @@ export default function TokenUsageCardSetting({
         <Box display="flex" justifyContent="space-between">
           <Box>
             <Typography variant="body2" color="text.secondary">
-              วันนี้
+              {t('today')}
             </Typography>
             <Typography variant="body2" fontWeight={600}>
               {today.toLocaleString()} Tokens
@@ -106,7 +108,7 @@ export default function TokenUsageCardSetting({
 
           <Box textAlign="right">
             <Typography variant="body2" color="text.secondary">
-              เฉลี่ยต่อวัน
+              {t('average')}
             </Typography>
             <Typography variant="body2" fontWeight={600}>
               {average.toLocaleString()} Tokens

@@ -2,12 +2,14 @@
 
 import { Box, Typography, Button } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { useTranslations } from 'next-intl';
 
 export default function AlertCard({
   title = "แจ้งเตือนการใช้งาน Token",
   message = "การใช้งาน Token อยู่ที่ 75% กรุณาติดตามการใช้งานอย่างใกล้ชิด",
   onDetailClick = () => {},
 }) {
+  const t = useTranslations('AlertCard');
   return (
     <Box
       sx={{
@@ -49,7 +51,7 @@ export default function AlertCard({
           },
         }}
       >
-        ดูรายละเอียด
+        {t('button1')}
       </Button>
     </Box>
   );

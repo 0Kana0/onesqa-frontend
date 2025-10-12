@@ -11,8 +11,10 @@ import {
   Stack,
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
+import { useTranslations } from 'next-intl';
 
 export default function UserInfoCard({ user }) {
+  const t = useTranslations('UserInfoCard');
   if (!user) return null;
 
   return (
@@ -41,7 +43,7 @@ export default function UserInfoCard({ user }) {
       >
         <Box>
           <Typography variant="subtitle1" fontWeight="bold">
-            การใช้งาน
+            {t('usage')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             ผู้ใช้งานอันดับต้น
@@ -62,31 +64,31 @@ export default function UserInfoCard({ user }) {
         }}
       >
         <Typography variant="subtitle1" fontWeight="bold">
-          รหัสผู้ใช้
+          {t('username')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {user.id || "-"}
         </Typography>
         <Typography variant="subtitle1" fontWeight="bold">
-          ชื่อ - นามสกุล
+          {t('name')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {user.name || "-"}
         </Typography>
         <Typography variant="subtitle1" fontWeight="bold">
-          ตำแหน่ง
+          {t('position')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {user.position || "-"}
         </Typography>
         <Typography variant="subtitle1" fontWeight="bold">
-          อีเมล
+          {t('email')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {user.email || "-"}
         </Typography>
         <Typography variant="subtitle1" fontWeight="bold">
-          โทรศัพท์
+          {t('phone')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {user.phone || "-"}
@@ -115,7 +117,7 @@ export default function UserInfoCard({ user }) {
           }}
         >
           <Typography variant="body2" sx={{ mb: 0.5 }}>
-            สถานะ:
+            {t('status')}:
           </Typography>
           <Chip
             label={user.status === "active" ? "ใช้งานอยู่" : "ไม่ใช้งาน"}
@@ -135,7 +137,7 @@ export default function UserInfoCard({ user }) {
           }}
         >
           <Typography variant="body2" sx={{ mb: 0.5 }}>
-            สิทธิ์การใช้งาน:
+            {t('permissions')}:
           </Typography>
           <Chip
             label={user.role || "-"}
