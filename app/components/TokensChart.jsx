@@ -8,6 +8,7 @@ import {
   Typography,
   LinearProgress,
   Divider,
+  useMediaQuery
 } from "@mui/material";
 import {
   LineChart,
@@ -34,6 +35,8 @@ export default function TokensChart({
   height = 350,
 }) {
   const t = useTranslations('TokensChart');
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  
   return (
     <Box
       elevation={3}
@@ -69,12 +72,16 @@ export default function TokensChart({
             }}
             formatter={(value) => value.toLocaleString()}
           />
-          <Legend
-            verticalAlign="top"
-            align="right"
-            iconType="circle"
-            wrapperStyle={{ fontSize: 12, marginBottom: 10 }}
-          />
+          {
+            !isMobile && (
+              <Legend
+                verticalAlign="top"
+                align="right"
+                iconType="circle"
+                wrapperStyle={{ fontSize: 12, marginBottom: 10 }}
+              />
+            )
+          }
 
           {/* เส้น 1: ChatGPT5 */}
           <Line

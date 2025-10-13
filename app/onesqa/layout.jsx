@@ -75,7 +75,7 @@ export default function PrivateLayout({ children }) {
   return (
     <section>
       <div style={{ display: "flex" }}>
-        <Sidebar />
+        {/* <Sidebar /> */}
         <div style={{ flexGrow: 1 }}>
           <Header />
           <main style={{ padding: "24px" }}>{children}</main>

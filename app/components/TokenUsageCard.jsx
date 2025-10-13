@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Box, Typography, LinearProgress } from "@mui/material";
+import { Box, Typography, LinearProgress, useMediaQuery } from "@mui/material";
 import { useTranslations } from "next-intl";
 
 export default function TokenUsageCard({
@@ -12,6 +12,9 @@ export default function TokenUsageCard({
   average = 1800,
 }) {
   const t = useTranslations("TokenUsageCard");
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+
   // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
   const percent = Math.min((used / total) * 100, 100);
 
@@ -32,7 +35,7 @@ export default function TokenUsageCard({
         flexDirection: "column",
         border: "1px solid #E5E7EB",
         boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
-        p: 2,
+        p: isMobile ? 1.5 : 2,
         gap: 1.2,
         bgcolor: "background.paper",
       }}

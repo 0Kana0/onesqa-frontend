@@ -6,6 +6,7 @@ import {
   Typography,
   TextField,
   MenuItem,
+  useMediaQuery
 } from "@mui/material";
 import { useTranslations } from 'next-intl';
 
@@ -17,6 +18,9 @@ export default function UserGroupSettingCard({
   onChange,
 }) {
   const t = useTranslations('UserGroupSettingCard');
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+
   const [limit, setLimit] = useState(defaultLimit);
   const [model, setModel] = useState(defaultModel);
 
@@ -31,7 +35,7 @@ export default function UserGroupSettingCard({
       sx={{
         border: "1px solid #e0e0e0",
         borderRadius: 3,
-        p: 2,
+        p: isMobile ? 1.5 : 2,
       }}
     >
       <Typography variant="h6" fontWeight={700}>

@@ -155,8 +155,8 @@ export default function Header() {
             src="/images/logo.png" // ✅ ใส่ path รูป (เช่น public/logo.png)
             alt="Logo"
             sx={{
-              width: 48,
-              height: 48,
+              width: isMobile ? 32 : 48,
+              height: isMobile ? 32 : 48,
               mr: 1, // margin ขวา
               ml: 1,
             }}
@@ -175,7 +175,7 @@ export default function Header() {
         sx={{
           bgcolor: "background.paper",
           boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-          px: 3,
+          px: isMobile ? 0 : 3,
           color: "background.text",
         }}
       >
@@ -190,7 +190,7 @@ export default function Header() {
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1.5,
+              gap: isMobile ? 0.5 : 1.5,
             }}
           >
             {locale === "th" ? (
@@ -199,7 +199,10 @@ export default function Header() {
                   <ReactCountryFlag
                     countryCode="TH"
                     svg
-                    style={{ width: "1.2em", height: "1.2em" }}
+                    style={{ 
+                      width: isMobile ? "1em" : "1.2em", 
+                      height: isMobile ? "1em" : "1.2em",
+                    }}
                   />
                 }
                 onClick={() => handleLanguageChange("en")}
@@ -214,7 +217,10 @@ export default function Header() {
                   <ReactCountryFlag
                     countryCode="GB"
                     svg
-                    style={{ width: "1.2em", height: "1.2em" }}
+                    style={{ 
+                      width: isMobile ? "1em" : "1.2em", 
+                      height: isMobile ? "1em" : "1.2em",
+                    }}
                   />
                 }
                 onClick={() => handleLanguageChange("th")}
@@ -248,19 +254,27 @@ export default function Header() {
                 <NotificationsNoneIcon />
               </Badge>
             </IconButton>
-            <Avatar
-              alt="User"
-              //src="/profile.png"
-              sx={{ width: 45, height: 45, borderRadius: "10px" }}
-            />
-            <Box sx={{ textAlign: "left", lineHeight: 1 }}>
-              <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                {user?.username}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {user?.role_name}
-              </Typography>
-            </Box>
+            {!isMobile && (
+              <>
+                <Avatar
+                  alt="User"
+                  //src="/profile.png"
+                  sx={{ 
+                    width: 45, 
+                    height: 45, 
+                    borderRadius: "10px", 
+                  }}
+                />
+                <Box sx={{ textAlign: "left", lineHeight: 1 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {user?.username}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {user?.role_name}
+                  </Typography>
+                </Box>
+              </>
+            )}
             <KeyboardArrowDownIcon
               onClick={handleClick}
               sx={{ color: "gray", cursor: "pointer" }}

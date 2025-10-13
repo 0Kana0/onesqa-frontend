@@ -14,6 +14,7 @@ import {
   LinearProgress,
   Paper,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import { useTranslations } from "next-intl";
 
@@ -22,7 +23,10 @@ export default function GroupTokenTable({
   modelOptions = [],
   onChange = () => {},
 }) {
-  const t = useTranslations('GroupTokenTable');
+  const t = useTranslations("GroupTokenTable");
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+
   // 🔹 ฟังก์ชันเรนเดอร์แถบความคืบหน้า
   const renderProgress = (usage) => {
     const percent = Math.min((usage.used / usage.total) * 100, 100);
@@ -60,90 +64,107 @@ export default function GroupTokenTable({
     <Paper
       elevation={0}
       sx={{
-        p: 2,
+        p: isMobile ? 1.5 : 2,
         overflowX: "auto",
       }}
     >
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>{t('tablecell1')}</TableCell>
-              <TableCell sx={{ fontWeight: 600, width: 180 }}>
-                {t('tablecell2')}
-                <Typography variant="body2" color="text.secondary">
-                  {t('tablecell2sub')}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600, width: 200 }}>
-                {t('tablecell3')}
-                <Typography variant="body2" color="text.secondary">
-                  {t('tablecell3sub')}
-                </Typography>
-              </TableCell>
-              {modelOptions.map((model) => (
-                <TableCell key={model} sx={{ fontWeight: 600, width: 220 }}>
-                  {model}
+      <Box
+        sx={{
+          width: "100%",
+          overflowX: "auto", // ✅ เลื่อนแนวนอนได้
+          overflowY: "hidden",
+          maxWidth: isMobile ? "70vw" : isTablet ? "80vw" : "90vw", // ✅ จำกัดไม่ให้เกินหน้าจอ
+        }}
+      >
+        <TableContainer
+          sx={{
+            mt: 3,
+            borderRadius: 2,
+            display: "inline-block", // ✅ ป้องกันตารางยืดเกิน container
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 600 }}>
+                  {t("tablecell1")}
                 </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell>
-                  <Typography fontWeight={600}>{row.group}</Typography>
+                <TableCell sx={{ fontWeight: 600, width: 180 }}>
+                  {t("tablecell2")}
+                  <Typography variant="body2" color="text.secondary">
+                    {t("tablecell2sub")}
+                  </Typography>
                 </TableCell>
-
-                {/* 🔸 Tokens */}
-                <TableCell>
-                  <TextField
-                    type="number"
-                    size="small"
-                    value={row.tokens}
-                    onChange={(e) =>
-                      onChange(row.id, "tokens", Number(e.target.value))
-                    }
-                    fullWidth
-                    sx={{
-                      "& .MuiInputBase-input": { textAlign: "right" },
-                    }}
-                  />
+                <TableCell sx={{ fontWeight: 600, width: 200 }}>
+                  {t("tablecell3")}
+                  <Typography variant="body2" color="text.secondary">
+                    {t("tablecell3sub")}
+                  </Typography>
                 </TableCell>
-
-                {/* 🔸 Default Model */}
-                <TableCell>
-                  <TextField
-                    select
-                    size="small"
-                    value={row.model}
-                    onChange={(e) =>
-                      onChange(row.id, "model", e.target.value)
-                    }
-                    fullWidth
-                  >
-                    {modelOptions.map((option, i) => (
-                      <MenuItem key={i} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </TableCell>
-
-                {/* 🔸 Progress ของแต่ละโมเดล */}
                 {modelOptions.map((model) => (
-                  <TableCell key={model}>
-                    {row.models?.[model]
-                      ? renderProgress(row.models[model])
-                      : "-"}
+                  <TableCell key={model} sx={{ fontWeight: 600, width: 220 }}>
+                    {model}
                   </TableCell>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell>
+                    <Typography fontWeight={600}>{row.group}</Typography>
+                  </TableCell>
+
+                  {/* 🔸 Tokens */}
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      size="small"
+                      value={row.tokens}
+                      onChange={(e) =>
+                        onChange(row.id, "tokens", Number(e.target.value))
+                      }
+                      fullWidth
+                      sx={{
+                        "& .MuiInputBase-input": { textAlign: "right" },
+                      }}
+                    />
+                  </TableCell>
+
+                  {/* 🔸 Default Model */}
+                  <TableCell>
+                    <TextField
+                      select
+                      size="small"
+                      value={row.model}
+                      onChange={(e) =>
+                        onChange(row.id, "model", e.target.value)
+                      }
+                      fullWidth
+                    >
+                      {modelOptions.map((option, i) => (
+                        <MenuItem key={i} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </TableCell>
+
+                  {/* 🔸 Progress ของแต่ละโมเดล */}
+                  {modelOptions.map((model) => (
+                    <TableCell key={model}>
+                      {row.models?.[model]
+                        ? renderProgress(row.models[model])
+                        : "-"}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
     </Paper>
   );
 }

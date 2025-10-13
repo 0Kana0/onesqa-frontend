@@ -4,7 +4,7 @@ import React from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_ROLES } from "@/graphql/role/queries";
 import { GET_ME } from "@/graphql/auth/queries";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import { useTranslations } from "next-intl";
 import ChatIcon from "@mui/icons-material/Chat";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -17,6 +17,8 @@ import TokenUsageDashboardBar from "@/app/components/TokenUsageDashboardBar";
 
 const DashboardPage = () => {
   const t = useTranslations("DashboardPage");
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+
   const { data: meData, loading: meLoading, error: meError } = useQuery(GET_ME);
   const { data, loading, error, refetch } = useQuery(GET_ROLES);
 
@@ -51,13 +53,13 @@ const DashboardPage = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: isMobile ? 0 : 3 }}>
       <Box
         sx={{
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
           borderRadius: 4,
-          p: 3,
+          p: isMobile ? 1.5 : 3,
           bgcolor: "background.paper",
           mb: 2,
         }}
@@ -74,7 +76,7 @@ const DashboardPage = () => {
           display: "flex",
           gap: 2,
           flexWrap: "wrap",
-          p: 3,
+          p: isMobile ? 1.5 : 3,
           mb: 2,
           borderRadius: 4,
           border: "1px solid #E5E7EB", // ✅ เส้นขอบรอบนอกเหมือนภาพ
@@ -116,7 +118,7 @@ const DashboardPage = () => {
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
           borderRadius: 4,
-          p: 3,
+          p: isMobile ? 1.5 : 3,
           bgcolor: "background.paper",
           mb: 2,
         }}
@@ -133,7 +135,7 @@ const DashboardPage = () => {
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
           borderRadius: 4,
-          p: 3,
+          p: isMobile ? 1.5 : 3,
           bgcolor: "background.paper",
           mb: 4,
         }}

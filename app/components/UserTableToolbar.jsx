@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, useMediaQuery } from "@mui/material";
 import { usePathname } from "next/navigation";
 import RefreshIcon from "@mui/icons-material/Autorenew";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -11,30 +11,38 @@ import { useTranslations } from 'next-intl';
 export default function UserTableToolbar({ onRefresh, onExport, onClearFilters }) {
   const pathname = usePathname();
   const t = useTranslations('UserTableToolbar');
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   
   return (
     <Box
       sx={{
         display: "flex",
+        flexDirection: isMobile ? "column" : "row", // ✅ สลับแนวตามจอ
+        alignItems: isMobile ? "flex-start" : "center",
         justifyContent: "space-between",
-        alignItems: "center",
         border: "1px solid #E5E7EB",
         p: 1.5,
         borderRadius: 3,
         bgcolor: "#fff",
         boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
         mb: 2,
-        bgcolor: "background.paper"
+        bgcolor: "background.paper",
+        gap: isMobile ? 1 : 0,
       }}
     >
       {pathname.startsWith("/onesqa/users") ? (
-        <Box>
+        <Box
+          sx={{
+            width: isMobile ? "100%" : "none",
+          }}
+        >
           {/* 🔵 ปุ่มเชื่อมต่อข้อมูลผู้ใช้งาน */}
           <Button
             variant="contained"
             startIcon={<RefreshIcon />}
             onClick={onRefresh}
             sx={{
+              width: isMobile ? "100%" : "none",
               bgcolor: "#1976D2",
               color: "white",
               "&:hover": { bgcolor: "#1565C0" },
@@ -50,7 +58,9 @@ export default function UserTableToolbar({ onRefresh, onExport, onClearFilters }
       <Box
         sx={{
           display: "flex",
-          gap: 1.5,
+          flexDirection: isMobile ? "column" : "row", // ✅ สลับแนวตามจอ
+          width: isMobile ? "100%" : "none",
+          gap: 1,
         }}
       >
         {/* 🟢 ปุ่มส่งออก */}

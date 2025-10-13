@@ -9,19 +9,22 @@ import {
   Chip,
   Divider,
   Stack,
+  useMediaQuery
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import { useTranslations } from 'next-intl';
 
 export default function UserInfoCard({ user }) {
   const t = useTranslations('UserInfoCard');
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+
   if (!user) return null;
 
   return (
     <Box
       sx={{
         borderRadius: 3,
-        p: 2,
+        p: isMobile ? 1 : 2,
         boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
         bgcolor: "background.paper",
         width: "100%",

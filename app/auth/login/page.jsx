@@ -14,7 +14,8 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  Link
+  Link,
+  useMediaQuery
 } from "@mui/material";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { accessTokenContext, userContext } = useAuth();
   const t = useTranslations('LoginPage');
+
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
 
   const [signin] = useMutation(SIGNIN);
   const [signinWithIdennumber] = useMutation(SIGNIN_WITH_ID);
@@ -200,22 +203,18 @@ export default function LoginPage() {
       {/* Title Section */}
       <Box
         sx={{
-          width: "100%",
+          height: isMobile ? "160px" : "220px",
           display: "flex",
-          justifyContent: "center", // ✅ ชิดซ้าย
           alignItems: "center",
-          //pl: 40, // padding ซ้าย
-          pr: 120, // padding ขวา
-          pt: 10, // padding บน
-          color: "white",
-          textAlign: "left",
+          //justifyContent: isMobile ? "center" : "flex-start",
+          px: isMobile ? 4 : 10,
         }}
       >
-        <Box sx={{ textAlign: "left" }}>
-          <Typography variant="h5" gutterBottom fontWeight="bold">
+        <Box sx={{ color: "white"}}>
+          <Typography variant="h5" fontWeight="bold">
             {t('title1')}
           </Typography>
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant="body1">
             {t('title2')}
           </Typography>
         </Box>

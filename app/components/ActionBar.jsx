@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, ButtonGroup } from "@mui/material";
+import { Box, Button, ButtonGroup, useMediaQuery } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import ReplayIcon from "@mui/icons-material/Replay";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -15,21 +15,30 @@ export default function ActionBar({
   settingMode="Tokens",
 }) {
   const t = useTranslations('ActionBar');
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  
   return (
     <Box
       sx={{
         display: "flex",
+        flexDirection: isMobile ? "column" : "row", // ✅ สลับแนวตามจอ
+        alignItems: isMobile ? "flex-start" : "center",
         justifyContent: "space-between",
-        alignItems: "center",
         p: 1.5,
         border: "1px solid #E0E0E0",
         borderRadius: 3,
         bgcolor: "background.paper",
         mb: 2,
+        gap: isMobile ? 1 : 0,
       }}
     >
       {/* ปุ่มฝั่งซ้าย */}
-      <Box sx={{ display: "flex", gap: 1 }}>
+      <Box sx={{ 
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row", // ✅ สลับแนวตามจอ
+        width: isMobile ? "100%" : "none",
+        gap: 1 
+      }}>
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
@@ -64,6 +73,7 @@ export default function ActionBar({
         <ButtonGroup
           variant="contained"
           sx={{
+            width: isMobile ? "100%" : "none",
             borderRadius: 2,
             overflow: "hidden",
             boxShadow: "none",
@@ -77,7 +87,7 @@ export default function ActionBar({
               "&:hover": {
                 bgcolor: viewMode === "card" ? "#1976d2" : "#BBDEFB",
               },
-              minWidth: 45,
+              width: isMobile ? "100%" : "none",
             }}
           >
             <ContentCopyIcon
@@ -95,7 +105,7 @@ export default function ActionBar({
               "&:hover": {
                 bgcolor: viewMode === "table" ? "#1976d2" : "#BBDEFB",
               },
-              minWidth: 45,
+              width: isMobile ? "100%" : "none",
             }}
           >
             <GridViewIcon

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, useMediaQuery} from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy"; // 🤖 AI
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive"; // 🌐 Model
 import HubIcon from "@mui/icons-material/Hub";
@@ -17,6 +17,8 @@ const SettingPage = () => {
   const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
 
   const t = useTranslations('SettingPage');
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
 
   // ✅ เก็บสถานะเปิด/ปิดของแต่ละการ์ด
   const [cards, setCards] = useState([
@@ -171,10 +173,10 @@ const SettingPage = () => {
               boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
               borderRadius: 3,
               bgcolor: "background.paper",
-              p: 3,
+              p: isMobile ? 1.5 : 3,
               display: "flex", // ใช้ flex layout
               flexDirection: "column", // ✅ เรียงในแนวตั้ง
-              gap: 2, // ✅ ระยะห่างระหว่างการ์ด (theme.spacing * 2 = 16px)
+              gap: isMobile ? 5 : 2, // ✅ ระยะห่างระหว่างการ์ด (theme.spacing * 2 = 16px)
             }}
           >
             {viewMode === "card" ? (
@@ -219,7 +221,7 @@ const SettingPage = () => {
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "space-between",
+                    flexWrap: "wrap",
                     gap: 2,
                   }}
                 >
@@ -272,7 +274,7 @@ const SettingPage = () => {
 
   return (
     <div>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: isMobile ? 0 : 3 }}>
         <ActionBar
           onSubmit={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
           onClearData={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
@@ -285,8 +287,9 @@ const SettingPage = () => {
           sx={{
             display: "flex",
             justifyContent: "center",
-            alignItems: "center",
-            gap: 2,
+            flexDirection: isTablet ? "column" : "row", // ✅ สลับแนวตามจอ
+            alignItems: isTablet ? "flex-start" : "center",
+            gap: 1,
             p: 1,
             bgcolor: "background.paper",
             borderRadius: 3,
@@ -309,6 +312,7 @@ const SettingPage = () => {
                   borderRadius: 2,
                   px: 3,
                   py: 1.5,
+                  width: isTablet ? "100%" : "none",
                   fontWeight: 600,
                   bgcolor: isSelected ? "#1976d2" : "#e3f2fd",
                   color: isSelected ? "#fff" : "#1976d2",

@@ -17,6 +17,7 @@ import {
   TextField,
   Button,
   Switch,
+  useMediaQuery,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
@@ -27,6 +28,9 @@ import { useTranslations } from "next-intl";
 const LogPage = () => {
   const t = useTranslations("LogPage");
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
+
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
 
   const [logFilter, setLogFilter] = useState("หัวข้อการ Logs แก้ไข");
   const [startDate, setStartDate] = useState("");
@@ -115,14 +119,14 @@ const LogPage = () => {
   const handleDeleteAll = () => {
     if (theme === "dark") {
       Swal.fire({
-        title: tDelete('title1'),
-        text: tDelete('text1'),
+        title: tDelete("title1"),
+        text: tDelete("text1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
         cancelButtonColor: "#3E8EF7",
-        confirmButtonText: tDelete('confirm'),
-        cancelButtonText: tDelete('cancel'),
+        confirmButtonText: tDelete("confirm"),
+        cancelButtonText: tDelete("cancel"),
         background: "#2F2F30", // สีพื้นหลังดำ
         color: "#fff", // สีข้อความเป็นขาว
         titleColor: "#fff", // สี title เป็นขาว
@@ -131,8 +135,8 @@ const LogPage = () => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
           Swal.fire({
-            title: tDelete('title2'),
-            text: tDelete('text2'),
+            title: tDelete("title2"),
+            text: tDelete("text2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
             background: "#2F2F30", // สีพื้นหลังดำ
@@ -144,20 +148,20 @@ const LogPage = () => {
       });
     } else {
       Swal.fire({
-        title: tDelete('title1'),
-        text: tDelete('text1'),
+        title: tDelete("title1"),
+        text: tDelete("text1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
         cancelButtonColor: "#3E8EF7",
-        confirmButtonText: tDelete('confirm'),
-        cancelButtonText: tDelete('cancel'),
+        confirmButtonText: tDelete("confirm"),
+        cancelButtonText: tDelete("cancel"),
       }).then((result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
           Swal.fire({
-            title: tDelete('title2'),
-            text: tDelete('text2'),
+            title: tDelete("title2"),
+            text: tDelete("text2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
           });
@@ -168,7 +172,7 @@ const LogPage = () => {
 
   return (
     <div>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: isMobile ? 0 : 3 }}>
         <UserTableToolbar
           onRefresh={() => console.log("🔄 เชื่อมต่อข้อมูลผู้ใช้งาน")}
           onExport={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
@@ -181,7 +185,7 @@ const LogPage = () => {
             border: "1px solid #E5E7EB",
             boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
             borderRadius: 4,
-            p: 2,
+            p: isMobile ? 1.5 : 2,
             bgcolor: "background.paper",
             mb: 2,
           }}
@@ -196,7 +200,8 @@ const LogPage = () => {
           <Box
             sx={{
               display: "flex",
-              alignItems: "center",
+              flexDirection: isTablet ? "column" : "row", // ✅ สลับแนวตามจอ
+              alignItems: isTablet ? "flex-start" : "center",
               gap: 2,
             }}
           >
@@ -204,7 +209,7 @@ const LogPage = () => {
               value={logFilter}
               onChange={(e) => setLogFilter(e.target.value)}
               size="small"
-              sx={{ flex: 1 }}
+              sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
             >
               <MenuItem value="หัวข้อการ Logs แก้ไข">
                 หัวข้อการ Logs แก้ไข
@@ -228,7 +233,7 @@ const LogPage = () => {
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               size="small"
-              sx={{ minWidth: 200 }}
+              sx={{ width: isTablet ? "100%" : 200 }}
               InputLabelProps={{ shrink: true }}
             />
 
@@ -239,7 +244,7 @@ const LogPage = () => {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               size="small"
-              sx={{ minWidth: 200 }}
+              sx={{ width: isTablet ? "100%" : 200 }}
               InputLabelProps={{ shrink: true }}
             />
           </Box>
@@ -251,7 +256,7 @@ const LogPage = () => {
             border: "1px solid #E5E7EB",
             boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
             borderRadius: 3,
-            p: 2,
+            p: isMobile ? 1.5 : 2,
             bgcolor: "background.paper",
           }}
         >
@@ -260,8 +265,10 @@ const LogPage = () => {
             sx={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
+              flexDirection: isTablet ? "column" : "row", // ✅ สลับแนวตามจอ
+              alignItems: isTablet ? "flex-start" : "center",
               mb: 2,
+              gap: 1,
             }}
           >
             <Box>
@@ -276,7 +283,7 @@ const LogPage = () => {
               variant="contained"
               color="error"
               startIcon={<DeleteIcon />}
-              sx={{ borderRadius: 2 }}
+              sx={{ width: isTablet ? "100%" : "none", borderRadius: 2 }}
               onClick={() => handleDeleteAll()}
             >
               {t("button1")}
@@ -284,48 +291,65 @@ const LogPage = () => {
           </Box>
 
           {/* Table */}
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: "background.default" }}>
-                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell1")}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell2")}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell3")}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{t("tablecell4")}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>
-                    {t("tablecell5")}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {paginatedUsers.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{row.time}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.topic}</TableCell>
-                    <TableCell>{row.old}</TableCell>
-                    <TableCell>{row.new}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* Footer */}
           <Box
             sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              mt: 2,
+              width: "100%",
+              overflowX: "auto", // ✅ เลื่อนแนวนอนได้
+              overflowY: "hidden",
+              maxWidth: isMobile ? "80vw" : isTablet ? "85vw" : "90vw", // ✅ จำกัดไม่ให้เกินหน้าจอ
             }}
           >
-            <Pagination
-              count={Math.ceil(filteredUsers.length / rowsPerPage)}
-              page={page}
-              onChange={handleChangePage}
-              color="primary"
-            />
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "background.default" }}>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {t("tablecell1")}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {t("tablecell2")}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {t("tablecell3")}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {t("tablecell4")}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {t("tablecell5")}
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedUsers.map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{row.time}</TableCell>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.topic}</TableCell>
+                      <TableCell>{row.old}</TableCell>
+                      <TableCell>{row.new}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Footer */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                mt: 2,
+              }}
+            >
+              <Pagination
+                count={Math.ceil(filteredUsers.length / rowsPerPage)}
+                page={page}
+                onChange={handleChangePage}
+                color="primary"
+              />
+            </Box>
           </Box>
         </Box>
       </Box>

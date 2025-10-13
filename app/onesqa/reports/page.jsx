@@ -18,6 +18,7 @@ import {
   Avatar,
   Stack,
   Divider,
+  useMediaQuery,
 } from "@mui/material";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
@@ -25,6 +26,9 @@ import { useTranslations } from "next-intl";
 
 const ReportPage = () => {
   const t = useTranslations("ReportPage");
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+
   const [aiFilter, setAiFilter] = useState("การใช้งาน AI Chatbot");
   const [quickRange, setQuickRange] = useState("เลือกช่วงเวลา");
   const [startDate, setStartDate] = useState("");
@@ -189,7 +193,7 @@ const ReportPage = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: isMobile ? 0 : 3 }}>
       <UserTableToolbar
         onRefresh={() => console.log("🔄 เชื่อมต่อข้อมูลผู้ใช้งาน")}
         onExport={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
@@ -202,7 +206,7 @@ const ReportPage = () => {
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 4,
-          p: 2,
+          p: isMobile ? 1.5 : 2,
           bgcolor: "background.paper",
           mb: 2,
         }}
@@ -214,7 +218,8 @@ const ReportPage = () => {
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
+            flexDirection: isTablet ? "column" : "row", // ✅ สลับแนวตามจอ
+            alignItems: isTablet ? "flex-start" : "center",
             gap: 2,
           }}
         >
@@ -222,7 +227,7 @@ const ReportPage = () => {
             value={aiFilter}
             onChange={(e) => setAiFilter(e.target.value)}
             size="small"
-            sx={{ flex: 1 }}
+            sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
           >
             <MenuItem value="การใช้งาน AI Chatbot">
               การใช้งาน AI Chatbot
@@ -236,7 +241,7 @@ const ReportPage = () => {
             value={quickRange}
             onChange={(e) => setQuickRange(e.target.value)}
             size="small"
-            sx={{ flex: 1 }}
+            sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
           >
             <MenuItem value="เลือกช่วงเวลา">เลือกช่วงเวลา</MenuItem>
             <MenuItem value="วันนี้">วันนี้</MenuItem>
@@ -251,7 +256,7 @@ const ReportPage = () => {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             size="small"
-            sx={{ minWidth: 200 }}
+            sx={{ width: isTablet ? "100%" : 200 }}
             InputLabelProps={{ shrink: true }}
           />
 
@@ -262,7 +267,7 @@ const ReportPage = () => {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             size="small"
-            sx={{ minWidth: 200 }}
+            sx={{ width: isTablet ? "100%" : 200 }}
             InputLabelProps={{ shrink: true }}
           />
         </Box>
@@ -274,7 +279,7 @@ const ReportPage = () => {
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
           borderRadius: 3,
-          p: 2,
+          p: isMobile ? 1.5 : 2,
           mb: 2,
           bgcolor: "background.paper",
         }}
@@ -286,75 +291,98 @@ const ReportPage = () => {
           {t("subtitle1")}
         </Typography>
 
-        <TableContainer>
-          <Table>
-            <TableHead sx={{ bgcolor: "background.default" }}>
-              <TableRow>
-                <TableCell>
-                  <b>{t("tablecell1")}</b>
-                </TableCell>
-                <TableCell>
-                  <b>{t("tablecell2")}</b>
-                </TableCell>
-                <TableCell>
-                  <b>{t("tablecell3")}</b>
-                </TableCell>
-                <TableCell align="center">
-                  <b>{t("tablecell4")}</b>
-                </TableCell>
-                <TableCell align="right">
-                  <b>{t("tablecell5")}</b>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {paginatedUsers.map((row, index) => (
-                <TableRow key={index} hover>
-                  <TableCell>
-                    {new Date(row.date).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "numeric",
-                      year: "numeric",
-                    })}
-                  </TableCell>
-                  <TableCell>{row.user}</TableCell>
-                  <TableCell>{row.dept}</TableCell>
-                  <TableCell align="center">{row.chats}</TableCell>
-                  <TableCell align="right">
-                    {row.tokens.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* 📄 Pagination */}
         <Box
           sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            mt: 2,
+            width: "100%",
+            overflowX: "auto", // ✅ เลื่อนแนวนอนได้
+            overflowY: "hidden",
+            maxWidth: isMobile ? "80vw" : isTablet ? "85vw" : "90vw", // ✅ จำกัดไม่ให้เกินหน้าจอ
           }}
         >
-          <Pagination
-            count={Math.ceil(filteredUsers.length / rowsPerPage)}
-            page={page}
-            onChange={handleChangePage}
-            color="primary"
-          />
+          <TableContainer
+            component={Paper}
+            sx={{
+              mt: 3,
+              borderRadius: 2,
+              display: "inline-block", // ✅ ป้องกันตารางยืดเกิน container
+            }}
+          >
+            <Table stickyHeader>
+              <TableHead sx={{ bgcolor: "background.default" }}>
+                <TableRow>
+                  <TableCell>
+                    <b>{t("tablecell1")}</b>
+                  </TableCell>
+                  <TableCell>
+                    <b>{t("tablecell2")}</b>
+                  </TableCell>
+                  <TableCell>
+                    <b>{t("tablecell3")}</b>
+                  </TableCell>
+                  <TableCell align="center">
+                    <b>{t("tablecell4")}</b>
+                  </TableCell>
+                  <TableCell align="right">
+                    <b>{t("tablecell5")}</b>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {paginatedUsers.map((row, index) => (
+                  <TableRow key={index} hover>
+                    <TableCell>
+                      {new Date(row.date).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "numeric",
+                        year: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell>{row.user}</TableCell>
+                    <TableCell>{row.dept}</TableCell>
+                    <TableCell align="center">{row.chats}</TableCell>
+                    <TableCell align="right">
+                      {row.tokens.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* 📄 Pagination */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              mt: 2,
+            }}
+          >
+            <Pagination
+              count={Math.ceil(filteredUsers.length / rowsPerPage)}
+              page={page}
+              onChange={handleChangePage}
+              color="primary"
+            />
+          </Box>
         </Box>
       </Box>
 
-      <Box sx={{ display: "flex" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: isTablet ? "column" : "row", // ✅ สลับแนวตามจอ
+          alignItems: isTablet ? "flex-start" : "center",
+        }}
+      >
         <Box
           sx={{
             border: "1px solid #E5E7EB",
             boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
             borderRadius: 4,
-            p: 3,
+            p: isMobile ? 1.5 : 3,
+            width: isTablet ? "100%" : "none",
             bgcolor: "background.paper",
             flex: 1,
           }}
@@ -420,7 +448,8 @@ const ReportPage = () => {
 
         <Box
           sx={{
-            p: 3,
+            p: isMobile ? 1.5 : 3,
+            width: isTablet ? "100%" : "none",
             bgcolor: "background.default",
             flex: 1,
           }}

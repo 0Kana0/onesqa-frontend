@@ -16,6 +16,7 @@ import {
   LinearProgress,
   Chip,
   TextField,
+  useMediaQuery
 } from "@mui/material";
 import { useParams } from "next/navigation";
 import UserInfoCard from "@/app/components/UserInfoCard";
@@ -28,6 +29,8 @@ export default function UserDetailPage() {
   const params = useParams();
   const { id } = params;
   const t = useTranslations('UserDetailPage');
+
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
 
   // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
   const user = {
@@ -68,7 +71,7 @@ export default function UserDetailPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: isMobile ? 0 : 3 }}>
       <ActionBar
         onSubmit={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
         onClearData={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
@@ -84,7 +87,7 @@ export default function UserDetailPage() {
             alignItems: "flex-start",
             gap: 3,
             flexWrap: "wrap",
-            p: 3,
+            p: isMobile ? 0 : 3,
             overflow: "hidden", // ✅ กันไม่ให้เกินขอบ
             "&::before": {
               content: '""',
@@ -94,7 +97,7 @@ export default function UserDetailPage() {
               left: 0,
               width: "100%",
               height: "33%", // ✅ แสดงแค่ 1/3 ของพื้นที่
-              bgcolor: "primary.main",
+              bgcolor: isMobile ? "none" : "primary.main",
               zIndex: 0,
             },
           }}
@@ -115,7 +118,7 @@ export default function UserDetailPage() {
               borderRadius: 3,
               boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
               bgcolor: "background.paper",
-              p: 2,
+              p: isMobile ? 1 : 2,
               position: "relative",
               zIndex: 1,
             }}
@@ -144,7 +147,7 @@ export default function UserDetailPage() {
               borderRadius: 3,
               boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
               bgcolor: "background.paper",
-              p: 2,
+              p: isMobile ? 1 : 2,
               position: "relative",
               zIndex: 1,
             }}

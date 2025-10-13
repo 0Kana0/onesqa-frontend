@@ -9,6 +9,7 @@ import {
   LinearProgress,
   Switch,
   TextField,
+  useMediaQuery,
 } from "@mui/material";
 import { useTranslations } from 'next-intl';
 
@@ -23,6 +24,9 @@ export default function TokenUsageCardSetting({
   defaultLimit = 1000000,
 }) {
   const t = useTranslations('TokenUsageCardSetting');
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+
   // ✅ เก็บค่า limit ใน state
   const [limit, setLimit] = useState(defaultLimit);
 
@@ -43,7 +47,7 @@ export default function TokenUsageCardSetting({
       sx={{
         borderRadius: 3,
         border: "1px solid #e0e0e0",
-        p: 2,
+        p: isMobile ? 1.5 : 2,
       }}
     >
       {/* 🔹 หัวข้อ + ปุ่มเปิด/ปิด */}
