@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { GET_LOGS } from "@/graphql/log/queries";
+import { DELETE_LOGS } from "@/graphql/log/mutations";
 import {
   Box,
   Typography,
@@ -17,13 +20,16 @@ import {
   TextField,
   Button,
   Switch,
+  CircularProgress,
   useMediaQuery,
 } from "@mui/material";
+import dayjs from "dayjs"; // ✅ เพิ่มบรรทัดนี้
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import Swal from "sweetalert2";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
+import { exportLogsToExcel } from "@/util/exportToExcel";
 
 const LogPage = () => {
   const t = useTranslations("LogPage");
@@ -31,6 +37,14 @@ const LogPage = () => {
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
+  const {
+    data: logsData,
+    loading: logsLoading,
+    error: logsError,
+  } = useQuery(GET_LOGS);
+
+  const [deleteLogs] = useMutation(DELETE_LOGS);
 
   const [logFilter, setLogFilter] = useState("หัวข้อการ Logs แก้ไข");
   const [startDate, setStartDate] = useState("");
@@ -40,64 +54,128 @@ const LogPage = () => {
   const { theme } = useTheme();
 
   const [logRows, setLogRows] = useState([
-    {
-      time: "2024-01-15 14:30:25",
-      name: "นายสมชาย ใจดี",
-      topic: "กำหนดแนวทางการตั้งคำถาม",
-      old: "มาตรฐานการประเมินคุณภาพภายนอกคืออะไร?",
-      new: "เกณฑ์การให้คะแนนการประเมินเป็นอย่างไร?",
-    },
-    {
-      time: "2024-01-15 14:25:10",
-      name: "นางสาวมาลี สวยมาก",
-      topic: "กำหนด Tokens ผู้ใช้งาน (นายสมชาย ใจดี)",
-      old: "50,000 (ChatGPT 4o)",
-      new: "100,000 (ChatGPT 4o)",
-    },
-    {
-      time: "2024-01-15 14:15:30",
-      name: "นายวิชัย เก่งมาก",
-      topic: "กำหนด AI Access",
-      old: "ไม่อนุญาต",
-      new: "อนุญาต",
-    },
-    {
-      time: "2024-01-15 14:15:30",
-      name: "นายวิชัย เก่งมาก",
-      topic: "ตั้งค่าการแจ้งเตือน",
-      old: (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <span>การแจ้งเตือนระบบ</span>
-          <Switch checked disabled />
-        </Box>
-      ),
-      new: (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <span>การแจ้งเตือนระบบ</span>
-          <Switch disabled />
-        </Box>
-      ),
-    },
+    // {
+    //   time: "2024-01-15 14:30:25",
+    //   name: "นายสมชาย ใจดี",
+    //   topic: "กำหนดแนวทางการตั้งคำถาม",
+    //   old: "มาตรฐานการประเมินคุณภาพภายนอกคืออะไร?",
+    //   new: "เกณฑ์การให้คะแนนการประเมินเป็นอย่างไร?",
+    // },
+    // {
+    //   time: "2024-01-15 14:25:10",
+    //   name: "นางสาวมาลี สวยมาก",
+    //   topic: "กำหนด Tokens ผู้ใช้งาน (นายสมชาย ใจดี)",
+    //   old: "50,000 (ChatGPT 4o)",
+    //   new: "100,000 (ChatGPT 4o)",
+    // },
+    // {
+    //   time: "2024-01-15 14:15:30",
+    //   name: "นายวิชัย เก่งมาก",
+    //   topic: "กำหนด AI Access",
+    //   old: "ไม่อนุญาต",
+    //   new: "อนุญาต",
+    // },
+    // {
+    //   time: "2024-01-15 14:15:30",
+    //   name: "นายวิชัย เก่งมาก",
+    //   topic: "ตั้งค่าการแจ้งเตือน",
+    //   old: (
+    //     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+    //       <span>การแจ้งเตือนระบบ</span>
+    //       <Switch checked disabled />
+    //     </Box>
+    //   ),
+    //   new: (
+    //     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+    //       <span>การแจ้งเตือนระบบ</span>
+    //       <Switch disabled />
+    //     </Box>
+    //   ),
+    // },
   ]);
 
+  useEffect(() => {
+    if (!logsData?.logs.length) return;
+
+    const transformed = logsData.logs.map((log) => {
+      const formattedTime = dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss");
+
+      // แปลง log_type เป็น topic
+      let topic = "";
+      if (log.log_type === "PROMPT") topic = "กำหนดแนวทางการตั้งคำถาม";
+      else if (log.log_type === "ALERT") topic = "ตั้งค่าการแจ้งเตือน";
+      else if (log.log_type === "MODEL") topic = "ตั้งค่า Model";
+      else topic = log.log_type;
+
+      // แปลง old/new
+      let oldValue = log.old_data;
+      let newValue = log.new_data;
+
+      // ถ้าเป็น ALERT ให้แสดงเป็น Switch
+      if (log.log_type === "ALERT") {
+        oldValue = (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <span>{log.old_data}</span>
+            <Switch checked={!!log.old_status} disabled />
+          </Box>
+        );
+        newValue = (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <span>{log.new_data}</span>
+            <Switch checked={!!log.new_status} disabled />
+          </Box>
+        );
+      }
+
+      return {
+        time: formattedTime,
+        name: log.edit_name,
+        topic,
+        old: oldValue,
+        new: newValue,
+      };
+    });
+
+    setLogRows(transformed);
+  }, [logsData]);
+
+  if (logsLoading)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>กำลังโหลดข้อมูล...</Typography>
+      </Box>
+    );
+
+  if (logsError)
+    return (
+      <Typography color="error" sx={{ mt: 5 }}>
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+      </Typography>
+    );
+
+  //console.log(logsData);
+  //console.log(JSON.stringify(logsData.logs, null, 2));
+  console.log(JSON.stringify(logRows, null, 2));
+
   // 🔹 ฟังก์ชันกรองข้อมูล
-  const filteredUsers = logRows.filter((user) => {
+  const filteredLogs = logRows.filter((log) => {
     const matchesLog =
-      logFilter === "หัวข้อการ Logs แก้ไข" || user.topic.includes(logFilter);
+      logFilter === "หัวข้อการ Logs แก้ไข" || log.topic.includes(logFilter);
 
     // --- แปลงวันที่ใน record ---
-    const userDate = new Date(user.time);
+    const logDate = new Date(dayjs(log.time).format("YYYY-MM-DD"));
 
     // --- ถ้ามี startDate / endDate ให้กรองตามนั้น ---
-    const isAfterStart = startDate ? userDate >= new Date(startDate) : true;
-    const isBeforeEnd = endDate ? userDate <= new Date(endDate) : true;
+    const isAfterStart = startDate ? logDate >= new Date(startDate) : true;
+    const isBeforeEnd = endDate ? logDate <= new Date(endDate) : true;
 
     // ✅ เงื่อนไขรวมทั้งหมด (สามารถเพิ่ม filter อื่นได้)
     return isAfterStart && isBeforeEnd && matchesLog;
   });
 
   // ✅ แบ่งข้อมูลตามหน้า
-  const paginatedUsers = filteredUsers.slice(
+  const paginatedLogs = filteredLogs.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
   );
@@ -131,9 +209,18 @@ const LogPage = () => {
         color: "#fff", // สีข้อความเป็นขาว
         titleColor: "#fff", // สี title เป็นขาว
         textColor: "#fff", // สี text เป็นขาว
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
+
+          try {
+            // ✅ เรียก mutation ไป backend
+            const { data } = await deleteLogs();
+            console.log("✅ Delete success:", data.deleteLogs);
+          } catch (error) {
+            console.log(error);
+          }
+
           Swal.fire({
             title: tDelete("title2"),
             text: tDelete("text2"),
@@ -156,9 +243,18 @@ const LogPage = () => {
         cancelButtonColor: "#3E8EF7",
         confirmButtonText: tDelete("confirm"),
         cancelButtonText: tDelete("cancel"),
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
+          
+          try {
+            // ✅ เรียก mutation ไป backend
+            const { data } = await deleteLogs();
+            console.log("✅ Delete success:", data.deleteLogs);
+          } catch (error) {
+            console.log(error);
+          }
+
           Swal.fire({
             title: tDelete("title2"),
             text: tDelete("text2"),
@@ -170,12 +266,42 @@ const LogPage = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    const transformed = logRows.map((row) => {
+      // 🧠 กำหนดค่า oldData/newData เริ่มต้น
+      let oldData = row.old;
+      let newData = row.new;
+
+      // ✅ ตรวจว่ามี Switch หรือไม่ (React element)
+      if (typeof row.old === "object" && row.topic.includes("แจ้งเตือน")) {
+        oldData = "การแจ้งเตือนระบบ ❌"; // old switch checked
+        newData = "การแจ้งเตือนระบบ ✅"; // new switch unchecked
+      }
+
+      // ✅ ถ้าค่าเป็น JSX หรือ object อื่นๆ ให้ดึงข้อความออก
+      if (typeof oldData === "object") oldData = "ไม่ทราบค่าเดิม";
+      if (typeof newData === "object") newData = "ไม่ทราบค่าใหม่";
+
+      return {
+        time: row.time,
+        name: row.name,
+        topic: row.topic,
+        oldData,
+        newData,
+      };
+    });
+
+    console.log(transformed);
+
+    exportLogsToExcel(transformed)
+  }
+
   return (
     <div>
       <Box sx={{ p: isMobile ? 0 : 3 }}>
         <UserTableToolbar
           onRefresh={() => console.log("🔄 เชื่อมต่อข้อมูลผู้ใช้งาน")}
-          onExport={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
+          onExport={() => handleExportExcel()}
           onClearFilters={handleClearFilters}
         />
 
@@ -321,7 +447,7 @@ const LogPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paginatedUsers.map((row, i) => (
+                  {paginatedLogs.map((row, i) => (
                     <TableRow key={i}>
                       <TableCell>{row.time}</TableCell>
                       <TableCell>{row.name}</TableCell>
@@ -330,6 +456,15 @@ const LogPage = () => {
                       <TableCell>{row.new}</TableCell>
                     </TableRow>
                   ))}
+
+                  {/* ถ้าไม่มีข้อมูล */}
+                  {paginatedLogs.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        ไม่พบข้อมูล
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -344,7 +479,7 @@ const LogPage = () => {
               }}
             >
               <Pagination
-                count={Math.ceil(filteredUsers.length / rowsPerPage)}
+                count={Math.ceil(filteredLogs.length / rowsPerPage)}
                 page={page}
                 onChange={handleChangePage}
                 color="primary"

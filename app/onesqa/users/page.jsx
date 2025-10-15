@@ -175,7 +175,7 @@ export default function UserPage() {
   if (usersError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
-        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้งาน
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
       </Typography>
     );
 
@@ -436,13 +436,13 @@ export default function UserPage() {
                 ))}
 
                 {/* ถ้าไม่มีข้อมูล */}
-                {/* {paginatedUsers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                    ไม่พบข้อมูลผู้ใช้งาน
-                  </TableCell>
-                </TableRow>
-              )} */}
+                {paginatedUsers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                      ไม่พบข้อมูล
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
