@@ -21,6 +21,7 @@ import {
   Button,
   useMediaQuery
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -32,15 +33,19 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useTranslations } from "next-intl";
+import { useSidebar } from "../../context/SidebarContext"; // ✅ ใช้ context
 
 export default function Header() {
   const router = useRouter();
   const { user, logoutContext } = useAuth();
+  const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
+
   console.log(user);
   const t = useTranslations("LogoutAlert");
   const th = useTranslations("Header");
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   const pathname = usePathname(); // ✅ ได้ path ปัจจุบัน เช่น "/login", "/dashboard"
   console.log("📍 current path:", pathname);
@@ -48,7 +53,7 @@ export default function Header() {
   const [logout] = useMutation(LOGOUT);
 
   const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+  const openDropdown = Boolean(anchorEl);
 
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -67,6 +72,7 @@ export default function Header() {
     else if (pathname.startsWith("/onesqa/settings")) return th("settings");
     else if (pathname.startsWith("/onesqa/logs")) return th("logs");
     else if (pathname.startsWith("/onesqa/detail")) return th("detail");
+    else if (pathname.startsWith("/onesqa/notification")) return th("notification");
   };
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
@@ -76,6 +82,11 @@ export default function Header() {
     console.log("👤 ไปที่โปรไฟล์");
     router.push(`/onesqa/detail`);
     handleClose();
+  };
+
+  const handleNotification = () => {
+    console.log("👤 ไปที่เเจ้งเตือน");
+    router.push(`/onesqa/notification`);
   };
 
   const handleThemeToggle = () => {
@@ -175,15 +186,27 @@ export default function Header() {
         sx={{
           bgcolor: "background.paper",
           boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-          px: isMobile ? 0 : 3,
+          px: isTablet ? 0 : 3,
           color: "background.text",
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           {/* ด้านซ้าย: ชื่อหน้า */}
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-            {pageNameCheck()}
-          </Typography>
+          {
+            isTablet ? (
+              <IconButton 
+                onClick={toggle} // ✅ ใช้ฟังก์ชันจาก Context
+                color="inherit" 
+                aria-label="open sidebar"
+              >
+                <MenuIcon sx={{ fontSize: 28 }} />
+              </IconButton>
+            ) : (
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {pageNameCheck()}
+              </Typography>
+            )
+          }
 
           {/* ด้านขวา: โปรไฟล์ */}
           <Box
@@ -200,8 +223,8 @@ export default function Header() {
                     countryCode="TH"
                     svg
                     style={{ 
-                      width: isMobile ? "1em" : "1.2em", 
-                      height: isMobile ? "1em" : "1.2em",
+                      width: isTablet ? "1em" : "1.2em", 
+                      height: isTablet ? "1em" : "1.2em",
                     }}
                   />
                 }
@@ -218,8 +241,8 @@ export default function Header() {
                     countryCode="GB"
                     svg
                     style={{ 
-                      width: isMobile ? "1em" : "1.2em", 
-                      height: isMobile ? "1em" : "1.2em",
+                      width: isTablet ? "1em" : "1.2em", 
+                      height: isTablet ? "1em" : "1.2em",
                     }}
                   />
                 }
@@ -232,6 +255,7 @@ export default function Header() {
             )}
 
             <IconButton
+              onClick={() => handleNotification()}
               sx={{
                 color: "#3E8EF7", // 🔵 สีฟ้า
                 position: "relative",
@@ -284,7 +308,7 @@ export default function Header() {
           {/* ✅ เมนู dropdown */}
           <Menu
             anchorEl={anchorEl}
-            open={open}
+            open={openDropdown}
             onClose={handleClose}
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             transformOrigin={{ vertical: "top", horizontal: "right" }}

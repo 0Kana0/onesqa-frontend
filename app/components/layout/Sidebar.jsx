@@ -13,6 +13,7 @@ import {
   ListItemText,
   IconButton,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Home,
@@ -24,12 +25,15 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "@mui/icons-material";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
+import { useSidebar } from "../../context/SidebarContext";
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(true);
+  const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
   const pathname = usePathname();
-  const t = useTranslations('Sidebar');
+  const t = useTranslations("Sidebar");
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   const menuItems = [
     { text: t('dashboard'), icon: <Home />, path: "/onesqa/dashboard" },
@@ -40,9 +44,12 @@ export default function Sidebar() {
     { text: t('logs'), icon: <History />, path: "/onesqa/logs" },
   ];
 
+  // ✅ ถ้าเป็น mobile และ sidebar ปิด => ไม่ render Drawer เลย
+  if (isTablet && !open) return null;
+
   return (
     <Drawer
-      variant="permanent"
+      variant={isTablet ? "temporary" : "permanent"}
       open={open}
       sx={{
         width: open ? 240 : 80,
@@ -94,7 +101,7 @@ export default function Sidebar() {
 
         {/* 🔹 ปุ่ม toggle ชิดขอบขวา */}
         <IconButton
-          onClick={() => setOpen(!open)}
+          onClick={toggle} // ✅ ใช้ฟังก์ชันจาก Context
           sx={{
             position: "absolute",
             top: 64,                // อยู่กลางแนวตั้ง
@@ -125,7 +132,11 @@ export default function Sidebar() {
 
           return (
             <ListItem key={index} disablePadding sx={{ display: "block" }}>
-              <Link href={item.path} style={{ textDecoration: "none" }}>
+              <Link 
+                href={item.path} 
+                onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
+                style={{ textDecoration: "none" }}
+              >
                 <ListItemButton
                   sx={{
                     minHeight: 48,

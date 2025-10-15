@@ -27,7 +27,7 @@ import { useTranslations } from "next-intl";
 const ReportPage = () => {
   const t = useTranslations("ReportPage");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   const [aiFilter, setAiFilter] = useState("การใช้งาน AI Chatbot");
   const [quickRange, setQuickRange] = useState("เลือกช่วงเวลา");

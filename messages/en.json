@@ -9,6 +9,7 @@
     "detail": "Detail",
     "profile": "Profile",
     "theme": "Theme",
+    "notification": "Notification",
     "logout": "Logout"
   },
   "Sidebar": {
@@ -112,6 +113,14 @@
     "button1": "Set Tokens by Group",
     "aititle1": "AI Chatbot Configuration",
     "aisubtitle1": "Set guidelines for question formulation (Maximum 5 questions)"
+  },
+  "NotificationPage": {
+    "notification": "Notification",
+    "setting": "Notification Settings",
+    "notititle1": "System Notification",
+    "notisubtitle1": "Manage and Monitor All Notifications",
+    "systemtitle1": "Notification Settings",
+    "systemsubtitle1": "Notification Type Settings"
   },
   "AlertCard": {
     "button1": "View Details"

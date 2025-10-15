@@ -10,6 +10,7 @@ import { NextIntlClientProvider } from "next-intl";
 import enMessages from "../messages/en.json"; // ภาษาอังกฤษ
 import thMessages from "../messages/th.json"; // ภาษาไทย
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import { SidebarProvider } from "./context/SidebarContext";
 
 function IntlWrapper({ children }) {
   const { locale } = useLanguage();
@@ -26,16 +27,18 @@ export default function Providers({ children }) {
     <ApolloProvider client={client}>
       <AuthProvider>
         <LanguageProvider>
-          <NextThemesProvider
-            attribute="class"
-            defaultTheme="light"
-            value={{ light: "light", dark: "dark" }}
-            enableSystem={false}
-          >
-            <MuiThemeProvider>
-              <IntlWrapper>{children}</IntlWrapper>
-            </MuiThemeProvider>
-          </NextThemesProvider>
+          <SidebarProvider>
+            <NextThemesProvider
+              attribute="class"
+              defaultTheme="light"
+              value={{ light: "light", dark: "dark" }}
+              enableSystem={false}
+            >
+              <MuiThemeProvider>
+                <IntlWrapper>{children}</IntlWrapper>
+              </MuiThemeProvider>
+            </NextThemesProvider>
+          </SidebarProvider>
         </LanguageProvider>
       </AuthProvider>
     </ApolloProvider>

@@ -2,12 +2,13 @@
 "use client";
 
 import { useRequireAuth } from "../components/ui/useAuthGuard";
-import { useQuery, useMutation } from "@apollo/client/react";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery, useMutation } from "@apollo/client/react";
+import { setCookie, deleteCookie } from "cookies-next";
+import { Box, CssBaseline, Container, useMediaQuery } from "@mui/material";
 import { GET_ME } from "@/graphql/auth/queries";
 import { REFRESH_TOKEN } from "@/graphql/auth/mutations";
-import { setCookie, getCookie, deleteCookie } from "cookies-next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import Footer from "../components/layout/Footer";
@@ -16,6 +17,9 @@ export default function PrivateLayout({ children }) {
   const { ready, isAuthed } = useRequireAuth();
   const pathname = usePathname();
   const router = useRouter();
+
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   // ✅ Query GET_ME
   const { data, loading, error, refetch } = useQuery(GET_ME, {
@@ -72,17 +76,59 @@ export default function PrivateLayout({ children }) {
     return <p>Error: {error.message}</p>;
   }
 
-  return (
-    <section>
-      <div style={{ display: "flex" }}>
-        {/* <Sidebar /> */}
-        <div style={{ flexGrow: 1 }}>
+  // ✅ Layout UI (ใช้ MUI)
+  if (isTablet) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          minHeight: "100vh",
+          bgcolor: "background.default",
+        }}
+      >
+        <CssBaseline />
+        <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+          {/* Header */}
           <Header />
-          <main style={{ padding: "24px" }}>{children}</main>
+          <Sidebar />
+
+          {/* Content */}
+          <Box component="main" sx={{ flexGrow: 1, py: 3 }}>
+            <Container maxWidth="xl">{children}</Container>
+          </Box>
+
           {/* Footer */}
           <Footer />
-        </div>
-      </div>
-    </section>
-  );
+        </Box>
+      </Box>
+    );
+  } else {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          minHeight: "100vh",
+          bgcolor: "background.default",
+        }}
+      >
+        <CssBaseline />
+
+        {/* Sidebar — ถ้ามี */}
+        <Sidebar />
+
+        <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+          {/* Header */}
+          <Header />
+
+          {/* Content */}
+          <Box component="main" sx={{ flexGrow: 1, py: 3 }}>
+            <Container maxWidth="xl">{children}</Container>
+          </Box>
+
+          {/* Footer */}
+          <Footer />
+        </Box>
+      </Box>
+    );
+  }
 }

@@ -19,7 +19,7 @@ export default function UserGroupSettingCard({
 }) {
   const t = useTranslations('UserGroupSettingCard');
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   const [limit, setLimit] = useState(defaultLimit);
   const [model, setModel] = useState(defaultModel);

@@ -25,7 +25,7 @@ export default function GroupTokenTable({
 }) {
   const t = useTranslations("GroupTokenTable");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   // 🔹 ฟังก์ชันเรนเดอร์แถบความคืบหน้า
   const renderProgress = (usage) => {

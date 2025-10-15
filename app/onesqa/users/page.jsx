@@ -35,7 +35,7 @@ export default function UserPage() {
   const router = useRouter();
   const t = useTranslations("UserPage");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   const {
     data: usersData,

@@ -13,7 +13,7 @@ export default function TokenUsageCard({
 }) {
   const t = useTranslations("TokenUsageCard");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
   const percent = Math.min((used / total) * 100, 100);

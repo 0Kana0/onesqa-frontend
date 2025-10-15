@@ -25,7 +25,7 @@ export default function TokenUsageCardSetting({
 }) {
   const t = useTranslations('TokenUsageCardSetting');
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   // ✅ เก็บค่า limit ใน state
   const [limit, setLimit] = useState(defaultLimit);

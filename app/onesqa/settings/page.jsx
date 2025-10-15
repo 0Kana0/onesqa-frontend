@@ -18,7 +18,7 @@ const SettingPage = () => {
 
   const t = useTranslations('SettingPage');
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:920px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   // ✅ เก็บสถานะเปิด/ปิดของแต่ละการ์ด
   const [cards, setCards] = useState([
@@ -131,13 +131,13 @@ const SettingPage = () => {
               boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
               borderRadius: 3,
               bgcolor: "background.paper",
-              p: 3,
+              p: isMobile ? 1.5 : 3,
             }}
           >
             <Typography variant="h6" fontWeight={600}>
               {t('aititle1')}
             </Typography>
-            <Typography variant="body1" sx={{ mt: 1 }}>
+            <Typography variant="body1" sx={{ mt: 1 }} color="text.secondary">
               {t('aisubtitle1')}
             </Typography>
           </Box>
@@ -271,7 +271,7 @@ const SettingPage = () => {
         return null;
     }
   };
-
+  
   return (
     <div>
       <Box sx={{ p: isMobile ? 0 : 3 }}>
