@@ -94,7 +94,7 @@
     "subtitle1": "ข้อมูลและสิทธิ์ผู้ใช้งานระบบ",
     "tablecell1": "ชื่อ - นามสกุล",
     "tablecell2": "บทบาท",
-    "tablecell3": "แผนก",
+    "tablecell3": "ตำแหน่ง",
     "tablecell4": "สถานะ",
     "tablecell5": "AI Access",
     "tablecell6": "ลงชื่อเข้าใช้ล่าสุด",
@@ -107,7 +107,7 @@
     "tablecell3": "ตำแหน่ง",
     "tablecell4": "โทรศัพท์มือถือ",
     "tablecell5": "สถานะ",
-    "tablecell6": "สิทธิ์การใช้งาน"
+    "tablecell6": "กลุ่มงาน"
   },
   "SettingPage": {
     "button1": "กำหนด Tokens รายกลุ่ม",
@@ -161,7 +161,7 @@
     "email": "อีเมล",
     "phone": "โทรศัพท์",
     "status": "สถานะ",
-    "permissions": "สิทธิ์การใช้งาน"
+    "group": "กลุ่มงาน"
   },
   "TokenUsageCardSetting": {
     "settoken": "กำหนด Tokens",

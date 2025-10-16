@@ -94,7 +94,7 @@
     "subtitle1": "Manage user data and system permissions",
     "tablecell1": "Name",
     "tablecell2": "Role",
-    "tablecell3": "Department",
+    "tablecell3": "Position",
     "tablecell4": "Status",
     "tablecell5": "AI Access",
     "tablecell6": "Last Login",
@@ -107,7 +107,7 @@
     "tablecell3": "Position",
     "tablecell4": "Phone Number",
     "tablecell5": "Status",
-    "tablecell6": "User permissions"
+    "tablecell6": "Group Name"
   },
   "SettingPage": {
     "button1": "Set Tokens by Group",
@@ -161,7 +161,7 @@
     "email": "Email",
     "phone": "Phone Number",
     "status": "Status",
-    "permissions": "User permissions"
+    "group": "Group"
   },
   "TokenUsageCardSetting": {
     "settoken": "Set Tokens",

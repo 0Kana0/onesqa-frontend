@@ -10,6 +10,15 @@ export const GET_USERS = gql`
       ai_access
       loginAt
       email
+      phone
+      group_name
+      user_ai {
+        activity
+        token_count
+        ai {
+          model_name
+        }
+      }
       user_role {
         role {
           role_name
@@ -35,6 +44,7 @@ export const GET_USER = gql`
       position
       username
       user_ai {
+        ai_id
         activity
         token_count
         ai {

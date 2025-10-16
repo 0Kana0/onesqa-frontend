@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { GET_SETTINGS } from "@/graphql/setting/queries";
+import { UPDATE_SETTING } from "@/graphql/setting/mutations";
 import { useAuth } from "../../context/AuthContext";
-import { Box, Button, Typography, useMediaQuery } from "@mui/material";
+import { Box, Button, Typography, CircularProgress, useMediaQuery } from "@mui/material";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useTranslations } from "next-intl";
@@ -18,8 +21,31 @@ const NotificationPage = () => {
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
+  const {
+    data: settingsData,
+    loading: settingsLoading,
+    error: settingsError,
+  } = useQuery(GET_SETTINGS);
+  
+  const [updateSetting] = useMutation(UPDATE_SETTING);
+
   const [systemNotify, setSystemNotify] = useState(true);
   const [tokenNotify, setTokenNotify] = useState(false);
+
+  if (settingsLoading)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>กำลังโหลดข้อมูล...</Typography>
+      </Box>
+    );
+  
+  if (settingsError)
+    return (
+      <Typography color="error" sx={{ mt: 5 }}>
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+      </Typography>
+    );
 
   const buttons = [
     {
@@ -29,6 +55,9 @@ const NotificationPage = () => {
     },
     { label: t("setting"), icon: <SettingsIcon />, value: "Setting" },
   ];
+
+  //console.log(settingsData?.settings);
+  console.log(JSON.stringify(settingsData?.settings, null, 2));
 
   const renderContent = () => {
     switch (selected) {
@@ -87,19 +116,30 @@ const NotificationPage = () => {
             </Typography>
 
             <Box sx={{ mt: 2 }}>
-              <NotificationToggleCard
-                title="การแจ้งเตือนระบบ"
-                description="รับการแจ้งเตือนเกี่ยวกับสถานะระบบและการใช้งาน"
-                checked={systemNotify}
-                onChange={(e) => setSystemNotify(e.target.checked)}
-              />
-
-              <NotificationToggleCard
-                title="การแจ้งเตือนทางอีเมล"
-                description="ส่งการแจ้งเตือนไปยังอีเมลของคุณ"
-                checked={tokenNotify}
-                onChange={(e) => setTokenNotify(e.target.checked)}
-              />
+              {settingsData?.settings?.map((setting) => (
+                <NotificationToggleCard
+                  key={setting.id}
+                  title={setting.setting_name}
+                  description={setting.setting_detail}
+                  checked={setting.activity}
+                  onChange={async (e) => {
+                    const newValue = e.target.checked;
+                    try {
+                      await updateSetting({
+                        variables: {
+                          id: setting.id,
+                          input: {
+                            activity: newValue,
+                          },
+                        },
+                      });
+                      console.log(`✅ Updated ${setting.setting_name} to ${newValue}`);
+                    } catch (err) {
+                      console.error("❌ Error updating setting:", err);
+                    }
+                  }}
+                />
+              ))}
             </Box>
           </Box>
         );

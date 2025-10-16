@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { Box, Button, Typography, useMediaQuery} from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy"; // 🤖 AI
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive"; // 🌐 Model

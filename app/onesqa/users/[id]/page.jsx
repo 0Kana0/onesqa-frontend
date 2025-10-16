@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@apollo/client/react";
 import {
   Box,
   Typography,
@@ -16,8 +17,11 @@ import {
   LinearProgress,
   Chip,
   TextField,
+  CircularProgress,
   useMediaQuery,
 } from "@mui/material";
+import { GET_USER } from "@/graphql/user/queries";
+import { UPDATE_USER } from "@/graphql/user/mutations";
 import { useParams } from "next/navigation";
 import UserInfoCard from "@/app/components/UserInfoCard";
 import TokenLimitCard from "@/app/components/TokenLimitCard";
@@ -35,49 +39,176 @@ export default function UserDetailPage() {
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
-  // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
-  const user = {
-    id,
-    name: "นายสมพล อารุณศักดิ์กุล",
-    position: "หัวหน้าภารกิจ",
-    email: "sompol@onesqa.or.th",
-    phone: "022163955",
-    status: "active",
-    role: "หัวหน้ากลุ่มงาน",
-  };
-
-  const users = [
-    {
-      id: 48095,
-      name: "นายสมพล จารุรนท์ศักดิ์ฑูร",
-      position: "หัวหน้าฝ่ายการกิจ",
-      phone: "022163955",
-      email: "sompol@onesqa.or.th",
-      status: "ใช้งานอยู่",
-      role: "หัวหน้าภารกิจ",
-      chatgpt5Limit: 1000000,
-      geminiLimit: 1000000,
-      chatgpt5Used: 1500000,
-      geminiUsed: 150000,
-      chatgpt5Max: 2000000,
-      geminiMax: 2000000,
-    },
-  ];
-
-  const [geminiTokens, setGeminiTokens] = useState(1000000);
-  const [chatgptTokens, setChatgptTokens] = useState(1000000);
   const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
+
+  const {
+    data: userData,
+    loading: userLoading,
+    error: userError,
+  } = useQuery(GET_USER, {
+    variables: {
+      id: id,
+    },
+  });
+
+  console.log(userData?.user);
+
+  const [updateUser] = useMutation(UPDATE_USER);
+
+  // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
+  // const [userCard, setUserCard] = useState([
+  //   {
+  //     id,
+  //     name: "นายสมพล อารุณศักดิ์กุล",
+  //     position: "หัวหน้าภารกิจ",
+  //     email: "sompol@onesqa.or.th",
+  //     phone: "022163955",
+  //     status: "active",
+  //     role: "หัวหน้ากลุ่มงาน",
+  //   },
+  // ]);
+  const [userCardTable, setUserCardTable] = useState([]);
+  const [resetTrigger, setResetTrigger] = useState(0); // ✅ ตัวแปร trigger
+
+  // ✅ useEffect
+  useEffect(() => {
+    if (userData?.user) {
+      const users = Array.isArray(userData.user)
+        ? userData.user
+        : [userData.user]; // ✅ ถ้าเป็น object เดียว แปลงให้เป็น array
+
+      const formattedData = users.map((user) => ({
+        id: user.id,
+        username: user.username,
+        name: `${user.firstname || ""} ${user.lastname || ""}`.trim() || "-",
+        email: user.email || "-",
+        phone: user.phone || "-",
+        position: user.position || "-",
+        group: user.group_name || "-",
+        status: user.ai_access ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+        colorMode: user.color_mode || "LIGHT",
+        aiModels:
+          user.user_ai?.map((ai) => ({
+            ai_id: ai.ai_id, // ✅ เพิ่ม ai_id ไว้ใช้งานตอน update
+            model: ai.ai?.model_name || "-",
+            token: ai.token_count || 0,
+            active: ai.activity,
+          })) || [],
+        chatgpt5Used: 1500000,
+        geminiUsed: 150000,
+        chatgpt5Max: 2000000,
+        geminiMax: 2000000,
+      }));
+
+      setUserCardTable(formattedData); // ✅ เก็บเป็น array เสมอ
+    }
+  }, [userData, resetTrigger]);
+
+  console.log(userCardTable);
+
+  // const userTable = [
+  //   {
+  //     id: 48095,
+  //     name: "นายสมพล จารุรนท์ศักดิ์ฑูร",
+  //     position: "หัวหน้าฝ่ายการกิจ",
+  //     phone: "022163955",
+  //     email: "sompol@onesqa.or.th",
+  //     status: "ใช้งานอยู่",
+  //     role: "หัวหน้าภารกิจ",
+  //     chatgpt5Limit: 1000000,
+  //     geminiLimit: 1000000,
+  //     chatgpt5Used: 1500000,
+  //     geminiUsed: 150000,
+  //     chatgpt5Max: 2000000,
+  //     geminiMax: 2000000,
+  //   },
+  // ];
+
+  if (userLoading)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>กำลังโหลดข้อมูล...</Typography>
+      </Box>
+    );
+
+  if (userError)
+    return (
+      <Typography color="error" sx={{ mt: 5 }}>
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+      </Typography>
+    );
 
   const handleViewChange = (mode) => {
     setViewMode(mode);
     console.log("🟢 เปลี่ยนโหมดเป็น:", mode);
   };
 
+  // ✅ ฟังก์ชันแยก: handleTokenChange
+  const handleTokenChange = (userIndex, aiIndex, newValue) => {
+    setUserCardTable((prev) => {
+      if (!prev || !Array.isArray(prev)) return prev; // safety guard
+
+      // clone array ทั้งหมดของ userCardTable
+      const updated = [...prev];
+
+      // clone user ที่เราจะแก้ไข
+      const targetUser = { ...updated[userIndex] };
+
+      // clone aiModels ของ user นั้น
+      const aiModels = [...targetUser.aiModels];
+
+      // แก้ไขค่า token ของโมเดลที่เลือก
+      aiModels[aiIndex] = {
+        ...aiModels[aiIndex],
+        token: newValue,
+      };
+
+      // เซ็ต aiModels กลับเข้า user
+      targetUser.aiModels = aiModels;
+
+      // เซ็ต user กลับเข้า array เดิม
+      updated[userIndex] = targetUser;
+
+      return updated; // ✅ React จะ re-render ด้วย state ใหม่
+    });
+  };
+
+  const handleReset = () => {
+    setResetTrigger((prev) => prev + 1); // ✅ trigger ให้ useEffect ทำงานใหม่
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // ✅ แปลง aiModels ใน userCardTable ให้ตรงกับ input schema
+      const formattedAiInput =
+        userCardTable[0]?.aiModels?.map((ai) => ({
+          ai_id: ai.ai_id, // 👈 แปลง model name → ai_id ที่ backend ใช้
+          token_count: ai.token,
+          activity: ai.active,
+        })) || [];
+
+      // ✅ เรียก mutation ไป backend
+      const { data } = await updateUser({
+        variables: {
+          id, // ต้องตรงกับ schema
+          input: {
+            user_ai: formattedAiInput, // เปลี่ยนเฉพาะ field นี้
+          },
+        },
+      });
+
+      console.log("✅ Update success:", data.updateUser);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
       <ActionBar
-        onSubmit={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
-        onClearData={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
+        onSubmit={() => handleSubmit()}
+        onClearData={() => handleReset()}
         viewMode={viewMode}
         onViewChange={handleViewChange}
       />
@@ -107,7 +238,7 @@ export default function UserDetailPage() {
         >
           {/* 🔹 กล่องซ้าย */}
           <Box sx={{ flex: 1, position: "relative", zIndex: 1 }}>
-            <UserInfoCard user={user} />
+            <UserInfoCard user={userCardTable[0]} />
           </Box>
 
           {/* 🔹 กล่องขวา */}
@@ -126,18 +257,21 @@ export default function UserDetailPage() {
               zIndex: 1,
             }}
           >
-            <TokenLimitCard
-              title="Gemini 2.5 Pro"
-              label={t("label1")}
-              value={geminiTokens}
-              onChange={setGeminiTokens}
-            />
-            <TokenLimitCard
-              title="ChatGPT 4o"
-              label={t("label1")}
-              value={chatgptTokens}
-              onChange={setChatgptTokens}
-            />
+            {userCardTable[0]?.aiModels?.map((ai, index) => (
+              <TokenLimitCard
+                key={index}
+                title={
+                  ai.model === "gpt-4o"
+                    ? "ChatGPT 4o"
+                    : ai.model === "gemini-2.5-pro"
+                    ? "Gemini 2.5 Pro"
+                    : ai.model
+                }
+                label={t("label1")}
+                value={ai.token}
+                onChange={(newValue) => handleTokenChange(0, index, newValue)} // ✅ ใช้ฟังก์ชันแยก
+              />
+            ))}
           </Box>
 
           <Box
@@ -220,24 +354,46 @@ export default function UserDetailPage() {
                     <TableCell>
                       <b>{t("tablecell6")}</b>
                     </TableCell>
-                    <TableCell>
-                      <b>ChatGPT5</b>
-                    </TableCell>
-                    <TableCell>
-                      <b>Gemini 2.5 Pro</b>
-                    </TableCell>
-                    <TableCell>
-                      <b>ChatGPT5</b>
-                    </TableCell>
-                    <TableCell>
-                      <b>Gemini 2.5 Pro</b>
-                    </TableCell>
+                    {/* ✅ สร้างหัวคอลัมน์ตาม aiModels */}
+                    {Array.from(
+                      new Set(
+                        userCardTable
+                          .flatMap((u) => u.aiModels?.map((ai) => ai.model) || [])
+                      )
+                    ).map((modelName) => (
+                      <TableCell key={modelName}>
+                        <b>
+                          {modelName === "gpt-4o"
+                            ? "ChatGPT 4o"
+                            : modelName === "gemini-2.5-pro"
+                            ? "Gemini 2.5 Pro"
+                            : modelName}
+                        </b>
+                      </TableCell>
+                    ))}
+                    {/* ✅ สร้างหัวคอลัมน์ตาม aiModels */}
+                    {Array.from(
+                      new Set(
+                        userCardTable
+                          .flatMap((u) => u.aiModels?.map((ai) => ai.model) || [])
+                      )
+                    ).map((modelName) => (
+                      <TableCell key={modelName}>
+                        <b>
+                          {modelName === "gpt-4o"
+                            ? "ChatGPT 4o"
+                            : modelName === "gemini-2.5-pro"
+                            ? "Gemini 2.5 Pro"
+                            : modelName}
+                        </b>
+                      </TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {users.map((user) => (
+                  {userCardTable.map((user) => (
                     <TableRow key={user.id} hover>
-                      <TableCell>{user.id}</TableCell>
+                      <TableCell>{user.username}</TableCell>
                       <TableCell>
                         <Typography>{user.name}</Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -264,52 +420,40 @@ export default function UserDetailPage() {
 
                       <TableCell>
                         <Chip
-                          label={user.role}
+                          label={user.group}
+                          size="small"
                           sx={{
-                            bgcolor:
-                              user.role === "ผู้ดูแลระบบ"
-                                ? "#FCE4EC"
-                                : user.role === "ผู้ประเมินภายนอก"
-                                ? "#E3F2FD"
-                                : "#FFF3E0",
-                            color:
-                              user.role === "ผู้ดูแลระบบ"
-                                ? "#D81B60"
-                                : user.role === "ผู้ประเมินภายนอก"
-                                ? "#1976D2"
-                                : "#F57C00",
+                            bgcolor: "#ECEFF1",
+                            color: "#37474F",
                             fontWeight: 500,
                           }}
                         />
                       </TableCell>
 
-                      {/* ChatGPT5 limit */}
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          value={user.chatgptTokens || 0}
-                          inputProps={{ style: { textAlign: "right" } }}
-                          fullWidth
-                          sx={{
-                            "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                            "& input": { color: "#757575", fontWeight: 500 },
-                          }}
-                        />
-                      </TableCell>
-
-                      {/* Gemini limit */}
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          value={user.geminiTokens || 0}
-                          inputProps={{ style: { textAlign: "right" } }}
-                          fullWidth
-                          sx={{
-                            "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                            "& input": { color: "#757575", fontWeight: 500 },
-                          }}
-                        />
-                      </TableCell>
+                      {/* ✅ วนลูปช่อง Token limit จาก aiModels */}
+                      {user.aiModels.map((ai, aiIndex) => (
+                        <TableCell key={ai.model}>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            {t("label1")}
+                          </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <TextField
+                              type="number"
+                              value={ai.token || 0}
+                              inputProps={{ step:1000, style: { textAlign: "right" } }}
+                              fullWidth
+                              sx={{
+                                "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                                "& input": { color: "#757575", fontWeight: 500 },
+                                width: "180px",
+                              }}
+                              onChange={(e) =>
+                                handleTokenChange(0, aiIndex, Number(e.target.value))
+                              } // ✅ เรียกฟังก์ชันอัปเดต state
+                            />
+                          </Box>
+                        </TableCell>
+                      ))}  
 
                       {/* Progress ChatGPT5 */}
                       <TableCell>

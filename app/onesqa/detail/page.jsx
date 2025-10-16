@@ -1,22 +1,92 @@
 "use client";
 
-import React, { useState } from "react";
-import { Box, useMediaQuery } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, CircularProgress, useMediaQuery } from "@mui/material";
+import { useQuery, useMutation } from "@apollo/client/react";
+import { GET_USER } from "@/graphql/user/queries";
 import UserInfoCard from "@/app/components/UserInfoCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function DetailPage() {
   // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const user = {
-    id: 1,
-    name: "นายสมพล อารุณศักดิ์กุล",
-    position: "หัวหน้าภารกิจ",
-    email: "sompol@onesqa.or.th",
-    phone: "022163955",
-    status: "active",
-    role: "หัวหน้ากลุ่มงาน",
-  };
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
+  const { user } = useAuth();
+
+  const {
+    data: userData,
+    loading: userLoading,
+    error: userError,
+  } = useQuery(GET_USER, {
+    variables: {
+      id: user.id,
+    },
+  });
+
+  const [userCard, setUserCard] = useState([]);
+
+  // const userCard = {
+  //   id: 1,
+  //   name: "นายสมพล อารุณศักดิ์กุล",
+  //   position: "หัวหน้าภารกิจ",
+  //   email: "sompol@onesqa.or.th",
+  //   phone: "022163955",
+  //   status: "active",
+  //   role: "หัวหน้ากลุ่มงาน",
+  // };
+
+  // ✅ useEffect
+  useEffect(() => {
+    if (userData?.user) {
+      const users = Array.isArray(userData.user)
+        ? userData.user
+        : [userData.user]; // ✅ ถ้าเป็น object เดียว แปลงให้เป็น array
+
+      const formattedData = users.map((user) => ({
+        id: user.id,
+        username: user.username,
+        name: `${user.firstname || ""} ${user.lastname || ""}`.trim() || "-",
+        email: user.email || "-",
+        phone: user.phone || "-",
+        position: user.position || "-",
+        group: user.group_name || "-",
+        status: user.ai_access ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+        colorMode: user.color_mode || "LIGHT",
+        aiModels:
+          user.user_ai?.map((ai) => ({
+            ai_id: ai.ai_id, // ✅ เพิ่ม ai_id ไว้ใช้งานตอน update
+            model: ai.ai?.model_name || "-",
+            token: ai.token_count || 0,
+            active: ai.activity,
+          })) || [],
+        chatgpt5Used: 1500000,
+        geminiUsed: 150000,
+        chatgpt5Max: 2000000,
+        geminiMax: 2000000,
+      }));
+
+      setUserCard(formattedData); // ✅ เก็บเป็น array เสมอ
+    }
+  }, [userData]);
+
+  console.log(userCard);
+
+  if (userLoading)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>กำลังโหลดข้อมูล...</Typography>
+      </Box>
+    );
+
+  if (userError)
+    return (
+      <Typography color="error" sx={{ mt: 5 }}>
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+      </Typography>
+    );
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
@@ -45,7 +115,7 @@ export default function DetailPage() {
       >
         {/* 🔹 กล่องซ้าย */}
         <Box sx={{ flex: 1, position: "relative", zIndex: 1 }}>
-          <UserInfoCard user={user} />
+          <UserInfoCard user={userCard[0]} />
         </Box>
 
         {/* 🔹 กล่องขวา */}

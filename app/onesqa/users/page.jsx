@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@apollo/client/react";
+import dayjs from "dayjs"; // ✅ เพิ่มบรรทัดนี้
 import {
   Box,
   Typography,
@@ -30,6 +31,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import DescriptionIcon from "@mui/icons-material/Description";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import { useTranslations } from "next-intl";
+import { exportUsersToExcel } from "@/util/exportToExcel";
 
 export default function UserPage() {
   const router = useRouter();
@@ -118,30 +120,6 @@ export default function UserPage() {
   const [users, setUsers] = useState([]);
   const [updateUser] = useMutation(UPDATE_USER);
 
-  // 🧭 helper ฟังก์ชันแปลง ISO → เวลาไทย
-  const formatToThaiDateTime = (isoString) => {
-    if (!isoString) return "-";
-    try {
-      const date = new Date(isoString);
-      // ใช้ Intl.DateTimeFormat เพื่อจัดรูปแบบ
-      const options = {
-        timeZone: "Asia/Bangkok",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      };
-      // ใช้ en-CA เพื่อให้ได้รูปแบบ YYYY-MM-DD
-      return new Intl.DateTimeFormat("en-CA", options)
-        .format(date)
-        .replace(",", ""); // ✅ เช่น 2025-10-03 16:09
-    } catch (error) {
-      return "-";
-    }
-  };
-
   // ✅ useEffect
   useEffect(() => {
     if (usersData?.users) {
@@ -151,11 +129,19 @@ export default function UserPage() {
           name: `${item?.firstname || ""} ${item?.lastname || ""}`,
           email: item?.email || "-",
           role: item?.user_role?.[0]?.role?.role_name || "ไม่ระบุ",
-          department: item?.position || "-",
+          position: item?.position || "-",
           //status: item?.ai_access ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+          phone: item?.phone || "-",
+          group: item?.group_name || "-",
           status: "ใช้งานอยู่",
           aiAccess: !!item?.ai_access,
-          lastLogin: formatToThaiDateTime(item?.loginAt), // ✅ ใช้ฟังก์ชันที่เราสร้าง
+          lastLogin: dayjs(item?.loginAt).format("YYYY-MM-DD HH:mm:ss"), // ✅ ใช้ฟังก์ชันที่เราสร้าง
+          aiModels:
+            item?.user_ai?.map((ai) => ({
+              model: ai.ai?.model_name || "-",
+              token: ai.token_count || 0,
+              active: ai.activity,
+          })) || [],
         })) || [];
 
       setUsers(formattedData);
@@ -163,6 +149,25 @@ export default function UserPage() {
   }, [usersData]);
 
   console.log(users);
+
+  const handleExportExcel = () => {
+    const transformed =
+      users?.map((item) => ({
+        id: item?.id,
+        fullName: item?.name || "-",
+        email: item?.email || "-",
+        phone: item?.phone || "-",
+        role: item?.role || "-",
+        position: item?.position || "-",
+        group: item?.group || "-",
+        status: item?.status ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+        aiAccess: !!item?.aiAccess,
+        lastLogin: item?.lastLogin,
+        aiModels: item?.aiModels
+      })) || [];
+
+    exportUsersToExcel(transformed);
+  };
 
   if (usersLoading)
     return (
@@ -251,7 +256,7 @@ export default function UserPage() {
     <Box sx={{ p: isMobile ? 0 : 3 }}>
       <UserTableToolbar
         onRefresh={() => console.log("🔄 เชื่อมต่อข้อมูลผู้ใช้งาน")}
-        onExport={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
+        onExport={() => handleExportExcel()}
         onClearFilters={handleClearFilters}
       />
 
@@ -393,7 +398,7 @@ export default function UserPage() {
                       />
                     </TableCell>
 
-                    <TableCell>{user.department}</TableCell>
+                    <TableCell>{user.position}</TableCell>
 
                     <TableCell>
                       <Chip

@@ -70,7 +70,7 @@ export default function UserInfoCard({ user }) {
           {t('username')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {user.id || "-"}
+          {user.username || "-"}
         </Typography>
         <Typography variant="subtitle1" fontWeight="bold">
           {t('name')}
@@ -123,11 +123,11 @@ export default function UserInfoCard({ user }) {
             {t('status')}:
           </Typography>
           <Chip
-            label={user.status === "active" ? "ใช้งานอยู่" : "ไม่ใช้งาน"}
+            label={user.status === "ใช้งานอยู่" ? "ใช้งานอยู่" : "ไม่ใช้งาน"}
             size="small"
             sx={{
-              bgcolor: user.status === "active" ? "#E8F5E9" : "#F5F5F5",
-              color: user.status === "active" ? "#2E7D32" : "#757575",
+              bgcolor: user.status === "ใช้งานอยู่" ? "#E8F5E9" : "#F5F5F5",
+              color: user.status === "ใช้งานอยู่" ? "#2E7D32" : "#757575",
               fontWeight: 500,
             }}
           />
@@ -140,10 +140,10 @@ export default function UserInfoCard({ user }) {
           }}
         >
           <Typography variant="body2" sx={{ mb: 0.5 }}>
-            {t('permissions')}:
+            {t('group')}:
           </Typography>
           <Chip
-            label={user.role || "-"}
+            label={user.group || "-"}
             size="small"
             sx={{
               bgcolor: "#ECEFF1",
