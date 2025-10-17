@@ -125,3 +125,45 @@ export function exportUsersToExcel(users, ln = "th") {
 
   saveAs(blob, fileName);
 }
+
+export function exportReportsToExcel(reports, ln = "th") {
+  // ✅ กำหนดหัวตารางตามภาษา
+  const headers =
+    ln === "en"
+      ? ["Date", "User", "Position", "Conversations", "Tokens"]
+      : ["วันที่", "ผู้ใช้งาน", "ตำแหน่ง", "การสนทนา", "Tokens"];
+
+  // ✅ แปลงข้อมูลให้อยู่ในรูปแบบ Array ของ Array
+  const rows = reports.map((item) => [
+    item.date || "-",
+    item.user || "-",
+    item.position || "-",
+    item.chats ?? 0,
+    item.tokens ?? 0,
+  ]);
+
+  // ✅ รวม header + rows
+  const worksheetData = [headers, ...rows];
+
+  // ✅ สร้าง worksheet และ workbook
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Summary");
+
+  // ✅ ปรับความกว้างคอลัมน์
+  worksheet["!cols"] = [
+    { wch: 15 }, // วันที่
+    { wch: 25 }, // ผู้ใช้งาน
+    { wch: 25 }, // ตำแหน่ง
+    { wch: 15 }, // การสนทนา
+    { wch: 15 }, // Tokens
+  ];
+
+  // ✅ เขียนและบันทึกไฟล์
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+
+  const fileName = `สรุปรายงาน.xlsx`;
+
+  saveAs(blob, fileName);
+}

@@ -23,6 +23,7 @@ import {
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import { useTranslations } from "next-intl";
+import { exportReportsToExcel } from "@/util/exportToExcel";
 
 const ReportPage = () => {
   const t = useTranslations("ReportPage");
@@ -40,42 +41,42 @@ const ReportPage = () => {
     {
       date: "2025-10-04",
       user: "นายสมชาย ใจดี",
-      dept: "เทคโนโลยีสารสนเทศ",
+      position: "เทคโนโลยีสารสนเทศ",
       chats: 15,
       tokens: 2500,
     },
     {
       date: "2025-10-05",
       user: "นางสาวมาลี สวยงาม",
-      dept: "การประเมินคุณภาพ",
+      position: "การประเมินคุณภาพ",
       chats: 8,
       tokens: 1200,
     },
     {
       date: "2025-10-06",
       user: "นายวิชัย เก่งมาก",
-      dept: "การประเมินคุณภาพ",
+      position: "การประเมินคุณภาพ",
       chats: 12,
       tokens: 1800,
     },
     {
       date: "2025-10-07",
       user: "นายวิชัย เก่งมาก",
-      dept: "การประเมินคุณภาพ",
+      position: "การประเมินคุณภาพ",
       chats: 12,
       tokens: 1800,
     },
     {
       date: "2025-10-08",
       user: "นายวิชัย เก่งมาก",
-      dept: "การประเมินคุณภาพ",
+      position: "การประเมินคุณภาพ",
       chats: 12,
       tokens: 1800,
     },
     {
       date: "2025-10-09",
       user: "นายวิชัย เก่งมาก",
-      dept: "การประเมินคุณภาพ",
+      position: "การประเมินคุณภาพ",
       chats: 12,
       tokens: 1800,
     },
@@ -192,11 +193,15 @@ const ReportPage = () => {
     console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
+  const handleExportExcel = () => {
+    exportReportsToExcel(rows)
+  }
+
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
       <UserTableToolbar
         onRefresh={() => console.log("🔄 เชื่อมต่อข้อมูลผู้ใช้งาน")}
-        onExport={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
+        onExport={() => handleExportExcel()}
         onClearFilters={handleClearFilters}
       />
 
@@ -237,7 +242,7 @@ const ReportPage = () => {
             <MenuItem value="ผู้ประเมินภายนอก">ผู้ประเมินภายนอก</MenuItem> */}
           </Select>
 
-          <Select
+          {/* <Select
             value={quickRange}
             onChange={(e) => setQuickRange(e.target.value)}
             size="small"
@@ -247,7 +252,7 @@ const ReportPage = () => {
             <MenuItem value="วันนี้">วันนี้</MenuItem>
             <MenuItem value="7วันย้อนหลัง">7วันย้อนหลัง</MenuItem>
             <MenuItem value="1เดือนย้อนหลัง">1เดือนย้อนหลัง</MenuItem>
-          </Select>
+          </Select> */}
 
           {/* วันที่เริ่มต้น */}
           <TextField
@@ -339,7 +344,7 @@ const ReportPage = () => {
                       })}
                     </TableCell>
                     <TableCell>{row.user}</TableCell>
-                    <TableCell>{row.dept}</TableCell>
+                    <TableCell>{row.position}</TableCell>
                     <TableCell align="center">{row.chats}</TableCell>
                     <TableCell align="right">
                       {row.tokens.toLocaleString()}

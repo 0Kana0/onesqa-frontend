@@ -18,6 +18,7 @@ export const UPDATE_USER = gql`
       user_ai {
         activity
         token_count
+        token_all
         ai {
           model_name
         }

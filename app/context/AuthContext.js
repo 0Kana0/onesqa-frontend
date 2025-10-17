@@ -63,10 +63,10 @@ export function AuthProvider({ children }) {
 
   const logoutContext = () => {
     setUser(null);
+    router.push("/auth/login");
     deleteCookie("accessToken", { path: "/" });
     localStorage.removeItem("user");
     //localStorage.removeItem("locale");
-    router.push("/auth/login");
   };
 
   return (

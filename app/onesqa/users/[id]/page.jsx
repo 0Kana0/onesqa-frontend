@@ -92,6 +92,7 @@ export default function UserDetailPage() {
             ai_id: ai.ai_id, // ✅ เพิ่ม ai_id ไว้ใช้งานตอน update
             model: ai.ai?.model_name || "-",
             token: ai.token_count || 0,
+            token_all: ai.token_all || 0,
             active: ai.activity,
           })) || [],
         chatgpt5Used: 1500000,
@@ -185,6 +186,7 @@ export default function UserDetailPage() {
         userCardTable[0]?.aiModels?.map((ai) => ({
           ai_id: ai.ai_id, // 👈 แปลง model name → ai_id ที่ backend ใช้
           token_count: ai.token,
+          token_all: ai.token,
           activity: ai.active,
         })) || [];
 

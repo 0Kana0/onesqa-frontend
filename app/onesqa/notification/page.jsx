@@ -29,9 +29,6 @@ const NotificationPage = () => {
   
   const [updateSetting] = useMutation(UPDATE_SETTING);
 
-  const [systemNotify, setSystemNotify] = useState(true);
-  const [tokenNotify, setTokenNotify] = useState(false);
-
   if (settingsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>

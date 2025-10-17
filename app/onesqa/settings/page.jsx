@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { Box, Button, Typography, useMediaQuery} from "@mui/material";
+import { Box, Button, Typography, CircularProgress, useMediaQuery} from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy"; // 🤖 AI
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive"; // 🌐 Model
 import HubIcon from "@mui/icons-material/Hub";
@@ -12,10 +12,13 @@ import UserGroupSettingCard from "@/app/components/UserGroupSettingCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import GroupTokenTable from "@/app/components/GroupTokenTable";
 import { useTranslations } from 'next-intl';
+import { UPDATE_AI } from "@/graphql/ai/mutations";
+import { GET_AIS } from "@/graphql/ai/queries";
 
 const SettingPage = () => {
   const [selected, setSelected] = useState("AI");
   const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
+  const [resetTrigger, setResetTrigger] = useState(0); // ✅ ตัวแปร trigger
 
   const t = useTranslations('SettingPage');
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
@@ -23,24 +26,26 @@ const SettingPage = () => {
 
   // ✅ เก็บสถานะเปิด/ปิดของแต่ละการ์ด
   const [cards, setCards] = useState([
-    {
-      id: 1,
-      title: "Gemini 2.5 Pro",
-      used: 200000000,
-      total: 500000000,
-      today: 2500,
-      average: 1800,
-      enabled: false,
-    },
-    {
-      id: 2,
-      title: "ChatGPT 4o",
-      used: 150000000,
-      total: 400000000,
-      today: 1200,
-      average: 1000,
-      enabled: true,
-    },
+    // {
+    //   id: 1,
+    //   title: "Gemini 2.5 Pro",
+    //   defaultLimit: 1200000000,
+    //   used: 200000000,
+    //   total: 500000000,
+    //   today: 2500,
+    //   average: 1800,
+    //   enabled: false,
+    // },
+    // {
+    //   id: 2,
+    //   title: "ChatGPT 4o",
+    //   defaultLimit: 800000000,
+    //   used: 150000000,
+    //   total: 400000000,
+    //   today: 1200,
+    //   average: 1000,
+    //   enabled: true,
+    // },
   ]);
 
   const [rows, setRows] = useState([
@@ -78,6 +83,51 @@ const SettingPage = () => {
 
   const modelOptions = ["Gemini 2.5 Pro", "ChatGPT 5"];
 
+  const {
+    data: aisData,
+    loading: aisLoading,
+    error: aisError,
+  } = useQuery(GET_AIS);
+    
+  const [updateAi] = useMutation(UPDATE_AI);
+
+  useEffect(() => {
+    if (!aisData?.ais.length) return;
+
+    const transformed = aisData?.ais?.map((ai) => {
+      return {
+        id: ai.id,
+        title: ai.model_name,
+        defaultLimit: ai.token_count,
+        token_all: ai.token_all,
+        used: 200000000,
+        total: 500000000,
+        today: 2500,
+        average: 1800,
+        enabled: ai.activity,
+      };
+    });
+
+    setCards(transformed);
+  }, [aisData, resetTrigger]);
+
+  console.log(cards);
+
+  if (aisLoading)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>กำลังโหลดข้อมูล...</Typography>
+      </Box>
+    );
+    
+  if (aisError)
+    return (
+      <Typography color="error" sx={{ mt: 5 }}>
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+      </Typography>
+    );
+
   // 🔹 เมื่อมีการเปลี่ยนแปลงช่องกรอก
   const handleTokenChange = (id, model, value) => {
     setRows((prev) =>
@@ -101,6 +151,15 @@ const SettingPage = () => {
     );
   };
 
+  const handleLimitChange = (id, newValue) => {
+    setCards((prev) =>
+      prev.map((card) =>
+        card.id === id
+          ? { ...card, defaultLimit: Number(newValue) } // ✅ อัปเดตค่าใหม่เฉพาะการ์ดนี้
+          : card
+      )
+    );
+  };
   // ✅ ฟังก์ชันสลับ Switch ของแต่ละการ์ด
   const handleToggle = (id) => {
     setCards((prev) =>
@@ -114,6 +173,37 @@ const SettingPage = () => {
     setViewMode(mode);
     console.log("🟢 เปลี่ยนโหมดเป็น:", mode);
   };
+
+  const handleReset = () => {
+    setResetTrigger((prev) => prev + 1); // ✅ trigger ให้ useEffect ทำงานใหม่
+  };
+
+  const handleSubmit = async () => {
+    console.log(cards);
+
+    try {
+      // ✅ ใช้ Promise.all เพื่ออัปเดตพร้อมกันทั้งหมด
+      const results = await Promise.all(
+        cards.map(async (card) => {
+          const { data } = await updateAi({
+            variables: {
+              id: card.id, // id ของ AI record
+              input: {
+                token_count: Number(card.defaultLimit),
+                token_all: Number(card.defaultLimit),
+                activity: card.enabled,
+              },
+            },
+          });
+          return data.updateAi;
+        })
+      );
+
+      console.log("✅ Update success:", results);
+    } catch (error) {
+      console.log(error); 
+    }
+  }
 
   const buttons = [
     { label: "AI", icon: <SmartToyIcon />, value: "AI" },
@@ -156,12 +246,14 @@ const SettingPage = () => {
               <TokenUsageCardSetting
                 key={card.id}
                 title={card.title}
+                defaultLimit={card.defaultLimit}
                 used={card.used}
                 total={card.total}
                 today={card.today}
                 average={card.average}
                 enabled={card.enabled}
                 onToggle={() => handleToggle(card.id)} // ✅ ส่งฟังก์ชันลงไป
+                onLimitChange={(newValue) => handleLimitChange(card.id, newValue)} // ✅ เพิ่มตรงนี้
               />
             ))}
           </Box>
@@ -277,8 +369,8 @@ const SettingPage = () => {
     <div>
       <Box sx={{ p: isMobile ? 0 : 3 }}>
         <ActionBar
-          onSubmit={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
-          onClearData={() => console.log("⬇️ ส่งออกไฟล์ Excel")}
+          onSubmit={() => handleSubmit()}
+          onClearData={() => handleReset()}
           viewMode={viewMode}
           onViewChange={handleViewChange}
           settingMode={selected}

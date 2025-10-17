@@ -21,14 +21,12 @@ export default function TokenUsageCardSetting({
   average = 1800,
   enabled = false,
   onToggle = () => {},
+  onLimitChange = () => {},
   defaultLimit = 1000000,
 }) {
   const t = useTranslations('TokenUsageCardSetting');
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
-
-  // ✅ เก็บค่า limit ใน state
-  const [limit, setLimit] = useState(defaultLimit);
 
   // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
   const percent = Math.min((used / total) * 100, 100);
@@ -68,8 +66,8 @@ export default function TokenUsageCardSetting({
           fullWidth
           size="small"
           variant="outlined"
-          value={limit}
-          onChange={(e) => setLimit(Number(e.target.value))} // ✅ อัปเดต state
+          value={defaultLimit}
+          onChange={(e) => onLimitChange(e.target.value)} // ✅ เรียกไปยัง parent
           sx={{
             mt: 0.5,
             mb: 1.5,

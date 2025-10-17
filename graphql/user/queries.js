@@ -15,6 +15,7 @@ export const GET_USERS = gql`
       user_ai {
         activity
         token_count
+        token_all
         ai {
           model_name
         }
@@ -47,6 +48,7 @@ export const GET_USER = gql`
         ai_id
         activity
         token_count
+        token_all
         ai {
           model_name
         }

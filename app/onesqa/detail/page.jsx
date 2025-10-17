@@ -21,7 +21,7 @@ export default function DetailPage() {
     error: userError,
   } = useQuery(GET_USER, {
     variables: {
-      id: user.id,
+      id: user?.id || 1,
     },
   });
 
@@ -59,6 +59,7 @@ export default function DetailPage() {
             ai_id: ai.ai_id, // ✅ เพิ่ม ai_id ไว้ใช้งานตอน update
             model: ai.ai?.model_name || "-",
             token: ai.token_count || 0,
+            token_all: ai.token_all || 0,
             active: ai.activity,
           })) || [],
         chatgpt5Used: 1500000,
