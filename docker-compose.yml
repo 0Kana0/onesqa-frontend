@@ -1,0 +1,9 @@
+services:
+  next:
+    image: naterkana/onesqa-frontend:0.1
+    container_name: next-frontend
+    ports:
+      - "3001:3001" 
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

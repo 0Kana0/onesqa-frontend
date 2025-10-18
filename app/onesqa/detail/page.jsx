@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Box, Typography, CircularProgress, useMediaQuery } from "@mui/material";
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  useMediaQuery,
+} from "@mui/material";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_USER } from "@/graphql/user/queries";
 import UserInfoCard from "@/app/components/UserInfoCard";
@@ -60,6 +65,8 @@ export default function DetailPage() {
             model: ai.ai?.model_name || "-",
             token: ai.token_count || 0,
             token_all: ai.token_all || 0,
+            today: ai.today || 0,
+            average: ai.average || 0,
             active: ai.activity,
           })) || [],
         chatgpt5Used: 1500000,
@@ -135,20 +142,22 @@ export default function DetailPage() {
             zIndex: 1,
           }}
         >
-          <TokenUsageCard
-            title="Gemini 2.5 Pro"
-            used={1500000}
-            total={2000000}
-            today={2500}
-            average={1800}
-          />
-          <TokenUsageCard
-            title="ChatGPT 4o"
-            used={1200000}
-            total={2000000}
-            today={3200}
-            average={2500}
-          />
+          {userCard[0]?.aiModels?.map((ai, index) => (
+            <TokenUsageCard
+              key={index}
+              title={
+                ai.model === "gpt-4o"
+                  ? "ChatGPT 4o"
+                  : ai.model === "gemini-2.5-pro"
+                  ? "Gemini 2.5 Pro"
+                  : ai.model
+              }
+              remain={ai.token}
+              total={ai.token_all}
+              today={ai.today}
+              average={ai.average}
+            />
+          ))}
         </Box>
       </Box>
     </Box>

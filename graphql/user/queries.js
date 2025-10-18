@@ -49,6 +49,8 @@ export const GET_USER = gql`
         activity
         token_count
         token_all
+        today
+        average
         ai {
           model_name
         }

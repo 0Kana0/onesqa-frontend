@@ -50,13 +50,13 @@
     "message1p2": "กรุณาติดตามการใช้งานอย่างใกล้ชิด",
     "card1": "การสนทนาทั้งหมด",
     "card2": "Tokens ที่ใช้",
-    "card3": "ออนไลน์",
+    "card3": "ผู้ใช้งานระบบ",
     "subtitle2": "สถิติ",
     "title2": "สถิติการใช้ Tokens รายวัน",
     "title3": "สถานะระบบ",
     "subtitle1": "ติดตามการใช้งานระบบ",
     "title4": "การใช้งาน Tokens",
-    "subtitle3": "ติดตามการใช้งาน Tokens ประจำเดือน"
+    "subtitle3": "ติดตามการใช้งาน Tokens"
   },
   "LogPage": {
     "filter1": "ค้นหาและกรอง Logs",
@@ -145,6 +145,7 @@
     "clear": "ล้างตัวกรอง"
   },
   "TokenUsageCard": {
+    "remaining": "คงเหลือ",
     "used": "ใช้งานแล้ว",
     "today": "วันนี้",
     "average": "เฉลี่ยต่อวัน"
@@ -165,6 +166,7 @@
   },
   "TokenUsageCardSetting": {
     "settoken": "กำหนด Tokens",
+    "remaining": "คงเหลือ",
     "used": "ใช้งานแล้ว",
     "today": "วันนี้",
     "average": "เฉลี่ยต่อวัน"

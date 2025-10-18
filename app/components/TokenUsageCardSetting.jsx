@@ -12,11 +12,12 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTranslations } from 'next-intl';
+import { formatTokens } from "@/util/formatTokens";
 
 export default function TokenUsageCardSetting({
   title = "Gemini 2.5 Pro",
-  used = 1500000,
-  total = 2000000,
+  remain = 1500000000,
+  total = 2000000000,
   today = 2500,
   average = 1800,
   enabled = false,
@@ -29,13 +30,13 @@ export default function TokenUsageCardSetting({
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
-  const percent = Math.min((used / total) * 100, 100);
+  const percent = Math.min((remain / total) * 100, 100);
 
-  // ✅ เปลี่ยนสีตามระดับการใช้งาน
+  // 🎨 กำหนดสีตามระดับการใช้งาน
   let progressColor = "#3E8EF7"; // 🔵 ปกติ
-  if (percent >= 70 && percent <= 85) {
+  if (percent >= 15 && percent <= 30) {
     progressColor = "#FFA726"; // 🟠 เตือน
-  } else if (percent > 85) {
+  } else if (percent < 15) {
     progressColor = "#E53935"; // 🔴 เตือนมาก
   }
 
@@ -78,10 +79,10 @@ export default function TokenUsageCardSetting({
         {/* 🔹 แถบการใช้งาน */}
         <Box display="flex" justifyContent="space-between">
           <Typography variant="body2" fontWeight={600}>
-            {t('used')}
+            {t('remaining')}
           </Typography>
           <Typography variant="body2">
-            {Math.round(used / 1_000_000)}M / {Math.round(total / 1_000_000)}M Tokens
+            {formatTokens(remain, isMobile)} / {formatTokens(total, isMobile)} Tokens
           </Typography>
         </Box>
 
@@ -104,7 +105,7 @@ export default function TokenUsageCardSetting({
               {t('today')}
             </Typography>
             <Typography variant="body2" fontWeight={600}>
-              {today.toLocaleString()} Tokens
+              {formatTokens(today, isMobile)} Tokens
             </Typography>
           </Box>
 
@@ -113,7 +114,7 @@ export default function TokenUsageCardSetting({
               {t('average')}
             </Typography>
             <Typography variant="body2" fontWeight={600}>
-              {average.toLocaleString()} Tokens
+              {formatTokens(average, isMobile)} Tokens
             </Typography>
           </Box>
         </Box>

@@ -50,13 +50,13 @@
     "message1p2": "Please monitor usage closely to avoid service interruption",
     "card1": "Conversations Today",
     "card2": "Tokens Remaining",
-    "card3": "Online",
+    "card3": "System users",
     "subtitle2": "Statistics",
     "title2": "Daily Token Usage Statistics",
     "title3": "System Status",
     "subtitle1": "System Usage Monitoring",
     "title4": "Token Usage",
-    "subtitle3": "Monthly token usage tracking with real-time updates"
+    "subtitle3": "Token usage tracking with real-time updates"
   },
   "LogPage": {
     "filter1": "Search and Filter Logs",
@@ -145,6 +145,7 @@
     "clear": "Clear filter"
   },
   "TokenUsageCard": {
+    "remaining": "Remaining",
     "used": "Already in use",
     "today": "Today",
     "average": "Average per day"
@@ -165,6 +166,7 @@
   },
   "TokenUsageCardSetting": {
     "settoken": "Set Tokens",
+    "remaining": "Remaining",
     "used": "Already in use",
     "today": "Today",
     "average": "Average per day"

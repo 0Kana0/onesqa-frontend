@@ -1,10 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_ROLES } from "@/graphql/role/queries";
 import { GET_ME } from "@/graphql/auth/queries";
-import { Box, useMediaQuery } from "@mui/material";
+import { GET_AIS } from "@/graphql/ai/queries";
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  useMediaQuery,
+} from "@mui/material";
 import { useTranslations } from "next-intl";
 import ChatIcon from "@mui/icons-material/Chat";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -19,15 +25,20 @@ const DashboardPage = () => {
   const t = useTranslations("DashboardPage");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
 
-  const { data: meData, loading: meLoading, error: meError } = useQuery(GET_ME);
-  const { data, loading, error, refetch } = useQuery(GET_ROLES);
+  // const { data: meData, loading: meLoading, error: meError } = useQuery(GET_ME);
+  // const { data, loading, error, refetch } = useQuery(GET_ROLES);
 
-  console.log(meData?.me);
-  console.log(meError?.message);
+  // console.log(meData?.me);
+  // console.log(meError?.message);
 
-  if (meLoading || loading) return <p>กำลังโหลด…</p>;
-  if (meError) return <p>ผิดพลาด ME: {meError.message}</p>;
-  if (error) return <p>ผิดพลาด ROLES: {error.message}</p>;
+  // if (meLoading || loading) return <p>กำลังโหลด…</p>;
+  // if (meError) return <p>ผิดพลาด ME: {meError.message}</p>;
+  // if (error) return <p>ผิดพลาด ROLES: {error.message}</p>;
+
+  const [summary, setSummary] = useState({
+    totalTokenCount: 0,
+    totalTokenAll: 0,
+  });
 
   const sampleData = [
     { date: "1 Oct", chatgpt: 900, gemini: 1800, total: 2700 },
@@ -48,28 +59,74 @@ const DashboardPage = () => {
     { label: "SSL Certificate", status: "ผิดพลาด" },
   ];
 
+  const {
+    data: aisData,
+    loading: aisLoading,
+    error: aisError,
+  } = useQuery(GET_AIS);
+
+  useEffect(() => {
+    if (!aisData?.ais?.length) return;
+
+    // ✅ รวมข้อมูลแต่ละฟิลด์
+    const totalTokenCount = aisData.ais.reduce(
+      (sum, ai) => sum + (ai.token_count || 0),
+      0
+    );
+    const totalTokenAll = aisData.ais.reduce(
+      (sum, ai) => sum + (ai.token_all || 0),
+      0
+    );
+
+    // ✅ ตั้งค่า state สรุป
+    setSummary({
+      totalTokenCount,
+      totalTokenAll,
+    });
+  }, [aisData]);
+
+  if (aisLoading)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>กำลังโหลดข้อมูล...</Typography>
+      </Box>
+    );
+
+  if (aisError)
+    return (
+      <Typography color="error" sx={{ mt: 5 }}>
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+      </Typography>
+    );
+
+  console.log(aisData?.ais);
+
   const handleDetail = () => {
     console.log("🟠 เปิดรายละเอียดการใช้งาน Token");
   };
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
-      <Box
-        sx={{
-          border: "1px solid #E5E7EB",
-          boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
-          borderRadius: 4,
-          p: isMobile ? 1.5 : 3,
-          bgcolor: "background.paper",
-          mb: 2,
-        }}
-      >
-        <AlertCard
-          title={t("title1")}
-          message={`${t("message1p1")} 75% ${t("message1p2")}`} // ใช้การเชื่อมข้อความแบบ template literal
-          onDetailClick={handleDetail}
-        />
-      </Box>
+      {summary.totalTokenAll > 0 &&
+        (summary.totalTokenCount / summary.totalTokenAll) * 100 <= 30 && (
+          <Box
+            sx={{
+              border: "1px solid #E5E7EB",
+              boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
+              borderRadius: 4,
+              p: isMobile ? 1.5 : 3,
+              bgcolor: "background.paper",
+              mb: 2,
+            }}
+          >
+            <AlertCard
+              title={t("title1")}
+              message={`${t("message1p1")} 70% ${t("message1p2")}`}
+              onDetailClick={handleDetail}
+            />
+          </Box>
+        )}
 
       <Box
         sx={{
@@ -110,7 +167,11 @@ const DashboardPage = () => {
       </Box>
 
       <Box>
-        <TokensChart data={sampleData} subtitle={t("subtitle2")}  title={t("title2")} />
+        <TokensChart
+          data={sampleData}
+          subtitle={t("subtitle2")}
+          title={t("title2")}
+        />
       </Box>
 
       <Box
@@ -140,11 +201,11 @@ const DashboardPage = () => {
           mb: 4,
         }}
       >
-        <TokenUsageDashboardBar 
-          title = {t("title4")}
-          subtitle = {t("subtitle3")}
-          used={500} 
-          total={2000} 
+        <TokenUsageDashboardBar
+          title={t("title4")}
+          subtitle={t("subtitle3")}
+          remain={summary.totalTokenCount}
+          total={summary.totalTokenAll}
         />
       </Box>
 

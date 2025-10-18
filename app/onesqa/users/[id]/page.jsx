@@ -29,6 +29,7 @@ import TokenUsageCard from "@/app/components/TokenUsageCard";
 import ActionBar from "@/app/components/ActionBar";
 import { useTranslations } from "next-intl";
 import { useSidebar } from "../../../context/SidebarContext"; // ✅ ใช้ context
+import { formatTokens } from "@/util/formatTokens";
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -91,14 +92,13 @@ export default function UserDetailPage() {
           user.user_ai?.map((ai) => ({
             ai_id: ai.ai_id, // ✅ เพิ่ม ai_id ไว้ใช้งานตอน update
             model: ai.ai?.model_name || "-",
+            remain: ai.token_count || 0,
             token: ai.token_count || 0,
             token_all: ai.token_all || 0,
+            today: ai.today || 0,
+            average: ai.average || 0,
             active: ai.activity,
           })) || [],
-        chatgpt5Used: 1500000,
-        geminiUsed: 150000,
-        chatgpt5Max: 2000000,
-        geminiMax: 2000000,
       }));
 
       setUserCardTable(formattedData); // ✅ เก็บเป็น array เสมอ
@@ -291,20 +291,22 @@ export default function UserDetailPage() {
               zIndex: 1,
             }}
           >
-            <TokenUsageCard
-              title="Gemini 2.5 Pro"
-              used={1500000}
-              total={2000000}
-              today={2500}
-              average={1800}
-            />
-            <TokenUsageCard
-              title="ChatGPT 4o"
-              used={1200000}
-              total={2000000}
-              today={3200}
-              average={2500}
-            />
+            {userCardTable[0]?.aiModels?.map((ai, index) => (
+              <TokenUsageCard
+                key={index}
+                title={
+                  ai.model === "gpt-4o"
+                    ? "ChatGPT 4o"
+                    : ai.model === "gemini-2.5-pro"
+                    ? "Gemini 2.5 Pro"
+                    : ai.model
+                }
+                remain={ai.remain}
+                total={ai.token_all}
+                today={ai.today}
+                average={ai.average}
+              />
+            ))}
           </Box>
         </Box>
       ) : (
@@ -433,7 +435,7 @@ export default function UserDetailPage() {
                       </TableCell>
 
                       {/* ✅ วนลูปช่อง Token limit จาก aiModels */}
-                      {user.aiModels.map((ai, aiIndex) => (
+                      {user?.aiModels?.map((ai, aiIndex) => (
                         <TableCell key={ai.model}>
                           <Typography variant="subtitle2" color="text.secondary">
                             {t("label1")}
@@ -458,60 +460,35 @@ export default function UserDetailPage() {
                       ))}  
 
                       {/* Progress ChatGPT5 */}
-                      <TableCell>
-                        <Box sx={{ width: 150 }}>
-                          <Typography variant="body2" sx={{ mb: 0.5 }}>
-                            {user.chatgpt5Used.toLocaleString()} /
-                            {user.chatgpt5Max.toLocaleString()} Tokens
-                          </Typography>
-                          <LinearProgress
-                            variant="determinate"
-                            value={(user.chatgpt5Used / user.chatgpt5Max) * 100}
-                            sx={{
-                              bgcolor: "#e3f2fd",
-                              "& .MuiLinearProgress-bar": {
-                                bgcolor:
-                                  (user.chatgpt5Used / user.chatgpt5Max) *
-                                    100 >=
-                                  86
-                                    ? "#E53935" // สีแดงเมื่อเปอร์เซ็นต์ >= 86%
-                                    : (user.chatgpt5Used / user.chatgpt5Max) *
-                                        100 >=
-                                      70
-                                    ? "#FFA726" // สีส้มเมื่อเปอร์เซ็นต์อยู่ในช่วง 70% - 85%
-                                    : "#3E8EF7", // สีฟ้าตามปกติ
-                              },
-                            }}
-                          />
-                        </Box>
-                      </TableCell>
-
-                      {/* Progress Gemini */}
-                      <TableCell>
-                        <Box sx={{ width: 150 }}>
-                          <Typography variant="body2" sx={{ mb: 0.5 }}>
-                            {user.geminiUsed.toLocaleString()} /
-                            {user.geminiMax.toLocaleString()} Tokens
-                          </Typography>
-                          <LinearProgress
-                            variant="determinate"
-                            value={(user.geminiUsed / user.geminiMax) * 100}
-                            sx={{
-                              bgcolor: "#e3f2fd",
-                              "& .MuiLinearProgress-bar": {
-                                bgcolor:
-                                  (user.geminiUsed / user.geminiMax) * 100 >= 86
-                                    ? "#E53935" // สีแดงเมื่อเปอร์เซ็นต์ >= 86%
-                                    : (user.geminiUsed / user.geminiMax) *
-                                        100 >=
-                                      70
-                                    ? "#FFA726" // สีส้มเมื่อเปอร์เซ็นต์อยู่ในช่วง 70% - 85%
-                                    : "#3E8EF7", // สีฟ้าตามปกติ
-                              },
-                            }}
-                          />
-                        </Box>
-                      </TableCell>
+                      {user?.aiModels?.map((ai, aiIndex) => (
+                        <TableCell key={aiIndex}>
+                          <Box sx={{ width: 150 }}>
+                            <Typography variant="body2" sx={{ mb: 0.5 }}>
+                              {formatTokens(ai.remain, isMobile)} /
+                              {formatTokens(ai.token_all, isMobile)} Tokens
+                            </Typography>
+                            <LinearProgress
+                              variant="determinate"
+                              value={(ai.remain / ai.token_all) * 100}
+                              sx={{
+                                bgcolor: "#e3f2fd",
+                                "& .MuiLinearProgress-bar": {
+                                  bgcolor:
+                                    (ai.remain / ai.token_all) *
+                                      100 <
+                                    15
+                                      ? "#E53935" // สีแดงเมื่อเปอร์เซ็นต์ >= 86%
+                                      : (ai.remain / ai.token_all) *
+                                          100 <=
+                                        30
+                                      ? "#FFA726" // สีส้มเมื่อเปอร์เซ็นต์อยู่ในช่วง 70% - 85%
+                                      : "#3E8EF7", // สีฟ้าตามปกติ
+                                },
+                              }}
+                            />
+                          </Box>
+                        </TableCell>
+                      ))}
                     </TableRow>
                   ))}
                 </TableBody>

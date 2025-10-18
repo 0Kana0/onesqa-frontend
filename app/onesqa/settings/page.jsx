@@ -99,11 +99,10 @@ const SettingPage = () => {
         id: ai.id,
         title: ai.model_name,
         defaultLimit: ai.token_count,
-        token_all: ai.token_all,
-        used: 200000000,
-        total: 500000000,
-        today: 2500,
-        average: 1800,
+        remain: ai.token_count,
+        total: ai.token_all,
+        today: ai.today,
+        average: ai.average,
         enabled: ai.activity,
       };
     });
@@ -245,9 +244,15 @@ const SettingPage = () => {
             {cards.map((card) => (
               <TokenUsageCardSetting
                 key={card.id}
-                title={card.title}
+                title={
+                  card.title === "gpt-4o"
+                    ? "ChatGPT 4o"
+                    : card.title === "gemini-2.5-pro"
+                    ? "Gemini 2.5 Pro"
+                    : card.title
+                }
                 defaultLimit={card.defaultLimit}
-                used={card.used}
+                remain={card.remain}
                 total={card.total}
                 today={card.today}
                 average={card.average}
@@ -295,19 +300,21 @@ const SettingPage = () => {
                   <Box sx={{ flex: 1 }}>
                     <TokenUsageCard
                       title="Gemini 2.5 Pro"
-                      used={1500000}
+                      remain={1500000}
                       total={2000000}
                       today={2500}
                       average={1800}
+                      always={true}
                     />
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <TokenUsageCard
                       title="Gemini 2.5 Pro"
-                      used={1500000}
+                      remain={1500000}
                       total={2000000}
                       today={2500}
                       average={1800}
+                      always={true}
                     />
                   </Box>
                 </Box>
@@ -332,19 +339,21 @@ const SettingPage = () => {
                   <Box sx={{ flex: 1 }}>
                     <TokenUsageCard
                       title="Gemini 2.5 Pro"
-                      used={1500000}
+                      remain={1500000}
                       total={2000000}
                       today={2500}
                       average={1800}
+                      always={true}
                     />
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <TokenUsageCard
                       title="Gemini 2.5 Pro"
-                      used={1500000}
+                      remain={1500000}
                       total={2000000}
                       today={2500}
                       average={1800}
+                      always={true}
                     />
                   </Box>
                 </Box>

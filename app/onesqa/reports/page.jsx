@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { GET_AIS } from "@/graphql/ai/queries";
 import {
   Box,
   Typography,
@@ -18,6 +20,7 @@ import {
   Avatar,
   Stack,
   Divider,
+  CircularProgress,
   useMediaQuery,
 } from "@mui/material";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
@@ -120,6 +123,29 @@ const ReportPage = () => {
     },
   ];
 
+  const {
+    data: aisData,
+    loading: aisLoading,
+    error: aisError,
+  } = useQuery(GET_AIS);
+
+  if (aisLoading)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>กำลังโหลดข้อมูล...</Typography>
+      </Box>
+    );
+
+  if (aisError)
+    return (
+      <Typography color="error" sx={{ mt: 5 }}>
+        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+      </Typography>
+    );
+
+  console.log(aisData?.ais);
+
   // utils ช่วยคำนวณขอบเขตวันให้ครอบคลุมทั้งวัน
   const startOfDay = (d) => {
     const x = new Date(d);
@@ -194,8 +220,8 @@ const ReportPage = () => {
   };
 
   const handleExportExcel = () => {
-    exportReportsToExcel(rows)
-  }
+    exportReportsToExcel(rows);
+  };
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
@@ -228,7 +254,7 @@ const ReportPage = () => {
             gap: 2,
           }}
         >
-          <Select
+          {/* <Select
             value={aiFilter}
             onChange={(e) => setAiFilter(e.target.value)}
             size="small"
@@ -239,10 +265,10 @@ const ReportPage = () => {
             </MenuItem>
             {/* <MenuItem value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</MenuItem>
             <MenuItem value="เจ้าหน้าที่">เจ้าหน้าที่</MenuItem>
-            <MenuItem value="ผู้ประเมินภายนอก">ผู้ประเมินภายนอก</MenuItem> */}
-          </Select>
+            <MenuItem value="ผู้ประเมินภายนอก">ผู้ประเมินภายนอก</MenuItem>
+          </Select> */}
 
-          {/* <Select
+          <Select
             value={quickRange}
             onChange={(e) => setQuickRange(e.target.value)}
             size="small"
@@ -252,7 +278,7 @@ const ReportPage = () => {
             <MenuItem value="วันนี้">วันนี้</MenuItem>
             <MenuItem value="7วันย้อนหลัง">7วันย้อนหลัง</MenuItem>
             <MenuItem value="1เดือนย้อนหลัง">1เดือนย้อนหลัง</MenuItem>
-          </Select> */}
+          </Select>
 
           {/* วันที่เริ่มต้น */}
           <TextField
@@ -471,20 +497,22 @@ const ReportPage = () => {
               gap: 2, // ✅ ระยะห่างระหว่างการ์ด (theme.spacing * 2 = 16px)
             }}
           >
-            <TokenUsageCard
-              title="Gemini 2.5 Pro"
-              used={1500000}
-              total={2000000}
-              today={2500}
-              average={1800}
-            />
-            <TokenUsageCard
-              title="Gemini 2.5 Pro"
-              used={1500000}
-              total={2000000}
-              today={2500}
-              average={1800}
-            />
+            {aisData?.ais?.map((ai) => (
+              <TokenUsageCard
+                key={ai.id}
+                title={
+                  ai.model_name === "gpt-4o"
+                    ? "ChatGPT 4o"
+                    : ai.model_name === "gemini-2.5-pro"
+                    ? "Gemini 2.5 Pro"
+                    : ai.model_name
+                }
+                remain={ai.token_count}
+                total={ai.token_all}
+                today={ai.today}
+                average={ai.average}
+              />
+            ))}
           </Box>
         </Box>
       </Box>

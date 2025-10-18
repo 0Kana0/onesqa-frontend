@@ -8,6 +8,8 @@ export const GET_AIS = gql`
       model_name
       token_count
       token_all
+      today
+      average
     }
   }
 `;
