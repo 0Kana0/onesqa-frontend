@@ -13,7 +13,6 @@ export const GET_USERS = gql`
       phone
       group_name
       user_ai {
-        activity
         token_count
         token_all
         ai {
@@ -46,7 +45,6 @@ export const GET_USER = gql`
       username
       user_ai {
         ai_id
-        activity
         token_count
         token_all
         today

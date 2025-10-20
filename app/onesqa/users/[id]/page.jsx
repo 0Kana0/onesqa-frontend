@@ -97,7 +97,6 @@ export default function UserDetailPage() {
             token_all: ai.token_all || 0,
             today: ai.today || 0,
             average: ai.average || 0,
-            active: ai.activity,
           })) || [],
       }));
 
@@ -187,7 +186,6 @@ export default function UserDetailPage() {
           ai_id: ai.ai_id, // 👈 แปลง model name → ai_id ที่ backend ใช้
           token_count: ai.token,
           token_all: ai.token,
-          activity: ai.active,
         })) || [];
 
       // ✅ เรียก mutation ไป backend

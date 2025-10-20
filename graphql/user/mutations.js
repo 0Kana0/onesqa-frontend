@@ -16,7 +16,6 @@ export const UPDATE_USER = gql`
       position
       username
       user_ai {
-        activity
         token_count
         token_all
         ai {

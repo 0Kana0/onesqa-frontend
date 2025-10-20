@@ -141,7 +141,6 @@ export default function UserPage() {
               model: ai.ai?.model_name || "-",
               token: ai.token_count || 0,
               token_all: ai.token_all || 0,
-              active: ai.activity,
           })) || [],
         })) || [];
 

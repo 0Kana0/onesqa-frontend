@@ -67,7 +67,6 @@ export default function DetailPage() {
             token_all: ai.token_all || 0,
             today: ai.today || 0,
             average: ai.average || 0,
-            active: ai.activity,
           })) || [],
         chatgpt5Used: 1500000,
         geminiUsed: 150000,
