@@ -33,6 +33,7 @@ import { exportLogsToExcel } from "@/util/exportToExcel";
 
 const LogPage = () => {
   const t = useTranslations("LogPage");
+  const tInit = useTranslations("Init");
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
@@ -143,14 +144,14 @@ const LogPage = () => {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>{t("loading")}...</Typography>
+        <Typography>{tInit("loading")}...</Typography>
       </Box>
     );
 
   if (logsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
-        ❌ {t("error")}
+        ❌ {tInit("error")}
       </Typography>
     );
 

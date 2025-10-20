@@ -30,6 +30,7 @@ import { exportReportsToExcel } from "@/util/exportToExcel";
 
 const ReportPage = () => {
   const t = useTranslations("ReportPage");
+  const tInit = useTranslations("Init");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
@@ -133,14 +134,14 @@ const ReportPage = () => {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>{t("loading")}...</Typography>
+        <Typography>{tInit("loading")}...</Typography>
       </Box>
     );
 
   if (aisError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
-        ❌ {t("error")}
+        ❌ {tInit("error")}
       </Typography>
     );
 

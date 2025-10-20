@@ -35,6 +35,7 @@ export default function UserDetailPage() {
   const params = useParams();
   const { id } = params;
   const t = useTranslations("UserDetailPage");
+  const tInit = useTranslations("Init");
   const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
@@ -128,14 +129,14 @@ export default function UserDetailPage() {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>กำลังโหลดข้อมูล...</Typography>
+        <Typography>{tInit("loading")}...</Typography>
       </Box>
     );
 
   if (userError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
-        ❌ {t("error")}
+        ❌ {tInit("error")}
       </Typography>
     );
 

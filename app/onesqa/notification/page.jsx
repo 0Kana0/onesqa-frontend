@@ -26,6 +26,7 @@ const PAGE_SIZE = 4;
 const NotificationPage = () => {
   const { user } = useAuth();
   const t = useTranslations("NotificationPage");
+  const tInit = useTranslations("Init");
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)");
 
@@ -141,7 +142,7 @@ const NotificationPage = () => {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>{t("loading")}...</Typography>
+        <Typography>{tInit("loading")}...</Typography>
       </Box>
     );
 
@@ -149,7 +150,7 @@ const NotificationPage = () => {
   if (settingsError || error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">❌ {t("error")}</Alert>
+        <Alert severity="error">❌ {tInit("error")}</Alert>
       </Box>
     );
   }
@@ -205,7 +206,7 @@ const NotificationPage = () => {
                 {(loading) && (
                   <Box sx={{ textAlign: "center"}}>
                     <CircularProgress />
-                    <Typography>{t("loading")}...</Typography>
+                    <Typography>{tInit("loading")}...</Typography>
                   </Box>
                 )} 
                 {!loading && items.length === 0 && (

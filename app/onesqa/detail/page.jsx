@@ -7,6 +7,7 @@ import {
   CircularProgress,
   useMediaQuery,
 } from "@mui/material";
+import { useTranslations } from "next-intl";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_USER } from "@/graphql/user/queries";
 import UserInfoCard from "@/app/components/UserInfoCard";
@@ -14,6 +15,7 @@ import TokenUsageCard from "@/app/components/TokenUsageCard";
 import { useAuth } from "@/app/context/AuthContext";
 
 export default function DetailPage() {
+  const tInit = useTranslations("Init");
   // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -84,14 +86,14 @@ export default function DetailPage() {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>{t("loading")}...</Typography>
+        <Typography>{tInit("loading")}...</Typography>
       </Box>
     );
 
   if (userError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
-        ❌ {t("error")}
+        ❌ {tInit("error")}
       </Typography>
     );
 

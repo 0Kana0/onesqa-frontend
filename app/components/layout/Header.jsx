@@ -266,7 +266,7 @@ export default function Header() {
               }}
             >
               <NotificationListener 
-                user_id={user.id} 
+                user_id={user?.id} 
                 isOnNotificationPage={isOnNotificationPage} 
                 hasNotification={hasNotification}
                 setHasNotification={setHasNotification}
