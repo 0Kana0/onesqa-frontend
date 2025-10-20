@@ -24,8 +24,12 @@ export default function NotificationListener({
   } = useQuery(MY_NOTIFICATIONS, {
     variables: {
       user_id: user_id,
-      fetchPolicy: "network-only", // ✅ โหลดจาก server ทุกครั้ง
+      first: 4,
+      after: null,
     },
+    skip: !user_id,
+    notifyOnNetworkStatusChange: true, // ให้รู้สถานะระหว่าง fetchMore/refetch
+    fetchPolicy: "network-only",
   });
 
   useEffect(() => {

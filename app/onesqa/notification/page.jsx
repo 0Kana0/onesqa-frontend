@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@apollo/client/react";
-import dayjs from "dayjs"; // ✅ เพิ่มบรรทัดนี้
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useQuery, useMutation } from "@apollo/client/react"; // ✅ ใช้จาก @apollo/client
+import dayjs from "dayjs";
+import { MY_NOTIFICATIONS } from "@/graphql/notification/queries";
 import { GET_SETTINGS } from "@/graphql/setting/queries";
 import { UPDATE_SETTING } from "@/graphql/setting/mutations";
-import { MY_NOTIFICATIONS } from "@/graphql/notification/queries";
 import { useAuth } from "../../context/AuthContext";
 import {
   Box,
@@ -13,6 +13,7 @@ import {
   Typography,
   CircularProgress,
   useMediaQuery,
+  Alert,
 } from "@mui/material";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -20,42 +21,123 @@ import { useTranslations } from "next-intl";
 import NotificationCard from "@/app/components/NotificationCard";
 import NotificationToggleCard from "@/app/components/NotificationToggleCard";
 
+const PAGE_SIZE = 4;
+
 const NotificationPage = () => {
   const { user } = useAuth();
+  const t = useTranslations("NotificationPage");
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTablet = useMediaQuery("(max-width:1200px)");
 
   const [selected, setSelected] = useState("Notification");
 
-  const t = useTranslations("NotificationPage");
-  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
-
+  // ----- โหลด settings (เหมือนเดิม) -----
   const {
     data: settingsData,
     loading: settingsLoading,
     error: settingsError,
   } = useQuery(GET_SETTINGS);
 
+  // ----- โหลด notifications (cursor-based) -----
   const {
-    data: notificationsData,
-    loading: notificationsLoading,
-    error: notificationsError,
+    data,
+    loading,
+    error,
+    fetchMore,
     refetch,
+    networkStatus,
   } = useQuery(MY_NOTIFICATIONS, {
-    variables: {
-      user_id: user?.id,
-      fetchPolicy: "network-only", // ✅ โหลดจาก server ทุกครั้ง
-    },
+    variables: { user_id: user?.id ?? "", first: PAGE_SIZE, after: null },
+    skip: !user?.id,
+    notifyOnNetworkStatusChange: true, // ให้รู้สถานะระหว่าง fetchMore/refetch
+    fetchPolicy: "network-only",
   });
 
+  console.log(data);
+
+  // รวม edges แบบ local state เพื่อควบคุม duplicate เองโดยไม่พึ่ง typePolicies
+  const [edges, setEdges] = useState([]);
+  const [endCursor, setEndCursor] = useState(null);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  // เมื่อ data ชุดแรก/รีเฟรช เข้ามา → เซ็ตฐานใหม่
   useEffect(() => {
-    if (user?.id) {
-      refetch(); // ✅ โหลดใหม่ทุกครั้งที่ user_id เปลี่ยนหรือเข้าหน้า
+    const conn = data?.myNotifications;
+    if (!conn) return;
+    const incoming = conn.edges ?? [];
+    const seen = new Set();
+    const merged = [];
+    for (const e of incoming) {
+      if (!seen.has(e.cursor)) {
+        seen.add(e.cursor);
+        merged.push(e);
+      }
     }
-  }, [user?.id]);
+    setEdges(merged);
+    setEndCursor(conn.pageInfo?.endCursor ?? null);
+    setHasNextPage(Boolean(conn.pageInfo?.hasNextPage));
+  }, [data?.myNotifications]);
+
+  //ถ้า user เปลี่ยน → refetch
+  useEffect(() => {
+    if (user?.id) refetch({ user_id: user.id, first: PAGE_SIZE, after: null });
+  }, [user?.id, refetch]);
 
   const [updateSetting] = useMutation(UPDATE_SETTING);
 
-  if (settingsLoading || notificationsLoading)
+  // โหลดหน้าเพิ่ม
+  const loadMore = useCallback(async () => {
+    if (!hasNextPage || !endCursor) return;
+    const res = await fetchMore({
+      variables: { user_id: user.id, first: PAGE_SIZE, after: endCursor },
+    });
+    const conn = res?.data?.myNotifications;
+    if (!conn) return;
+    const incoming = conn.edges ?? [];
+    // รวม/ลบซ้ำด้วย cursor
+    setEdges((prev) => {
+      const seen = new Set(prev.map((e) => e.cursor));
+      const merged = [...prev];
+      for (const e of incoming) {
+        if (!seen.has(e.cursor)) {
+          seen.add(e.cursor);
+          merged.push(e);
+        }
+      }
+      return merged;
+    });
+    setEndCursor(conn.pageInfo?.endCursor ?? null);
+    setHasNextPage(Boolean(conn.pageInfo?.hasNextPage));
+  }, [fetchMore, endCursor, hasNextPage, user?.id]);
+
+  // IntersectionObserver sentinel
+  const loaderRef = useRef(null);
+  useEffect(() => {
+    const el = loaderRef.current;
+    if (!el) return;
+    if (!hasNextPage) return;
+
+    let locked = false;
+    const io = new IntersectionObserver(async (entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && !locked) {
+        locked = true;
+        try {
+          await loadMore();
+        } finally {
+          // ปลดล็อกเล็กน้อยกันยิงซ้ำถี่
+          setTimeout(() => (locked = false), 150);
+        }
+      }
+    }, { root: null, rootMargin: "1px", threshold: 0 });
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasNextPage, loadMore]);
+
+  const items = useMemo(() => edges.map((e) => e.node), [edges]);
+
+  if (settingsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -63,12 +145,14 @@ const NotificationPage = () => {
       </Box>
     );
 
-  if (settingsError || notificationsError)
+  // ----- สถานะโหลด/ผิดพลาดรวมสองฝั่ง -----
+  if (settingsError || error) {
     return (
-      <Typography color="error" sx={{ mt: 5 }}>
-        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
-      </Typography>
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">❌ {t("loadError") || "เกิดข้อผิดพลาดในการโหลดข้อมูล"}</Alert>
+      </Box>
     );
+  }
 
   const buttons = [
     {
@@ -103,15 +187,38 @@ const NotificationPage = () => {
             </Typography>
 
             <Box sx={{ mt: 2 }}>
-              {notificationsData?.myNotifications?.map((noti) => (
+              {items.map((n) => (
                 <NotificationCard
-                  key={noti.id}
-                  title={noti.title}
-                  message={noti.message}
-                  date={dayjs(noti.createdAt).format("YYYY-MM-DD HH:mm:ss")}
-                  status={noti.type}
+                  key={n.id}
+                  title={n.title}
+                  message={n.message}
+                  date={dayjs(n.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+                  status={n.type}
                 />
               ))}
+
+              {/* Loader / Sentinel */}
+              <Box
+                ref={loaderRef}
+                sx={{ display: "flex", justifyContent: "center", py: 2 }}
+              >
+                {(loading) && (
+                  <Box sx={{ textAlign: "center"}}>
+                    <CircularProgress />
+                    <Typography>กำลังโหลดข้อมูล...</Typography>
+                  </Box>
+                )} 
+                {!loading && items.length === 0 && (
+                  <Typography variant="body2" sx={{ py: 3, textAlign: "center" }}>
+                    {"ยังไม่มีการแจ้งเตือน"}
+                  </Typography>
+                )}
+                {!hasNextPage && items.length > 0 && (
+                  <Typography variant="caption" sx={{ opacity: 0.6 }}>
+                    — {"ไม่มีรายการเพิ่มเติม"} —
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Box>
         );
