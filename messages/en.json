@@ -1,4 +1,8 @@
 {
+  "Init": {
+    "loading": "Loading data",
+    "error": "An error occurred while loading data"
+  },
   "Header": {
     "dashboard": "Dashboard",
     "chat": "AI Chatbot",
@@ -120,7 +124,9 @@
     "notititle1": "System Notification",
     "notisubtitle1": "Manage and Monitor All Notifications",
     "systemtitle1": "Notification Settings",
-    "systemsubtitle1": "Notification Type Settings"
+    "systemsubtitle1": "Notification Type Settings",
+    "loading1": "No notifications",
+    "loading2": "There are no additional items."
   },
   "AlertCard": {
     "button1": "View Details"

@@ -141,7 +141,7 @@ const NotificationPage = () => {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>กำลังโหลดข้อมูล...</Typography>
+        <Typography>{t("loading")}...</Typography>
       </Box>
     );
 
@@ -149,7 +149,7 @@ const NotificationPage = () => {
   if (settingsError || error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">❌ {t("loadError") || "เกิดข้อผิดพลาดในการโหลดข้อมูล"}</Alert>
+        <Alert severity="error">❌ {t("error")}</Alert>
       </Box>
     );
   }
@@ -205,17 +205,17 @@ const NotificationPage = () => {
                 {(loading) && (
                   <Box sx={{ textAlign: "center"}}>
                     <CircularProgress />
-                    <Typography>กำลังโหลดข้อมูล...</Typography>
+                    <Typography>{t("loading")}...</Typography>
                   </Box>
                 )} 
                 {!loading && items.length === 0 && (
                   <Typography variant="body2" sx={{ py: 3, textAlign: "center" }}>
-                    {"ยังไม่มีการแจ้งเตือน"}
+                    {t("loading1")}
                   </Typography>
                 )}
                 {!hasNextPage && items.length > 0 && (
                   <Typography variant="caption" sx={{ opacity: 0.6 }}>
-                    — {"ไม่มีรายการเพิ่มเติม"} —
+                    — {t("loading2")} —
                   </Typography>
                 )}
               </Box>

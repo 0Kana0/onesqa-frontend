@@ -135,7 +135,7 @@ export default function UserDetailPage() {
   if (userError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
-        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+        ❌ {t("error")}
       </Typography>
     );
 

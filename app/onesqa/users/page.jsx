@@ -173,14 +173,14 @@ export default function UserPage() {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
-        <Typography>กำลังโหลดข้อมูล...</Typography>
+        <Typography>{t("loading")}...</Typography>
       </Box>
     );
 
   if (usersError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
-        ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
+        ❌ {t("error")}
       </Typography>
     );
 
