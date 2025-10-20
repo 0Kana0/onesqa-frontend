@@ -22,7 +22,6 @@ import {
   useMediaQuery
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -34,11 +33,13 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useTranslations } from "next-intl";
 import { useSidebar } from "../../context/SidebarContext"; // ✅ ใช้ context
+import NotificationListener from "../NotificationListener";
 
 export default function Header() {
   const router = useRouter();
   const { user, logoutContext } = useAuth();
   const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
+  const [hasNotification, setHasNotification] = useState(false);
 
   console.log(user);
   const t = useTranslations("LogoutAlert");
@@ -49,6 +50,7 @@ export default function Header() {
 
   const pathname = usePathname(); // ✅ ได้ path ปัจจุบัน เช่น "/login", "/dashboard"
   console.log("📍 current path:", pathname);
+  const isOnNotificationPage = pathname?.includes("/onesqa/notification"); // รองรับ /onesqa/notification/... และกรณีมี prefix
 
   const [logout] = useMutation(LOGOUT);
 
@@ -86,6 +88,8 @@ export default function Header() {
 
   const handleNotification = () => {
     console.log("👤 ไปที่เเจ้งเตือน");
+    setHasNotification(false);
+    localStorage.removeItem("alert");
     router.push(`/onesqa/notification`);
   };
 
@@ -261,22 +265,12 @@ export default function Header() {
                 position: "relative",
               }}
             >
-              <Badge
-                variant="dot"
-                overlap="circular"
-                sx={{
-                  "& .MuiBadge-dot": {
-                    backgroundColor: "#E53935", // 🔴 สีแดง
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    top: 4,
-                    right: 4,
-                  },
-                }}
-              >
-                <NotificationsNoneIcon />
-              </Badge>
+              <NotificationListener 
+                user_id={user.id} 
+                isOnNotificationPage={isOnNotificationPage} 
+                hasNotification={hasNotification}
+                setHasNotification={setHasNotification}
+              />
             </IconButton>
             {!isMobile && (
               <>

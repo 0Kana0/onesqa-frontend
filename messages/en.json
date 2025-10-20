@@ -195,5 +195,8 @@
     "cancel": "Cancel",
     "title2": "Completely deleted!",
     "text2": "All edit history has been deleted"
+  },
+  "Toast": {
+    "title1": "New Notification"
   }
 }

@@ -12,6 +12,9 @@ import thMessages from "../messages/th.json"; // ภาษาไทย
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import { SidebarProvider } from "./context/SidebarContext";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 function IntlWrapper({ children }) {
   const { locale } = useLanguage();
   const messages = locale === "th" ? thMessages : enMessages;
@@ -35,7 +38,11 @@ export default function Providers({ children }) {
               enableSystem={false}
             >
               <MuiThemeProvider>
-                <IntlWrapper>{children}</IntlWrapper>
+                <IntlWrapper>
+                  {children}
+                  {/* ✅ ToastContainer อยู่ข้างนอกทั้งหมด */}
+                  <ToastContainer newestOnTop />
+                </IntlWrapper>
               </MuiThemeProvider>
             </NextThemesProvider>
           </SidebarProvider>

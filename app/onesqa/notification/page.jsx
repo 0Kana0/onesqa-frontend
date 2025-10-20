@@ -2,10 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
+import dayjs from "dayjs"; // ✅ เพิ่มบรรทัดนี้
 import { GET_SETTINGS } from "@/graphql/setting/queries";
 import { UPDATE_SETTING } from "@/graphql/setting/mutations";
+import { MY_NOTIFICATIONS } from "@/graphql/notification/queries";
 import { useAuth } from "../../context/AuthContext";
-import { Box, Button, Typography, CircularProgress, useMediaQuery } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  CircularProgress,
+  useMediaQuery,
+} from "@mui/material";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useTranslations } from "next-intl";
@@ -26,18 +34,36 @@ const NotificationPage = () => {
     loading: settingsLoading,
     error: settingsError,
   } = useQuery(GET_SETTINGS);
-  
+
+  const {
+    data: notificationsData,
+    loading: notificationsLoading,
+    error: notificationsError,
+    refetch,
+  } = useQuery(MY_NOTIFICATIONS, {
+    variables: {
+      user_id: user?.id,
+      fetchPolicy: "network-only", // ✅ โหลดจาก server ทุกครั้ง
+    },
+  });
+
+  useEffect(() => {
+    if (user?.id) {
+      refetch(); // ✅ โหลดใหม่ทุกครั้งที่ user_id เปลี่ยนหรือเข้าหน้า
+    }
+  }, [user?.id]);
+
   const [updateSetting] = useMutation(UPDATE_SETTING);
 
-  if (settingsLoading)
+  if (settingsLoading || notificationsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
         <Typography>กำลังโหลดข้อมูล...</Typography>
       </Box>
     );
-  
-  if (settingsError)
+
+  if (settingsError || notificationsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ เกิดข้อผิดพลาดในการโหลดข้อมูล
@@ -77,20 +103,15 @@ const NotificationPage = () => {
             </Typography>
 
             <Box sx={{ mt: 2 }}>
-              <NotificationCard
-                title="การใช้งาน Token เกินกำหนด"
-                message="การใช้งาน Token อยู่ที่ 85% กรุณาติดตามการใช้งานอย่างใกล้ชิด"
-                date="15/11/2567 14:30:00"
-                status="warning"
-                isRead={false} // 🔹 ยังไม่อ่าน
-              />
-              <NotificationCard
-                title="การใช้งาน Token เกินกำหนด"
-                message="การใช้งาน Token อยู่ที่ 85% กรุณาติดตามการใช้งานอย่างใกล้ชิด"
-                date="15/11/2567 14:30:00"
-                status="warning"
-                isRead={false} // 🔹 ยังไม่อ่าน
-              />
+              {notificationsData?.myNotifications?.map((noti) => (
+                <NotificationCard
+                  key={noti.id}
+                  title={noti.title}
+                  message={noti.message}
+                  date={dayjs(noti.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+                  status={noti.type}
+                />
+              ))}
             </Box>
           </Box>
         );
@@ -130,7 +151,9 @@ const NotificationPage = () => {
                           },
                         },
                       });
-                      console.log(`✅ Updated ${setting.setting_name} to ${newValue}`);
+                      console.log(
+                        `✅ Updated ${setting.setting_name} to ${newValue}`
+                      );
                     } catch (err) {
                       console.error("❌ Error updating setting:", err);
                     }

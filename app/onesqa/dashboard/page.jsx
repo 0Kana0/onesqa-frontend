@@ -109,7 +109,7 @@ const DashboardPage = () => {
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
       {summary.totalTokenAll > 0 &&
-        (summary.totalTokenCount / summary.totalTokenAll) * 100 <= 30 && (
+        (summary.totalTokenCount / summary.totalTokenAll) * 100 <= 15 && (
           <Box
             sx={{
               border: "1px solid #E5E7EB",
@@ -122,7 +122,7 @@ const DashboardPage = () => {
           >
             <AlertCard
               title={t("title1")}
-              message={`${t("message1p1")} 70% ${t("message1p2")}`}
+              message={`${t("message1p1")} 85% ${t("message1p2")}`}
               onDetailClick={handleDetail}
             />
           </Box>

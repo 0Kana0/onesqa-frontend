@@ -20,11 +20,11 @@ export default function NotificationCard({
 
   const getStatusColor = () => {
     switch (status) {
-      case "warning":
+      case "WARNING":
         return { color: "#FF9500", bg: "#FFF3E0", icon: <WarningAmberIcon /> };
-      case "info":
+      case "INFO":
         return { color: "#0288D1", bg: "#E1F5FE", icon: <InfoIcon /> };
-      case "success":
+      case "SUCCESS":
         return { color: "#2E7D32", bg: "#E8F5E9", icon: <CheckCircleIcon /> };
       default:
         return { color: "#616161", bg: "#F5F5F5", icon: <InfoIcon /> };
