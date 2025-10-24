@@ -11,6 +11,9 @@ export const SIGNIN = gql`
         color_mode
         email
         login_type
+        locale
+        alert
+        is_online
         phone
         position
         group_name
@@ -42,6 +45,9 @@ export const VERIFY_SIGNIN_WITH_ID = gql`
         color_mode
         email
         login_type
+        locale
+        alert
+        is_online
         phone
         position
         group_name
@@ -63,6 +69,9 @@ export const REFRESH_TOKEN = gql`
         color_mode
         email
         login_type
+        locale
+        alert
+        is_online
         phone
         position
         group_name

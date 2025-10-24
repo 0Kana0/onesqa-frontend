@@ -12,6 +12,9 @@ export const UPDATE_USER = gql`
       lastname
       loginAt
       login_type
+      locale
+      alert
+      is_online
       phone
       position
       username

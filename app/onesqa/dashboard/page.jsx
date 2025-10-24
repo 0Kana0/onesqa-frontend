@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_ROLES } from "@/graphql/role/queries";
+import { ONLINE_USERS } from "@/graphql/userStatus/queries";
 import { GET_ME } from "@/graphql/auth/queries";
 import { GET_AIS } from "@/graphql/ai/queries";
 import {
@@ -20,6 +21,7 @@ import TokensChart from "@/app/components/TokensChart";
 import AlertCard from "@/app/components/AlertCard";
 import SystemStatusCard from "@/app/components/SystemStatusCard";
 import TokenUsageDashboardBar from "@/app/components/TokenUsageDashboardBar";
+import OnlineUsersListener from "@/app/components/OnlineUsersListener";
 
 const DashboardPage = () => {
   const t = useTranslations("DashboardPage");
@@ -64,7 +66,18 @@ const DashboardPage = () => {
     data: aisData,
     loading: aisLoading,
     error: aisError,
-  } = useQuery(GET_AIS);
+  } = useQuery(GET_AIS, {
+    fetchPolicy: "network-only",
+  });
+
+  const {
+    data: onlineUsersData,
+    loading: onlineUsersLoading,
+    error: onlineUsersError,
+    refetch
+  } = useQuery(ONLINE_USERS, {
+    fetchPolicy: "network-only",
+  });
 
   useEffect(() => {
     if (!aisData?.ais?.length) return;
@@ -86,7 +99,7 @@ const DashboardPage = () => {
     });
   }, [aisData]);
 
-  if (aisLoading)
+  if (aisLoading || onlineUsersLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -94,7 +107,7 @@ const DashboardPage = () => {
       </Box>
     );
 
-  if (aisError)
+  if (aisError || onlineUsersError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -127,7 +140,13 @@ const DashboardPage = () => {
               onDetailClick={handleDetail}
             />
           </Box>
-        )}
+        )
+      }
+
+      {/* <OnlineUsersListener 
+        online={onlineUsersData?.onlineUsers} 
+        refetch={refetch}
+      /> */}
 
       <Box
         sx={{

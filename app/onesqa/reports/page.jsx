@@ -128,7 +128,9 @@ const ReportPage = () => {
     data: aisData,
     loading: aisLoading,
     error: aisError,
-  } = useQuery(GET_AIS);
+  } = useQuery(GET_AIS, {
+    fetchPolicy: "network-only",
+  });
 
   if (aisLoading)
     return (

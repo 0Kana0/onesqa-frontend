@@ -27,6 +27,7 @@ export default function DetailPage() {
     loading: userLoading,
     error: userError,
   } = useQuery(GET_USER, {
+    fetchPolicy: "network-only",
     variables: {
       id: user?.id || 1,
     },

@@ -37,7 +37,9 @@ const NotificationPage = () => {
     data: settingsData,
     loading: settingsLoading,
     error: settingsError,
-  } = useQuery(GET_SETTINGS);
+  } = useQuery(GET_SETTINGS, {
+    fetchPolicy: "network-only",
+  });
 
   // ----- โหลด notifications (cursor-based) -----
   const {

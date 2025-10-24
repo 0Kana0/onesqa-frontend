@@ -10,6 +10,9 @@ export const GET_ME = gql`
       color_mode
       email
       login_type
+      locale
+      alert
+      is_online
       phone
       position
       group_name

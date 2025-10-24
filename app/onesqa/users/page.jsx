@@ -44,7 +44,9 @@ export default function UserPage() {
     data: usersData,
     loading: usersLoading,
     error: usersError,
-  } = useQuery(GET_USERS);
+  } = useQuery(GET_USERS, {
+    fetchPolicy: "network-only",
+  });
   //console.log(usersData);
 
   // 🔹 state

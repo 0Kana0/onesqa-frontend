@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@apollo/client/react";
+import { NetworkStatus } from "@apollo/client";
+import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
 import { GET_LOGS } from "@/graphql/log/queries";
 import { DELETE_LOGS } from "@/graphql/log/mutations";
 import {
@@ -31,21 +32,36 @@ import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { exportLogsToExcel } from "@/util/exportToExcel";
 
+const mapLogFilterToType = (label) => {
+  switch (label) {
+    case "กำหนดแนวทางการตั้งคำถาม": return "PROMPT";
+    case "ตั้งค่าการแจ้งเตือน": return "ALERT";
+    case "ตั้งค่า Model": return "MODEL";
+    case "ตั้งค่า Model ของผู้ใช้งาน": return "PERSONAL";
+    case "ตั้งค่า Model ของกลุ่มงาน": return "GROUP";
+    default: return null; // "หัวข้อการ Logs แก้ไข" = ทั้งหมด
+  }
+};
+
+const mapTypeToLogFilter = (label) => {
+  switch (label) {
+    case "PROMPT": return "กำหนดแนวทางการตั้งคำถาม";
+    case "ALERT": return "ตั้งค่าการแจ้งเตือน";
+    case "MODEL": return "ตั้งค่า Model";
+    case "PERSONAL": return "ตั้งค่า Model ของผู้ใช้งาน";
+    case "GROUP": return "ตั้งค่า Model ของกลุ่มงาน";
+    default: return null; // "หัวข้อการ Logs แก้ไข" = ทั้งหมด
+  }
+};
+
 const LogPage = () => {
+  const client = useApolloClient();
   const t = useTranslations("LogPage");
   const tInit = useTranslations("Init");
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
-
-  const {
-    data: logsData,
-    loading: logsLoading,
-    error: logsError,
-  } = useQuery(GET_LOGS);
-
-  const [deleteLogs] = useMutation(DELETE_LOGS);
 
   const [logFilter, setLogFilter] = useState("หัวข้อการ Logs แก้ไข");
   const [startDate, setStartDate] = useState("");
@@ -94,19 +110,43 @@ const LogPage = () => {
     //   ),
     // },
   ]);
+  const [totalCount, setTotalCount] = useState(0)
+
+  const {
+    data: logsData,
+    loading: logsLoading,
+    error: logsError,
+    networkStatus
+  } = useQuery(GET_LOGS, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    variables: {
+      page: page, 
+      pageSize: rowsPerPage,
+      where: {
+        logType: mapLogFilterToType(logFilter),
+        startDate: startDate,
+        endDate: endDate
+      }
+    },
+  });
+
+  const [deleteLogs] = useMutation(DELETE_LOGS);
 
   useEffect(() => {
-    if (!logsData?.logs.length) return;
+    //console.log(logsData?.logs?.totalCount);
+    if (!logsData?.logs?.items.length) {
+      setLogRows([]);
+      setTotalCount(0);
+      
+      return;
+    } 
 
-    const transformed = logsData.logs.map((log) => {
+    const transformed = logsData.logs.items.map((log) => {
       const formattedTime = dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss");
 
       // แปลง log_type เป็น topic
-      let topic = "";
-      if (log.log_type === "PROMPT") topic = "กำหนดแนวทางการตั้งคำถาม";
-      else if (log.log_type === "ALERT") topic = "ตั้งค่าการแจ้งเตือน";
-      else if (log.log_type === "MODEL") topic = "ตั้งค่า Model";
-      else topic = log.log_type;
+      let topic = mapTypeToLogFilter(log.log_type);
 
       // แปลง old/new
       let oldValue = log.old_data;
@@ -128,6 +168,18 @@ const LogPage = () => {
         );
       }
 
+      // helper ไว้ใช้ซ้ำ
+      const toApprovalText = (v) => {
+        if (v === true || v === 'true' || v === 1 || v === '1') return 'อนุมัติ';
+        if (v === false || v === 'false' || v === 0 || v === '0') return 'ไม่อนุมัติ';
+        return v == null ? '' : String(v); // กัน null/undefined
+      };
+
+      if (log.log_type === 'MODEL' || log.log_type === 'PERSONAL') {
+        oldValue = log.old_data + " " + toApprovalText(log.old_status);
+        newValue = log.new_data + " " + toApprovalText(log.new_status);
+      }
+
       return {
         time: formattedTime,
         name: log.edit_name,
@@ -138,9 +190,15 @@ const LogPage = () => {
     });
 
     setLogRows(transformed);
+    setTotalCount(logsData?.logs?.totalCount)
   }, [logsData]);
 
-  if (logsLoading)
+  // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
+  const isInitialLoading =
+    networkStatus === NetworkStatus.loading && !logsData;
+
+  // ก่อนหน้าเคยเขียน if (logsLoading) return ... → เปลี่ยนเป็นเช็ค isInitialLoading
+  if (isInitialLoading) 
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -157,29 +215,26 @@ const LogPage = () => {
 
   //console.log(logsData);
   //console.log(JSON.stringify(logsData.logs, null, 2));
-  console.log(JSON.stringify(logRows, null, 2));
+  //console.log(JSON.stringify(logRows, null, 2));
+  //console.log(logRows, logsData?.logs?.items.length);
+  //console.log(logsData?.logs?.totalCount / rowsPerPage);
+  //console.log(totalCount);
 
   // 🔹 ฟังก์ชันกรองข้อมูล
-  const filteredLogs = logRows.filter((log) => {
-    const matchesLog =
-      logFilter === "หัวข้อการ Logs แก้ไข" || log.topic.includes(logFilter);
+  // const filteredLogs = logRows.filter((log) => {
+  //   const matchesLog =
+  //     logFilter === "หัวข้อการ Logs แก้ไข" || log.topic.includes(logFilter);
 
-    // --- แปลงวันที่ใน record ---
-    const logDate = new Date(dayjs(log.time).format("YYYY-MM-DD"));
+  //   // --- แปลงวันที่ใน record ---
+  //   const logDate = new Date(dayjs(log.time).format("YYYY-MM-DD"));
 
-    // --- ถ้ามี startDate / endDate ให้กรองตามนั้น ---
-    const isAfterStart = startDate ? logDate >= new Date(startDate) : true;
-    const isBeforeEnd = endDate ? logDate <= new Date(endDate) : true;
+  //   // --- ถ้ามี startDate / endDate ให้กรองตามนั้น ---
+  //   const isAfterStart = startDate ? logDate >= new Date(startDate) : true;
+  //   const isBeforeEnd = endDate ? logDate <= new Date(endDate) : true;
 
-    // ✅ เงื่อนไขรวมทั้งหมด (สามารถเพิ่ม filter อื่นได้)
-    return isAfterStart && isBeforeEnd && matchesLog;
-  });
-
-  // ✅ แบ่งข้อมูลตามหน้า
-  const paginatedLogs = filteredLogs.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
+  //   // ✅ เงื่อนไขรวมทั้งหมด (สามารถเพิ่ม filter อื่นได้)
+  //   return isAfterStart && isBeforeEnd && matchesLog;
+  // });
 
   // ✅ เมื่อเปลี่ยนหน้า
   const handleChangePage = (event, value) => {
@@ -191,6 +246,7 @@ const LogPage = () => {
     setLogFilter("หัวข้อการ Logs แก้ไข"); // กลับไปค่าหมวดหมู่เริ่มต้น
     setStartDate(""); // ล้างวันที่เริ่ม
     setEndDate(""); // ล้างวันที่สิ้นสุด
+    setPage(1);
     console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
@@ -213,6 +269,7 @@ const LogPage = () => {
       }).then(async (result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
+          setTotalCount(0);
 
           try {
             // ✅ เรียก mutation ไป backend
@@ -247,6 +304,7 @@ const LogPage = () => {
       }).then(async (result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
+          setTotalCount(0);
           
           try {
             // ✅ เรียก mutation ไป backend
@@ -267,34 +325,60 @@ const LogPage = () => {
     }
   };
 
-  const handleExportExcel = () => {
-    const transformed = logRows.map((row) => {
-      // 🧠 กำหนดค่า oldData/newData เริ่มต้น
-      let oldData = row.old;
-      let newData = row.new;
+  const handleExportExcel = async () => {
+    // เรียกแบบไม่ส่ง variables (ใช้ค่า default ของ schema)
+    const { data } = await client.query({
+      query: GET_LOGS,
+      fetchPolicy: "network-only",
+    });
 
-      // ✅ ตรวจว่ามี Switch หรือไม่ (React element)
-      if (typeof row.old === "object" && row.topic.includes("แจ้งเตือน")) {
-        oldData = "การแจ้งเตือนระบบ ❌"; // old switch checked
-        newData = "การแจ้งเตือนระบบ ✅"; // new switch unchecked
+    //console.log(data);
+    //console.log(data?.logs?.items);
+    
+    const lowRowExcel = data?.logs?.items ?? [];
+
+    const toApprovalText = (v) => {
+      if (v === true || v === "true" || v === 1 || v === "1") return "อนุมัติ";
+      if (v === false || v === "false" || v === 0 || v === "0") return "ไม่อนุมัติ";
+      return v == null ? "" : String(v);
+    };
+
+    const payload = lowRowExcel.map((log) => {
+      const time = dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss");
+      const topic = typeof mapTypeToLogFilter === "function"
+        ? mapTypeToLogFilter(log.log_type)
+        : log.log_type;
+
+      if (log.log_type === "ALERT") {
+        return {
+          time,
+          name: log.edit_name,
+          topic,
+          oldData: `${log.old_data ?? ""} ${log.old_status ? "✅" : "❌"}`,
+          newData: `${log.new_data ?? ""} ${log.new_status ? "✅" : "❌"}`,
+        };
       }
 
-      // ✅ ถ้าค่าเป็น JSX หรือ object อื่นๆ ให้ดึงข้อความออก
-      if (typeof oldData === "object") oldData = "ไม่ทราบค่าเดิม";
-      if (typeof newData === "object") newData = "ไม่ทราบค่าใหม่";
+      if (log.log_type === "MODEL" || log.log_type === "PERSONAL") {
+        return {
+          time,
+          name: log.edit_name,
+          topic,
+          oldData: `${log.old_data ?? ""} ${toApprovalText(log.old_status)}`,
+          newData: `${log.new_data ?? ""} ${toApprovalText(log.new_status)}`,
+        };
+      }
 
       return {
-        time: row.time,
-        name: row.name,
-        topic: row.topic,
-        oldData,
-        newData,
+        time,
+        name: log.edit_name,
+        topic,
+        oldData: log.old_data ?? "",
+        newData: log.new_data ?? "",
       };
     });
 
-    console.log(transformed);
-
-    exportLogsToExcel(transformed)
+    exportLogsToExcel(payload);
   }
 
   return (
@@ -334,7 +418,10 @@ const LogPage = () => {
           >
             <Select
               value={logFilter}
-              onChange={(e) => setLogFilter(e.target.value)}
+              onChange={(e) => {
+                setLogFilter(e.target.value)
+                setPage(1)
+              }}
               size="small"
               sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
             >
@@ -344,12 +431,17 @@ const LogPage = () => {
               <MenuItem value="กำหนดแนวทางการตั้งคำถาม">
                 กำหนดแนวทางการตั้งคำถาม
               </MenuItem>
-              <MenuItem value="กำหนด Tokens ผู้ใช้งาน ">
-                กำหนด Tokens ผู้ใช้งาน
-              </MenuItem>
-              <MenuItem value="กำหนด AI Access">กำหนด AI Access</MenuItem>
               <MenuItem value="ตั้งค่าการแจ้งเตือน">
                 ตั้งค่าการแจ้งเตือน
+              </MenuItem>
+              <MenuItem value="ตั้งค่า Model">
+                ตั้งค่า Model
+              </MenuItem>
+              <MenuItem value="ตั้งค่า Model ของผู้ใช้งาน">
+                ตั้งค่า Model ของผู้ใช้งาน
+              </MenuItem>
+              <MenuItem value="ตั้งค่า Model ของกลุ่มงาน">
+                ตั้งค่า Model ของกลุ่มงาน
               </MenuItem>
             </Select>
 
@@ -358,7 +450,10 @@ const LogPage = () => {
               label={t("startDate")}
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                setStartDate(e.target.value)
+                setPage(1)
+              }}
               size="small"
               sx={{ width: isTablet ? "100%" : 200 }}
               InputLabelProps={{ shrink: true }}
@@ -369,7 +464,10 @@ const LogPage = () => {
               label={t("endDate")}
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => {
+                setEndDate(e.target.value)
+                setPage(1)
+              }}
               size="small"
               sx={{ width: isTablet ? "100%" : 200 }}
               InputLabelProps={{ shrink: true }}
@@ -411,7 +509,10 @@ const LogPage = () => {
               color="error"
               startIcon={<DeleteIcon />}
               sx={{ width: isTablet ? "100%" : "none", borderRadius: 2 }}
-              onClick={() => handleDeleteAll()}
+              onClick={() => {
+                handleDeleteAll()
+                setPage(1)
+              }}
             >
               {t("button1")}
             </Button>
@@ -448,7 +549,7 @@ const LogPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paginatedLogs.map((row, i) => (
+                  {logRows.map((row, i) => (
                     <TableRow key={i}>
                       <TableCell>{row.time}</TableCell>
                       <TableCell>{row.name}</TableCell>
@@ -459,7 +560,7 @@ const LogPage = () => {
                   ))}
 
                   {/* ถ้าไม่มีข้อมูล */}
-                  {paginatedLogs.length === 0 && (
+                  {logRows.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                         ไม่พบข้อมูล
@@ -480,7 +581,7 @@ const LogPage = () => {
               }}
             >
               <Pagination
-                count={Math.ceil(filteredLogs.length / rowsPerPage)}
+                count={Math.ceil(totalCount / rowsPerPage)}
                 page={page}
                 onChange={handleChangePage}
                 color="primary"
