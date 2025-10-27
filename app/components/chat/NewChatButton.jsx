@@ -1,0 +1,118 @@
+// app/components/ChatQuickActions.jsx
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+} from "@mui/material";
+import CreateOutlinedIcon from "@mui/icons-material/CreateOutlined";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import ChatSearchModal from "./ChatSearchModal";
+
+export default function NewChatButton({
+  onNewChat,   // (optional) callback เมื่อกด "แชตใหม่"
+  onSearch,    // (optional) callback เมื่อกด "ค้นหาแชต"
+  disabledNew = false,
+  disabledSearch = false,
+}) {
+  const pathname = usePathname();
+  
+  // state เปิด/ปิด modal ค้นหา
+  const [openSearch, setOpenSearch] = useState(false);
+
+  // ตัวอย่างข้อมูลให้เหมือนภาพตัวอย่าง
+  const sections = [
+    { id: "t1", title: "การแก้ไขข้อผิดพลาด slui" },
+    { id: "t2", title: "Next.js MUI UI toggle" },
+    { id: "t3", title: "คำว่า saber คืออะไร" },
+    { id: "t4", title: "การแก้ไขข้อผิดพลาด slui" },
+    { id: "t5", title: "Next.js MUI UI toggle" },
+    { id: "t6", title: "คำว่า saber คืออะไร" },
+    { id: "t7", title: "การแก้ไขข้อผิดพลาด slui" },
+    { id: "t8", title: "Next.js MUI UI toggle" },
+    { id: "t9", title: "คำว่า saber คืออะไร" },
+    { id: "t10", title: "การแก้ไขข้อผิดพลาด slui" },
+    { id: "t11", title: "Next.js MUI UI toggle" },
+    { id: "t12", title: "คำว่า saber คืออะไร" },
+    { id: "t13", title: "การแก้ไขข้อผิดพลาด slui" },
+    { id: "t14", title: "Next.js MUI UI toggle" },
+    { id: "t15", title: "คำว่า saber คืออะไร" },
+    { id: "t16", title: "การแก้ไขข้อผิดพลาด slui" },
+    { id: "t17", title: "Next.js MUI UI toggle" },
+    { id: "t18", title: "คำว่า saber คืออะไร" },
+  ];
+
+  const items = [
+    {
+      key: "new",
+      label: "แชตใหม่",
+      icon: <CreateOutlinedIcon fontSize="small" />,
+      onClick: onNewChat,
+      disabled: disabledNew,
+    },
+    {
+      key: "search",
+      label: "ค้นหาแชต",
+      icon: <SearchOutlinedIcon fontSize="small" />,
+      onClick: () => setOpenSearch(true),
+      disabled: disabledSearch,
+    },
+  ];
+
+  return (
+    <>
+      <Paper elevation={0} sx={{ p: 0, backgroundColor: "transparent" }}>
+        <List
+          dense
+          sx={{
+            "& .MuiListItemButton-root": {
+              borderRadius: 1.5,
+              mb: 0.5,
+              px: 1,
+            },
+            "& .MuiListItemIcon-root": {
+              minWidth: 32,
+            },
+          }}
+        >
+          {items.map((it) => {
+            const selected = pathname === it.href;
+            return (
+              <ListItemButton
+                key={it.key}
+                onClick={it.onClick}
+                disabled={it.disabled}
+                disableRipple
+              >
+                <ListItemIcon>{it.icon}</ListItemIcon>
+                <ListItemText
+                  primary={it.label}
+                  primaryTypographyProps={{ fontSize: 14 }}
+                />
+              </ListItemButton>
+            );
+          })}
+        </List>
+      </Paper>
+
+      <ChatSearchModal
+        open={openSearch}
+        onClose={() => setOpenSearch(false)}
+        sections={sections}
+        onSelect={(item) => {
+          // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
+          console.log("เลือก:", item);
+          // ตัวอย่าง: ไปหน้าแชตของ item.id
+          // router.push(`/chat/${item.id}`);
+          setOpenSearch(false);
+        }}
+      />
+    </>
+  );
+}

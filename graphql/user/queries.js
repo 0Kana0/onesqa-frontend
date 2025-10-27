@@ -1,27 +1,33 @@
 import { gql } from "@apollo/client";
 
 export const GET_USERS = gql`
-  query users {
-    users {
-      id
-      firstname
-      lastname
-      position
-      ai_access
-      loginAt
-      email
-      phone
-      group_name
-      user_ai {
-        token_count
-        token_all
-        ai {
-          model_name
+  query users($page: Int, $pageSize: Int, $where: UserFilterInput) {
+    users(page: $page, pageSize: $pageSize, where: $where) {
+      page
+      pageSize
+      totalCount
+      items {
+        id
+        firstname
+        lastname
+        position
+        ai_access
+        loginAt
+        is_online
+        email
+        phone
+        group_name
+        user_ai {
+          token_count
+          token_all
+          ai {
+            model_name
+          }
         }
-      }
-      user_role {
-        role {
-          role_name
+        user_role {
+          role {
+            role_name
+          }
         }
       }
     }

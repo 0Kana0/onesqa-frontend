@@ -31,6 +31,7 @@ import Swal from "sweetalert2";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { exportLogsToExcel } from "@/util/exportToExcel";
+import { useRequireRole } from "@/hook/useRequireRole";
 
 const mapLogFilterToType = (label) => {
   switch (label) {
@@ -137,12 +138,11 @@ const LogPage = () => {
     //console.log(logsData?.logs?.totalCount);
     if (!logsData?.logs?.items.length) {
       setLogRows([]);
-      setTotalCount(0);
-      
+      setTotalCount(0);  
       return;
     } 
 
-    const transformed = logsData.logs.items.map((log) => {
+    const transformed = logsData?.logs?.items?.map((log) => {
       const formattedTime = dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss");
 
       // แปลง log_type เป็น topic
@@ -192,6 +192,14 @@ const LogPage = () => {
     setLogRows(transformed);
     setTotalCount(logsData?.logs?.totalCount)
   }, [logsData]);
+
+  const { allowed, loading, user } = useRequireRole({
+    roles: ["ผู้ดูแลระบบ"],
+    redirectTo: "/onesqa/chat",
+  });
+  
+  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
   // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
   const isInitialLoading =
@@ -330,6 +338,13 @@ const LogPage = () => {
     const { data } = await client.query({
       query: GET_LOGS,
       fetchPolicy: "network-only",
+      variables: {
+        where: {
+          logType: mapLogFilterToType(logFilter),
+          startDate: startDate,
+          endDate: endDate
+        }
+      }
     });
 
     //console.log(data);

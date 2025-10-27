@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const GET_LOGS = gql`
-  query GET_LOGS($page: Int, $pageSize: Int, $where: LogFilterInput) {
+  query logs($page: Int, $pageSize: Int, $where: LogFilterInput) {
     logs(page: $page, pageSize: $pageSize, where: $where) {
       page
       pageSize

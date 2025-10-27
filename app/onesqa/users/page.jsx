@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { NetworkStatus } from "@apollo/client";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@apollo/client/react";
+import { useQuery, useMutation, useApolloClient } from "@apollo/client/react";
 import dayjs from "dayjs"; // ✅ เพิ่มบรรทัดนี้
 import {
   Box,
@@ -32,22 +33,21 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import { useTranslations } from "next-intl";
 import { exportUsersToExcel } from "@/util/exportToExcel";
+import { useRequireRole } from "@/hook/useRequireRole";
+
+const normalize = (v) => (v === 'ทั้งหมด' || v === '' || v == null ? null : v);
+const normalizeText = (v) => {
+  const s = (v ?? '').trim();
+  return s === '' ? null : s;
+}
 
 export default function UserPage() {
+  const client = useApolloClient();
   const router = useRouter();
   const t = useTranslations("UserPage");
   const tInit = useTranslations("Init");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
-
-  const {
-    data: usersData,
-    loading: usersLoading,
-    error: usersError,
-  } = useQuery(GET_USERS, {
-    fetchPolicy: "network-only",
-  });
-  //console.log(usersData);
 
   // 🔹 state
   const [search, setSearch] = useState("");
@@ -55,6 +55,32 @@ export default function UserPage() {
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
   const [page, setPage] = useState(1);
   const rowsPerPage = 5; // ✅ แสดง 5 แถวต่อหน้า
+
+  const [users, setUsers] = useState([]);
+  const [totalCount, setTotalCount] = useState(0)
+
+  const [pendingIds, setPendingIds] = useState(new Set());
+  const isPending = useCallback((id) => pendingIds.has(id), [pendingIds]);
+
+  const {
+    data: usersData,
+    loading: usersLoading,
+    error: usersError,
+    networkStatus
+  } = useQuery(GET_USERS, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    variables: {
+      page: page, 
+      pageSize: rowsPerPage,
+      where: {
+        role: normalize(roleFilter),
+        status: normalize(statusFilter),
+        search: normalizeText(search)
+      }
+    },
+  });
+  //console.log(usersData);
 
   // ✅ state ของ users (เก็บค่า aiAccess แบบ toggle ได้)
   // const [users, setUsers] = useState([
@@ -120,59 +146,124 @@ export default function UserPage() {
   //   },
   // ]);
 
-  const [users, setUsers] = useState([]);
   const [updateUser] = useMutation(UPDATE_USER);
+
+  // ✅ เมื่อ toggle ปุ่ม
+  const handleToggleAccess = useCallback(
+    async (id, nextChecked) => {
+      if (pendingIds.has(id)) return; // กันกดซ้ำระหว่างกำลังยิง API
+
+      // เก็บค่าเดิมไว้เพื่อ rollback
+      const current = users.find((u) => u.id === id);
+      if (!current) return;
+      const prevChecked = !!current.aiAccess;
+
+      // 1) ล็อกปุ่มของแถวนั้น
+      setPendingIds((prev) => {
+        const s = new Set(prev);
+        s.add(id);
+        return s;
+      });
+
+      // 2) optimistic update ทันที
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, aiAccess: nextChecked } : u))
+      );
+
+      try {
+        // 3) ยิงจริงไป backend (ใช้ nextChecked ไม่ใช่ !user.aiAccess)
+        const { data } = await updateUser({
+          variables: {
+            id,
+            input: { ai_access: nextChecked },
+          },
+        });
+
+        // 4) ซิงก์ค่าจากเซิร์ฟเวอร์ เผื่อ backend ปรับ logic เอง
+        const serverValue = !!data?.updateUser?.ai_access;
+        setUsers((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, aiAccess: serverValue } : u))
+        );
+      } catch (err) {
+        console.error("Update failed:", err);
+        // 5) rollback ถ้ามี error
+        setUsers((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, aiAccess: prevChecked } : u))
+        );
+      } finally {
+        // 6) ปลดล็อก
+        setPendingIds((prev) => {
+          const s = new Set(prev);
+          s.delete(id);
+          return s;
+        });
+      }
+    },
+    [users, pendingIds, updateUser]
+  );
+
+  //console.log(usersData?.users?.items);
 
   // ✅ useEffect
   useEffect(() => {
-    if (usersData?.users) {
-      const formattedData =
-        usersData.users.map((item) => ({
-          id: item?.id,
-          name: `${item?.firstname || ""} ${item?.lastname || ""}`,
-          email: item?.email || "-",
-          role: item?.user_role?.[0]?.role?.role_name || "ไม่ระบุ",
-          position: item?.position || "-",
-          //status: item?.ai_access ? "ใช้งานอยู่" : "ไม่ใช้งาน",
-          phone: item?.phone || "-",
-          group: item?.group_name || "-",
-          status: "ใช้งานอยู่",
-          aiAccess: !!item?.ai_access,
-          lastLogin: dayjs(item?.loginAt).format("YYYY-MM-DD HH:mm:ss"), // ✅ ใช้ฟังก์ชันที่เราสร้าง
-          aiModels:
-            item?.user_ai?.map((ai) => ({
-              model: ai.ai?.model_name || "-",
-              token: ai.token_count || 0,
-              token_all: ai.token_all || 0,
-          })) || [],
-        })) || [];
+    // รอจนกว่าจะมีโครง usersData ก่อน ค่อยประมวลผล
+    if (!usersData?.users) return;
 
-      setUsers(formattedData);
+    const items = usersData.users.items || [];
+
+    // ถ้าไม่มีรายการ → ล้าง state แล้วจบ
+    if (!items.length) {
+      setUsers([]);
+      setTotalCount(usersData.users.totalCount ?? 0);
+      return;
     }
+
+    const formattedData = items.map((item) => {
+      const lastLogin =
+        item?.loginAt && dayjs(item.loginAt).isValid()
+          ? dayjs(item.loginAt).format('YYYY-MM-DD HH:mm:ss')
+          : '-';
+
+      return {
+        id: item?.id,
+        name: `${item?.firstname || ''} ${item?.lastname || ''}`.trim(),
+        email: item?.email || '-',
+        role: item?.user_role?.[0]?.role?.role_name || 'ไม่ระบุ',
+        position: item?.position || '-',
+        status: item?.is_online ? 'ใช้งานอยู่' : 'ไม่ใช้งาน',
+        phone: item?.phone || '-',
+        group: item?.group_name || '-',
+        aiAccess: !!item?.ai_access,
+        lastLogin,
+        aiModels:
+          item?.user_ai?.map((ua) => ({
+            model: ua?.ai?.model_name || '-',
+            token: ua?.token_count ?? 0,
+            token_all: ua?.token_all ?? 0,
+          })) || [],
+      };
+    });
+
+    setUsers(formattedData);
+    setTotalCount(usersData.users.totalCount ?? formattedData.length);
   }, [usersData]);
 
   console.log(users);
 
-  const handleExportExcel = () => {
-    const transformed =
-      users?.map((item) => ({
-        id: item?.id,
-        fullName: item?.name || "-",
-        email: item?.email || "-",
-        phone: item?.phone || "-",
-        role: item?.role || "-",
-        position: item?.position || "-",
-        group: item?.group || "-",
-        status: item?.status ? "ใช้งานอยู่" : "ไม่ใช้งาน",
-        aiAccess: !!item?.aiAccess,
-        lastLogin: item?.lastLogin,
-        aiModels: item?.aiModels
-      })) || [];
+  const { allowed, loading, user } = useRequireRole({
+    roles: ["ผู้ดูแลระบบ"],
+    redirectTo: "/onesqa/chat",
+  });
+    
+  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
-    exportUsersToExcel(transformed);
-  };
-
-  if (usersLoading)
+  // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
+  const isInitialLoading =
+    networkStatus === NetworkStatus.loading && !usersData;
+  
+  // ก่อนหน้าเคยเขียน if (logsLoading) return ... → เปลี่ยนเป็นเช็ค isInitialLoading
+  if (isInitialLoading) 
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -187,57 +278,67 @@ export default function UserPage() {
       </Typography>
     );
 
-  // ✅ เมื่อ toggle ปุ่ม
-  const handleToggleAccess = async (id) => {
-    // หา user ที่ toggle อยู่
-    const targetUser = users.find((u) => u.id === id);
-    if (!targetUser) return;
-
-    const newAccess = !targetUser.aiAccess;
-
-    // ✅ อัปเดต UI ทันที (optimistic update)
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === id ? { ...user, aiAccess: !user.aiAccess } : user
-      )
-    );
-
-    // ถ้ามี backend → สามารถเรียก API ที่นี่ได้ เช่น:
-    // await axios.put(`/api/users/${id}/access`, { aiAccess: !user.aiAccess })
-    try {
-      // ✅ เรียก mutation ไป backend
-      const { data } = await updateUser({
-        variables: {
-          id, // ต้องตรงกับ schema
-          input: {
-            ai_access: newAccess, // เปลี่ยนเฉพาะ field นี้
-          },
+  const handleExportExcel = async () => {
+    // ดึงข้อมูลแบบ network-only เพื่อให้สดใหม่
+    const { data } = await client.query({
+      query: GET_USERS,
+      fetchPolicy: 'network-only',
+      variables: {
+        // ถ้าสกีมามี default page/pageSize ก็ไม่ต้องส่ง
+        // ใส่ where ตามฟิลเตอร์หน้า UI (แปลง "ทั้งหมด" -> null)
+        where: {
+          role: normalize(roleFilter),
+          status: normalize(statusFilter),
+          search: normalizeText(search),
         },
-      });
+        // ถ้าอยากดึงเยอะ ๆ ในทีเดียวและสกีมารองรับ ให้กำหนดเอง เช่น:
+        // page: 1,
+        // pageSize: 1000,
+      },
+    });
 
-      console.log("✅ Update success:", data.updateUser);
-    } catch (error) {
-      console.log(error);
-    }
+    const items = data?.users?.items ?? [];
+
+    const transformed = items.map((item, idx) => {
+      const lastLogin =
+        item?.loginAt && dayjs(item.loginAt).isValid()
+          ? dayjs(item.loginAt).format('YYYY-MM-DD HH:mm:ss')
+          : '-';
+
+      return {
+        id: item?.id ?? `row-${idx}`,
+        fullName: `${item?.firstname || ''} ${item?.lastname || ''}`.trim() || '-',
+        email: item?.email || '-',
+        phone: item?.phone || '-',
+        role: item?.user_role?.[0]?.role?.role_name || 'ไม่ระบุ',
+        position: item?.position || '-',
+        group: item?.group_name || '-',
+        status: item?.is_online ? 'ใช้งานอยู่' : 'ไม่ใช้งาน', // ถ้าหมายถึง AI access ให้เปลี่ยนเป็น item?.ai_access
+        aiAccess: !!item?.ai_access,
+        lastLogin,
+        aiModels:
+          item?.user_ai?.map((ua) => ({
+            model: ua?.ai?.model_name || '-',
+            token: ua?.token_count ?? 0,
+            token_all: ua?.token_all ?? 0,
+          })) || [],
+      };
+    });
+
+    exportUsersToExcel(transformed);
   };
 
   // 🔹 ฟังก์ชันกรองข้อมูล
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = roleFilter === "ทั้งหมด" || user.role === roleFilter;
-    const matchesStatus =
-      statusFilter === "ทั้งหมด" || user.status === statusFilter;
+  // const filteredUsers = users.filter((user) => {
+  //   const matchesSearch =
+  //     user.name.toLowerCase().includes(search.toLowerCase()) ||
+  //     user.email.toLowerCase().includes(search.toLowerCase());
+  //   const matchesRole = roleFilter === "ทั้งหมด" || user.role === roleFilter;
+  //   const matchesStatus =
+  //     statusFilter === "ทั้งหมด" || user.status === statusFilter;
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  // ✅ แบ่งข้อมูลตามหน้า
-  const paginatedUsers = filteredUsers.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
+  //   return matchesSearch && matchesRole && matchesStatus;
+  // });
 
   // ✅ เมื่อเปลี่ยนหน้า
   const handleChangePage = (event, value) => {
@@ -248,6 +349,7 @@ export default function UserPage() {
     setSearch("");
     setRoleFilter("ทั้งหมด");
     setStatusFilter("ทั้งหมด");
+    setPage(1)
     console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
@@ -289,7 +391,10 @@ export default function UserPage() {
             variant="outlined"
             placeholder="ค้นหาผู้ใช้งาน..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setPage(1)
+            }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
             InputProps={{
@@ -303,7 +408,10 @@ export default function UserPage() {
 
           <Select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            onChange={(e) => {
+              setRoleFilter(e.target.value)
+              setPage(1)
+            }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none" }}
           >
@@ -315,7 +423,10 @@ export default function UserPage() {
 
           <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value)
+              setPage(1)
+            }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none" }}
           >
@@ -371,7 +482,7 @@ export default function UserPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedUsers.map((user, index) => (
+                {users.map((user, index) => (
                   <TableRow key={index}>
                     <TableCell>
                       <Typography fontWeight="bold">{user.name}</Typography>
@@ -422,7 +533,8 @@ export default function UserPage() {
                       <Switch
                         checked={user.aiAccess}
                         color="primary"
-                        onChange={() => handleToggleAccess(user.id)}
+                        onChange={(e) => handleToggleAccess(user.id, e.target.checked)}
+                        disabled={isPending(user.id)}  // ✅ กันกดติด ๆ กัน
                       />
                     </TableCell>
 
@@ -444,7 +556,7 @@ export default function UserPage() {
                 ))}
 
                 {/* ถ้าไม่มีข้อมูล */}
-                {paginatedUsers.length === 0 && (
+                {users.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                       ไม่พบข้อมูล
@@ -464,7 +576,7 @@ export default function UserPage() {
             }}
           >
             <Pagination
-              count={Math.ceil(filteredUsers.length / rowsPerPage)}
+              count={Math.ceil(totalCount / rowsPerPage)}
               page={page}
               onChange={handleChangePage}
               color="primary"

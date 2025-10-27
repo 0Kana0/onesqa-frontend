@@ -22,6 +22,7 @@ import AlertCard from "@/app/components/AlertCard";
 import SystemStatusCard from "@/app/components/SystemStatusCard";
 import TokenUsageDashboardBar from "@/app/components/TokenUsageDashboardBar";
 import OnlineUsersListener from "@/app/components/OnlineUsersListener";
+import { useRequireRole } from "@/hook/useRequireRole";
 
 const DashboardPage = () => {
   const t = useTranslations("DashboardPage");
@@ -98,6 +99,14 @@ const DashboardPage = () => {
       totalTokenAll,
     });
   }, [aisData]);
+
+  const { allowed, loading, user } = useRequireRole({
+    roles: ["ผู้ดูแลระบบ"],
+    redirectTo: "/onesqa/chat",
+  });
+
+  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
   if (aisLoading || onlineUsersLoading)
     return (

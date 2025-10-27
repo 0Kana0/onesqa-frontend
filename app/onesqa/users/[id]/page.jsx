@@ -30,6 +30,7 @@ import ActionBar from "@/app/components/ActionBar";
 import { useTranslations } from "next-intl";
 import { useSidebar } from "../../../context/SidebarContext"; // ✅ ใช้ context
 import { formatTokens } from "@/util/formatTokens";
+import { useRequireRole } from "@/hook/useRequireRole";
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -125,6 +126,14 @@ export default function UserDetailPage() {
   //     geminiMax: 2000000,
   //   },
   // ];
+
+  const { allowed, loading, user } = useRequireRole({
+    roles: ["ผู้ดูแลระบบ"],
+    redirectTo: "/onesqa/chat",
+  });
+    
+  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
   if (userLoading)
     return (

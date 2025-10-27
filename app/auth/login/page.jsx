@@ -92,7 +92,11 @@ export default function LoginPage() {
 
 
         // Step 4: Redirect
-        router.push("/onesqa/dashboard");
+        if (loginResult?.data?.signin?.user?.role_name === "ผู้ดูแลระบบ") {
+          router.push("/onesqa/dashboard");
+        } else {
+          router.push("/onesqa/chat");
+        }
       } catch (error) {
         console.log(error);
       }
@@ -180,7 +184,11 @@ export default function LoginPage() {
       userContext(loginResult?.data?.verifySigninWithIdennumber?.user, "th");
 
       // Step 4: Redirect
-      router.push("/onesqa/dashboard");
+      if (loginResult?.data?.signin?.user?.role_name === "ผู้ดูแลระบบ") {
+        router.push("/onesqa/dashboard");
+      } else {
+        router.push("/onesqa/chat");
+      }
     } catch (error) {
       console.log(error);
     }

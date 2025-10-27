@@ -14,6 +14,7 @@ import GroupTokenTable from "@/app/components/GroupTokenTable";
 import { useTranslations } from 'next-intl';
 import { UPDATE_AI } from "@/graphql/ai/mutations";
 import { GET_AIS } from "@/graphql/ai/queries";
+import { useRequireRole } from "@/hook/useRequireRole";
 
 const SettingPage = () => {
   const [selected, setSelected] = useState("AI");
@@ -114,6 +115,14 @@ const SettingPage = () => {
   }, [aisData, resetTrigger]);
 
   console.log(cards);
+
+  const { allowed, loading, user } = useRequireRole({
+    roles: ["ผู้ดูแลระบบ"],
+    redirectTo: "/onesqa/chat",
+  });
+    
+  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
   if (aisLoading)
     return (

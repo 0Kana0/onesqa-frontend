@@ -67,14 +67,14 @@ export default function Header() {
   if (!mounted) return null;
 
   const pageNameCheck = () => {
-    if (pathname.startsWith("/onesqa/dashboard")) return th("dashboard");
+    if (pathname.startsWith("/onesqa/dashboard") && user?.role_name === "ผู้ดูแลระบบ") return th("dashboard");
     else if (pathname.startsWith("/onesqa/chat")) return th("chat");
-    else if (pathname.startsWith("/onesqa/users")) return th("users");
-    else if (pathname.startsWith("/onesqa/reports")) return th("reports");
-    else if (pathname.startsWith("/onesqa/settings")) return th("settings");
-    else if (pathname.startsWith("/onesqa/logs")) return th("logs");
+    else if (pathname.startsWith("/onesqa/users") && user?.role_name === "ผู้ดูแลระบบ") return th("users");
+    else if (pathname.startsWith("/onesqa/reports") && user?.role_name === "ผู้ดูแลระบบ") return th("reports");
+    else if (pathname.startsWith("/onesqa/settings") && user?.role_name === "ผู้ดูแลระบบ") return th("settings");
+    else if (pathname.startsWith("/onesqa/logs") && user?.role_name === "ผู้ดูแลระบบ") return th("logs");
     else if (pathname.startsWith("/onesqa/detail")) return th("detail");
-    else if (pathname.startsWith("/onesqa/notification")) return th("notification");
+    else if (pathname.startsWith("/onesqa/notification") ) return th("notification");
   };
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);

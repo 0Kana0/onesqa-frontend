@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { useMutation, useQuery } from "@apollo/client/react";
+import React, { useState, useEffect } from "react";
+import { NetworkStatus } from "@apollo/client";
+import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
 import { GET_AIS } from "@/graphql/ai/queries";
 import {
   Box,
@@ -27,8 +28,10 @@ import UserTableToolbar from "@/app/components/UserTableToolbar";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import { useTranslations } from "next-intl";
 import { exportReportsToExcel } from "@/util/exportToExcel";
+import { useRequireRole } from "@/hook/useRequireRole";
 
 const ReportPage = () => {
+  const client = useApolloClient();
   const t = useTranslations("ReportPage");
   const tInit = useTranslations("Init");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
@@ -41,7 +44,7 @@ const ReportPage = () => {
   const [page, setPage] = useState(1);
   const rowsPerPage = 5; // ✅ แสดง 5 แถวต่อหน้า
 
-  const rows = [
+  const reportRows = [
     {
       date: "2025-10-04",
       user: "นายสมชาย ใจดี",
@@ -85,6 +88,7 @@ const ReportPage = () => {
       tokens: 1800,
     },
   ];
+  const [totalCount, setTotalCount] = useState(0)
 
   const topUsers = [
     {
@@ -131,6 +135,14 @@ const ReportPage = () => {
   } = useQuery(GET_AIS, {
     fetchPolicy: "network-only",
   });
+
+  const { allowed, loading, user } = useRequireRole({
+    roles: ["ผู้ดูแลระบบ"],
+    redirectTo: "/onesqa/chat",
+  });
+  
+  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
   if (aisLoading)
     return (
@@ -184,29 +196,23 @@ const ReportPage = () => {
   };
 
   // 🔹 ฟังก์ชันกรองข้อมูล
-  const filteredUsers = rows.filter((user) => {
-    const userDate = new Date(user.date);
+  // const filteredUsers = reportRows.filter((user) => {
+  //   const userDate = new Date(user.date);
 
-    // ช่วงเวลาจากดรอปดาวน์
-    const quick = getRangeFromQuick(quickRange);
+  //   // ช่วงเวลาจากดรอปดาวน์
+  //   const quick = getRangeFromQuick(quickRange);
 
-    // ถ้ามี startDate/endDate ที่เลือกเอง ให้มาก่อน; ไม่งั้นใช้ quick range
-    const effectiveStart = startDate
-      ? startOfDay(new Date(startDate))
-      : quick.start;
-    const effectiveEnd = endDate ? endOfDay(new Date(endDate)) : quick.end;
+  //   // ถ้ามี startDate/endDate ที่เลือกเอง ให้มาก่อน; ไม่งั้นใช้ quick range
+  //   const effectiveStart = startDate
+  //     ? startOfDay(new Date(startDate))
+  //     : quick.start;
+  //   const effectiveEnd = endDate ? endOfDay(new Date(endDate)) : quick.end;
 
-    const isAfterStart = effectiveStart ? userDate >= effectiveStart : true;
-    const isBeforeEnd = effectiveEnd ? userDate <= effectiveEnd : true;
+  //   const isAfterStart = effectiveStart ? userDate >= effectiveStart : true;
+  //   const isBeforeEnd = effectiveEnd ? userDate <= effectiveEnd : true;
 
-    return isAfterStart && isBeforeEnd;
-  });
-
-  // ✅ แบ่งข้อมูลตามหน้า
-  const paginatedUsers = filteredUsers.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
+  //   return isAfterStart && isBeforeEnd;
+  // });
 
   // ✅ เมื่อเปลี่ยนหน้า
   const handleChangePage = (event, value) => {
@@ -219,11 +225,12 @@ const ReportPage = () => {
     setQuickRange("เลือกช่วงเวลา"); // รีเซ็ตดรอปดาวน์ช่วงเวลา
     setStartDate(""); // ล้างวันที่เริ่ม
     setEndDate(""); // ล้างวันที่สิ้นสุด
+    setPage(1);
     console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
   const handleExportExcel = () => {
-    exportReportsToExcel(rows);
+    exportReportsToExcel(reportRows);
   };
 
   return (
@@ -273,7 +280,10 @@ const ReportPage = () => {
 
           <Select
             value={quickRange}
-            onChange={(e) => setQuickRange(e.target.value)}
+            onChange={(e) => {
+              setQuickRange(e.target.value)
+              setPage(1)
+            }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
           >
@@ -288,7 +298,10 @@ const ReportPage = () => {
             label={t("startDate")}
             type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => {
+              setStartDate(e.target.value)
+              setPage(1)
+            }}
             size="small"
             sx={{ width: isTablet ? "100%" : 200 }}
             InputLabelProps={{ shrink: true }}
@@ -299,7 +312,10 @@ const ReportPage = () => {
             label={t("endDate")}
             type="date"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={(e) => {
+              setEndDate(e.target.value)
+              setPage(1)
+            }}
             size="small"
             sx={{ width: isTablet ? "100%" : 200 }}
             InputLabelProps={{ shrink: true }}
@@ -363,7 +379,7 @@ const ReportPage = () => {
               </TableHead>
 
               <TableBody>
-                {paginatedUsers.map((row, index) => (
+                {reportRows.map((row, index) => (
                   <TableRow key={index} hover>
                     <TableCell>
                       {new Date(row.date).toLocaleDateString("en-GB", {
@@ -380,6 +396,15 @@ const ReportPage = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+
+                {/* ถ้าไม่มีข้อมูล */}
+                {reportRows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                      ไม่พบข้อมูล
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -394,7 +419,7 @@ const ReportPage = () => {
             }}
           >
             <Pagination
-              count={Math.ceil(filteredUsers.length / rowsPerPage)}
+              count={Math.ceil(totalCount / rowsPerPage)}
               page={page}
               onChange={handleChangePage}
               color="primary"
