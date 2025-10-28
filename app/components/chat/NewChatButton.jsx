@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   List,
   ListItemButton,
@@ -21,6 +21,7 @@ export default function NewChatButton({
   disabledNew = false,
   disabledSearch = false,
 }) {
+  const router = useRouter();
   const pathname = usePathname();
   
   // state เปิด/ปิด modal ค้นหา
@@ -53,7 +54,7 @@ export default function NewChatButton({
       key: "new",
       label: "แชตใหม่",
       icon: <CreateOutlinedIcon fontSize="small" />,
-      onClick: onNewChat,
+      onClick: () => router.push("/onesqa/chat"),
       disabled: disabledNew,
     },
     {
@@ -89,6 +90,10 @@ export default function NewChatButton({
                 onClick={it.onClick}
                 disabled={it.disabled}
                 disableRipple
+                sx={{
+                  "& .MuiListItemIcon-root": { color: "common.white" },
+                  "& .MuiListItemText-primary": { color: "common.white" },
+                }}
               >
                 <ListItemIcon>{it.icon}</ListItemIcon>
                 <ListItemText

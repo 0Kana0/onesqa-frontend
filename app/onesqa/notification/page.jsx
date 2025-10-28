@@ -58,6 +58,8 @@ const NotificationPage = () => {
 
   console.log(data);
 
+  const [updateSetting] = useMutation(UPDATE_SETTING);
+
   // รวม edges แบบ local state เพื่อควบคุม duplicate เองโดยไม่พึ่ง typePolicies
   const [edges, setEdges] = useState([]);
   const [endCursor, setEndCursor] = useState(null);
@@ -85,8 +87,6 @@ const NotificationPage = () => {
   useEffect(() => {
     if (user?.id) refetch({ user_id: user.id, first: PAGE_SIZE, after: null });
   }, [user?.id, refetch]);
-
-  const [updateSetting] = useMutation(UPDATE_SETTING);
 
   // โหลดหน้าเพิ่ม
   const loadMore = useCallback(async () => {

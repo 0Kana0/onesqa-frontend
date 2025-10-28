@@ -42,6 +42,9 @@ export default function Sidebar() {
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
+  const chatPageCheckOne = user?.role_name === "ผู้ดูแลระบบ" && !pathname.startsWith("/onesqa/chat")
+  const chatPageCheckTwo = (user?.role_name === "ผู้ดูแลระบบ" && pathname.startsWith("/onesqa/chat")) || user?.role_name !== "ผู้ดูแลระบบ"
+
   const menuItems = [
     { text: t('dashboard'), icon: <Home />, path: "/onesqa/dashboard" },
     { text: t('chat'), icon: <Chat />, path: "/onesqa/chat" },
@@ -56,8 +59,10 @@ export default function Sidebar() {
   
   const handleInitPage = () => {
     if (user?.role_name === "ผู้ดูแลระบบ") {
+      if (isTablet) toggle()
       router.push("/onesqa/dashboard");
     } else {
+      if (isTablet) toggle()
       router.push("/onesqa/chat");
     }
   }
@@ -66,11 +71,13 @@ export default function Sidebar() {
     <Drawer
       variant={isTablet ? "temporary" : "permanent"}
       open={open}
+      onClose={chatPageCheckTwo ? toggle : undefined} // ✅ ใช้ฟังก์ชันจาก Context
+      ModalProps={{ keepMounted: true }}       // ✅ ช่วยเรื่อง perf บนมือถือ
       sx={(theme) => ({
-        ...((user?.role_name === "ผู้ดูแลระบบ" && pathname.startsWith("/onesqa/chat")) || user?.role_name !== "ผู้ดูแลระบบ"
+        ...(chatPageCheckTwo
           ? {
               // ✅ ชุด "อันบน" (เมื่อ true)
-              width: 300,
+              width: 280,
             }
           : {
               // ✅ ชุด "อันล่าง" (เมื่อ false)
@@ -78,14 +85,16 @@ export default function Sidebar() {
             }),
         flexShrink: 0,
         "& .MuiDrawer-paper": {
+          //boxShadow: "0 3px 8px rgba(0,0,0,0.5)",
+          boxShadow: `0 3px 8px ${theme.palette.background.shabow}`, // เงาสีขาวนุ่ม ๆ
           boxSizing: "border-box",
           background: `linear-gradient(to bottom, ${theme.palette.primary.main}, #1E61C2)`,
           color: "white",
           border: "none",
-          ...((user?.role_name === "ผู้ดูแลระบบ" && pathname.startsWith("/onesqa/chat")) || user?.role_name !== "ผู้ดูแลระบบ"
+          ...(chatPageCheckTwo
             ? {
                 // ✅ ชุด "อันบน" (เมื่อ true)
-                width: 300,
+                width: 280,
                 height: "100dvh",          // หรือ "100vh"
                 maxHeight: "100dvh",
                 overflowY: "auto",
@@ -106,11 +115,11 @@ export default function Sidebar() {
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: open ? "space-between" : "center",
+          justifyContent: open || chatPageCheckTwo ? "space-between" : "center",
           p: 2,
         }}
       >
-        {open && (
+        {(open || chatPageCheckTwo) ? (
           <Typography
             variant="subtitle1"
             sx={{ fontWeight: "bold", display: "flex", alignItems: "center", cursor: "pointer" }}
@@ -124,9 +133,7 @@ export default function Sidebar() {
             />
             ONESQA AI Chatbot
           </Typography>
-        )}
-
-        {!open && (
+        ) : (
           <Box
             component="img"
             src="/images/logo.png"
@@ -137,7 +144,7 @@ export default function Sidebar() {
         )}
 
         {/* 🔹 ปุ่ม toggle ชิดขอบขวา */}
-        {user?.role_name === "ผู้ดูแลระบบ" && !pathname.startsWith("/onesqa/chat") && (
+        {chatPageCheckOne && (
           <IconButton
             onClick={toggle} // ✅ ใช้ฟังก์ชันจาก Context
             sx={{
@@ -165,7 +172,7 @@ export default function Sidebar() {
       </Box>
 
       {/* 🔹 เมนูรายการ */}
-      {user?.role_name === "ผู้ดูแลระบบ" && !pathname.startsWith("/onesqa/chat") ? (
+      {chatPageCheckOne ? (
         <List sx={{ mt: 1 }}>
           {menuItems.map((item, index) => {
             const isActive = pathname.startsWith(item.path);
@@ -215,10 +222,7 @@ export default function Sidebar() {
         </List>
       ) : (
         <Box sx={{ p: 0.5 }}>
-          <NewChatButton
-            onNewChat={() => console.log("new chat")}
-            onSearch={() => console.log("search chat")}
-          />
+          <NewChatButton/>
           <ProjectSidebar
             onCreateProject={() => {/* เปิด dialog สร้างโครงการ */}}
             onOpenFolder={(name) => {/* เปิด drawer/โหลดรายการในโฟลเดอร์ */}}
