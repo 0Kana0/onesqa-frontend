@@ -19,3 +19,14 @@ export const GET_CHATS = gql`
     }
   }
 `;
+
+export const GET_CHAT = gql`
+  query chat($id: ID!) {
+    chat(id: $id) {
+      id
+      ai_id
+      createdAt
+      updatedAt
+    }
+  }
+`;

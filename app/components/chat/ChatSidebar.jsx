@@ -87,7 +87,7 @@ export default function ChatSidebar() {
       .map((n) => ({
         id: n.id,
         label: n.chat_name,
-        href: "#", // เปลี่ยนเป็น `/chats/${n.id}` ได้ถ้าต้องการลิงก์จริง
+        href: `/onesqa/chat/${n.id}`, // เปลี่ยนเป็น `/chats/${n.id}` ได้ถ้าต้องการลิงก์จริง
       }));
   
     setItems([...base, ...mapped]);
