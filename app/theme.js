@@ -13,7 +13,7 @@ export const getDesignTokens = (mode) => ({
             alert: "#FFF9EE", 
             notification: "#F5F7FA" },
           background: { 
-            default: "#f5f5f5", 
+            default: "#ffffff", 
             paper: "#ffffff", 
             bglogin: "#ffffff", 
             text: "#000000",

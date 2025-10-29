@@ -195,11 +195,30 @@ const ChatInput = ({
                 borderRadius: 3,
                 '& fieldset': { border: 'none' },
                 fontSize: { xs: '0.9rem', md: '1rem' },
+                color: 'text.primary',
                 '&:hover': {
                   borderColor: 'primary.main',
                 },
                 '&.Mui-focused': {
                   borderColor: 'primary.main',
+                },
+                '& input': {
+                  color: 'text.primary',
+                  '&::placeholder': {
+                    color: (theme) => theme.palette.mode === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.5)' 
+                      : 'rgba(0, 0, 0, 0.6)',
+                    opacity: 1,
+                  },
+                },
+                '& textarea': {
+                  color: 'text.primary',
+                  '&::placeholder': {
+                    color: (theme) => theme.palette.mode === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.5)' 
+                      : 'rgba(0, 0, 0, 0.6)',
+                    opacity: 1,
+                  },
                 },
               },
             }}
@@ -220,13 +239,19 @@ const ChatInput = ({
             {/* ปุ่มแนบไฟล์ */}
             <IconButton 
               size="small" 
-              color="primary"
               onClick={handleFileAttach}
               disabled={disabled}
               sx={{ 
-                backgroundColor: 'action.hover',
+                color: (theme) => theme.palette.mode === 'dark' 
+                  ? 'grey.300' 
+                  : 'primary.main',
+                backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                  ? 'rgba(255,255,255,0.08)' 
+                  : 'action.hover',
                 '&:hover': {
-                  backgroundColor: 'primary.light',
+                  backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                    ? 'rgba(255,255,255,0.12)' 
+                    : 'primary.light',
                 },
               }}
             >
@@ -246,6 +271,20 @@ const ChatInput = ({
                     px: 2,
                     fontSize: '0.75rem',
                     textTransform: 'none',
+                    color: (theme) => theme.palette.mode === 'dark' 
+                      ? 'grey.300' 
+                      : 'text.primary',
+                    borderColor: (theme) => theme.palette.mode === 'dark' 
+                      ? 'grey.600' 
+                      : 'divider',
+                    '&:hover': {
+                      borderColor: (theme) => theme.palette.mode === 'dark' 
+                        ? 'grey.500' 
+                        : 'primary.main',
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                        ? 'rgba(255,255,255,0.04)' 
+                        : 'action.hover',
+                    },
                   }}
                 >
                   Deep Research
@@ -260,6 +299,20 @@ const ChatInput = ({
                     px: 2,
                     fontSize: '0.75rem',
                     textTransform: 'none',
+                    color: (theme) => theme.palette.mode === 'dark' 
+                      ? 'grey.300' 
+                      : 'text.primary',
+                    borderColor: (theme) => theme.palette.mode === 'dark' 
+                      ? 'grey.600' 
+                      : 'divider',
+                    '&:hover': {
+                      borderColor: (theme) => theme.palette.mode === 'dark' 
+                        ? 'grey.500' 
+                        : 'primary.main',
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                        ? 'rgba(255,255,255,0.04)' 
+                        : 'action.hover',
+                    },
                   }}
                 >
                   Canvas
@@ -272,14 +325,26 @@ const ChatInput = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {/* ปุ่มบันทึกเสียง */}
             <IconButton 
-              color={isRecording ? "error" : "primary"}
               disabled={disabled}
               onClick={handleVoiceRecord}
-              title={isRecording ? 'หยุดบันทึกเสียง' : `เริ่มบันทึกเสียง (${speechLang === 'th-TH' ? 'ภาษาไทย' : 'English'})`}
+              title={isRecording ? 'หยุดบันทึกเสียง' : 'เริ่มบันทึกเสียง'}
               sx={{ 
-                backgroundColor: isRecording ? 'error.light' : 'action.hover',
+                color: isRecording 
+                  ? 'error.main' 
+                  : (theme) => theme.palette.mode === 'dark' 
+                    ? 'grey.300' 
+                    : 'primary.main',
+                backgroundColor: isRecording 
+                  ? 'error.light' 
+                  : (theme) => theme.palette.mode === 'dark' 
+                    ? 'rgba(255,255,255,0.08)' 
+                    : 'action.hover',
                 '&:hover': {
-                  backgroundColor: isRecording ? 'error.main' : 'primary.light',
+                  backgroundColor: isRecording 
+                    ? 'error.main' 
+                    : (theme) => theme.palette.mode === 'dark' 
+                      ? 'rgba(255,255,255,0.12)' 
+                      : 'primary.light',
                 },
                 ...(isRecording && {
                   animation: 'pulse 1.5s infinite',
@@ -298,12 +363,21 @@ const ChatInput = ({
             <IconButton
               onClick={handleSend}
               disabled={(!message.trim() && attachedFiles.length === 0) || disabled || isLoading}
-              color="primary"
               sx={{
-                backgroundColor: (message.trim() || attachedFiles.length > 0) && !disabled ? 'primary.main' : 'grey.300',
-                color: 'white',
+                backgroundColor: (message.trim() || attachedFiles.length > 0) && !disabled 
+                  ? (theme) => theme.palette.mode === 'dark' 
+                    ? 'grey.600' 
+                    : 'primary.main'
+                  : 'grey.300',
+                color: (message.trim() || attachedFiles.length > 0) && !disabled 
+                  ? 'white' 
+                  : 'grey.500',
                 '&:hover': {
-                  backgroundColor: (message.trim() || attachedFiles.length > 0) && !disabled ? 'primary.dark' : 'grey.400',
+                  backgroundColor: (message.trim() || attachedFiles.length > 0) && !disabled 
+                    ? (theme) => theme.palette.mode === 'dark' 
+                      ? 'grey.700' 
+                      : 'primary.dark'
+                    : 'grey.400',
                 },
                 '&.Mui-disabled': {
                   backgroundColor: 'grey.300',

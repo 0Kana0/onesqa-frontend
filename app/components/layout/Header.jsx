@@ -188,10 +188,14 @@ export default function Header() {
       <AppBar
         position="static"
         sx={{
-          bgcolor: "background.paper",
+          bgcolor: (theme) => theme.palette.mode === 'dark' 
+            ? '#1A376F' 
+            : 'background.paper',
           boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
           px: isTablet ? 0 : 3,
-          color: "background.text",
+          color: (theme) => theme.palette.mode === 'dark' 
+            ? 'white' 
+            : 'background.text',
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -327,9 +331,9 @@ export default function Header() {
             <MenuItem onClick={() => handleThemeToggle()}>
               <ListItemIcon>
                 {theme === "dark" ? (
-                  <Brightness7Icon fontSize="small" sx={{ color: "#3E8EF7" }} />
+                  <Brightness7Icon fontSize="small" sx={{ color: "text.secondary" }} />
                 ) : (
-                  <Brightness4Icon fontSize="small" sx={{ color: "#3E8EF7" }} />
+                  <Brightness4Icon fontSize="small" sx={{ color: "text.secondary" }} />
                 )}
               </ListItemIcon>
               {th("theme")}

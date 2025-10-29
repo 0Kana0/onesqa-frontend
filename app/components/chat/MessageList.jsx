@@ -330,19 +330,19 @@ const MessageList = ({ messages = [], isLoading = false }) => {
                 elevation: 3,
               },
             }}
-            onClick={() => window.open(message.url, '_blank')}
+            onClick={() => window.open(message.linkUrl || message.url, '_blank')}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <LinkIcon fontSize="small" />
               <Typography variant="subtitle2" noWrap>
-                {message.title || 'External Link Title'}
+                {message.linkTitle || message.title || 'External Link Title'}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-              {message.description || 'External link description'}
+              {message.linkDescription || message.description || 'External link description'}
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.7 }}>
-              {message.url || 'https://www.externallink.com'}
+              {message.linkUrl || message.url || 'https://www.externallink.com'}
             </Typography>
           </Paper>
         );
@@ -371,6 +371,61 @@ const MessageList = ({ messages = [], isLoading = false }) => {
               </tbody>
             </table>
           </Box>
+        );
+
+      case 'file':
+        return (
+          <Paper
+            elevation={1}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+            onClick={() => {
+              if (message.downloadUrl && message.downloadUrl !== '#') {
+                window.open(message.downloadUrl, '_blank');
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 1,
+                  backgroundColor: 'primary.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                }}
+              >
+                📄
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }} noWrap>
+                  {message.filename || 'ไฟล์เอกสาร'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {message.fileSize || 'ไม่ทราบขนาด'}
+                </Typography>
+              </Box>
+              <DownloadIcon 
+                sx={{ 
+                  color: (theme) => theme.palette.mode === 'dark' 
+                    ? 'grey.400' 
+                    : 'action.active' 
+                }} 
+              />
+            </Box>
+          </Paper>
         );
 
       default:
@@ -517,8 +572,14 @@ const MessageList = ({ messages = [], isLoading = false }) => {
                         size="small"
                         onClick={() => handleCopyMessage(message.content)}
                         sx={{
-                          color: 'text.secondary',
-                          '&:hover': { color: 'primary.main' },
+                          color: (theme) => theme.palette.mode === 'dark' 
+                            ? 'grey.400' 
+                            : 'text.secondary',
+                          '&:hover': { 
+                            color: (theme) => theme.palette.mode === 'dark' 
+                              ? 'grey.200' 
+                              : 'primary.main',
+                          },
                         }}
                       >
                         <CopyIcon fontSize="small" />
@@ -544,8 +605,14 @@ const MessageList = ({ messages = [], isLoading = false }) => {
                           size="small"
                           onClick={() => handleDownloadFile(message.downloadUrl, message.filename)}
                           sx={{
-                            color: 'text.secondary',
-                            '&:hover': { color: 'primary.main' },
+                            color: (theme) => theme.palette.mode === 'dark' 
+                              ? 'grey.400' 
+                              : 'text.secondary',
+                            '&:hover': { 
+                              color: (theme) => theme.palette.mode === 'dark' 
+                                ? 'grey.200' 
+                                : 'primary.main',
+                            },
                           }}
                         >
                           <DownloadIcon fontSize="small" />
@@ -605,15 +672,24 @@ const MessageList = ({ messages = [], isLoading = false }) => {
               sx={{
                 width: { xs: 32, sm: 40 },
                 height: { xs: 32, sm: 40 },
-                backgroundColor: 'primary.main',
+                backgroundColor: 'transparent',
               }}
+              src="/images/ai-avatar.png"
             >
               🤖
             </Avatar>
             
             <Box
               sx={{
-                backgroundColor: 'grey.100',
+                backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                  ? 'grey.800' 
+                  : 'grey.100',
+                color: (theme) => theme.palette.mode === 'dark' 
+                  ? 'grey.100' 
+                  : 'text.primary',
+                border: (theme) => theme.palette.mode === 'dark' 
+                  ? '1px solid rgba(255,255,255,0.1)' 
+                  : 'none',
                 borderRadius: 3,
                 p: { xs: 2, sm: 2.5 },
                 position: 'relative',
@@ -627,7 +703,9 @@ const MessageList = ({ messages = [], isLoading = false }) => {
                   borderTop: '8px solid transparent',
                   borderBottom: '8px solid transparent',
                   borderRight: '8px solid',
-                  borderRightColor: 'grey.100',
+                  borderRightColor: (theme) => theme.palette.mode === 'dark' 
+                    ? 'grey.800' 
+                    : 'grey.100',
                 },
               }}
             >
@@ -639,7 +717,9 @@ const MessageList = ({ messages = [], isLoading = false }) => {
                       width: 8,
                       height: 8,
                       borderRadius: '50%',
-                      backgroundColor: 'primary.main',
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                        ? 'grey.400' 
+                        : 'primary.main',
                       animation: 'typing 1.4s ease-in-out infinite',
                       animationDelay: `${i * 0.2}s`,
                       '@keyframes typing': {
