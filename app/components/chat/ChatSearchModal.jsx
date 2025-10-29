@@ -2,6 +2,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { NetworkStatus } from "@apollo/client";
+import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
+import { GET_CHATS } from "@/graphql/chat/queries";
 import {
   Box,
   Dialog,
@@ -17,31 +21,102 @@ import {
   ListItemText,
   Divider,
   Typography,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 
+const normalizeText = (v) => {
+  const s = (v ?? '').trim();
+  return s === '' ? null : s;
+}
+
 export default function ChatSearchModal({
   open,
   onClose,
   onSelect, // (item) => void
-  sections = [], // [{ label: "วันนี้", items: [{ id, title }] }, ...]
   placeholder = "ค้นหาแชต...",
 }) {
+  const { user } = useAuth();
   const [q, setQ] = useState("");
+  const [first, setFirst] = useState(5);
+
+  // ตัวอย่างข้อมูลให้เหมือนภาพตัวอย่าง
+  // const sections = [
+  //   { id: "t1", chat_name: "การแก้ไขข้อผิดพลาด slui" },
+  //   { id: "t2", chat_name: "Next.js MUI UI toggle" },
+  //   { id: "t3", chat_name: "คำว่า saber คืออะไร" },
+  //   { id: "t4", chat_name: "การแก้ไขข้อผิดพลาด slui" },
+  //   { id: "t5", chat_name: "Next.js MUI UI toggle" },
+  //   { id: "t6", chat_name: "คำว่า saber คืออะไร" },
+  //   { id: "t7", chat_name: "การแก้ไขข้อผิดพลาด slui" },
+  //   { id: "t8", chat_name: "Next.js MUI UI toggle" },
+  //   { id: "t9", chat_name: "คำว่า saber คืออะไร" },
+  //   { id: "t10", chat_name: "การแก้ไขข้อผิดพลาด slui" },
+  //   { id: "t11", chat_name: "Next.js MUI UI toggle" },
+  //   { id: "t12", chat_name: "คำว่า saber คืออะไร" },
+  //   { id: "t13", chat_name: "การแก้ไขข้อผิดพลาด slui" },
+  //   { id: "t14", chat_name: "Next.js MUI UI toggle" },
+  //   { id: "t15", chat_name: "คำว่า saber คืออะไร" },
+  //   { id: "t16", chat_name: "การแก้ไขข้อผิดพลาด slui" },
+  //   { id: "t17", chat_name: "Next.js MUI UI toggle" },
+  //   { id: "t18", chat_name: "คำว่า saber คืออะไร" },
+  // ];
+
+  const vars = {
+    user_id: user?.id ?? "",
+    search: normalizeText(q),
+    ...(q?.trim() ? {} : { first }),   // ถ้า q มีค่า → ไม่ใส่ first
+  };
+
+  const { data: chatsData, loading: chatsLoading, error: chatsError, refetch } =
+    useQuery(GET_CHATS, {
+      variables: vars,
+      fetchPolicy: "network-only",
+    });
+
+
+  console.log("data modal", chatsData?.chats?.edges);
+  console.log(q, first);
+  
 
   useEffect(() => {
     if (!open) setQ("");
   }, [open]);
 
-  // filter แบบง่าย
-  const filter = (text) => text.toLowerCase().includes(q.toLowerCase());
+  if (chatsLoading && !open)
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <Typography>
+          <CircularProgress />
+        </Typography>
+      </Box>
+    );
 
-  // เตรียมข้อมูลสำหรับโหมด flat
-  const flat = Array.isArray(sections)
-    ? sections.filter((it) => filter(it.title))
-    : [];
+  // ----- สถานะโหลด/ผิดพลาดรวมสองฝั่ง -----
+  if (chatsError)
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">❌</Alert>
+      </Box>
+    );
+
+  const sections = chatsData?.chats?.edges.map((edge) => ({
+    id: `t${edge.node.id}`,
+    chat_name: edge.node.chat_name,
+  }));
+
+  console.log(sections);
+
+  // // filter แบบง่าย
+  // const filter = (text) => text.toLowerCase().includes(q.toLowerCase());
+
+  // // เตรียมข้อมูลสำหรับโหมด flat
+  // const flat = Array.isArray(sections)
+  //   ? sections.filter((it) => filter(it.chat_name))
+  //   : [];
 
   return (
     <Dialog
@@ -81,7 +156,9 @@ export default function ChatSearchModal({
             autoFocus
             placeholder={placeholder}
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              setQ(e.target.value)
+            }}
             sx={{ flex: 1, fontSize: 14.5, py: 0.5 }}
           />
         </Box>
@@ -116,7 +193,7 @@ export default function ChatSearchModal({
             "& .MuiListItemIcon-root": { minWidth: 32 },
           }}
         >
-          {flat.map((it, idx) => (
+          {sections?.map((it, idx) => (
             <ListItemButton
               key={it.id}
               onClick={() => {
@@ -128,7 +205,7 @@ export default function ChatSearchModal({
                 <ChatBubbleOutlineRounded fontSize="small" />
               </ListItemIcon>
               <ListItemText
-                primary={it.title}
+                primary={it.chat_name}
                 primaryTypographyProps={{ fontSize: 14.5 }}
               />
             </ListItemButton>

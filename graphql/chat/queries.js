@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GET_CHATS = gql`
-  query chats($chatgroup_id: ID, $user_id: ID!, $first: Int, $after: String) {
-    chats(chatgroup_id: $chatgroup_id, user_id: $user_id, first: $first, after: $after) {
+  query chats($chatgroup_id: ID, $user_id: ID!, $first: Int, $after: String, $search: String) {
+    chats(chatgroup_id: $chatgroup_id, user_id: $user_id, first: $first, after: $after, search: $search) {
       edges {
         node {
           id
