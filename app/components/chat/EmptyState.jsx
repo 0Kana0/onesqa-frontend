@@ -55,22 +55,15 @@ const EmptyState = () => {
             borderRadius: 3,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            animation: 'robotBob 2s ease-in-out infinite',
-            overflow: 'hidden',
-            '@keyframes robotBob': {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-5px)' },
-            },
+            justifyContent: 'center'
           }}
         >
           <img
             src="/images/ai-avatar.png"
             alt="ONESQA AI Avatar"
             style={{
-              width: '150%',
-              height: '150%',
+              width: '100%',
+              height: '100%',
               objectFit: 'contain',
             }}
           />

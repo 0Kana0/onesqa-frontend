@@ -17,8 +17,7 @@ const ChatPage = () => {
   
   const models = [
     { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google' },
-    { id: 'gpt-5', name: 'GPT-5', provider: 'OpenAI' },
-    { id: 'claude-3', name: 'Claude 3', provider: 'Anthropic' }
+    { id: 'gpt-5', name: 'GPT-5', provider: 'OpenAI' }
   ];
 
   // จำลองการส่งข้อความ
