@@ -27,28 +27,6 @@ export default function NewChatButton({
   // state เปิด/ปิด modal ค้นหา
   const [openSearch, setOpenSearch] = useState(false);
 
-  // ตัวอย่างข้อมูลให้เหมือนภาพตัวอย่าง
-  const sections = [
-    { id: "t1", title: "การแก้ไขข้อผิดพลาด slui" },
-    { id: "t2", title: "Next.js MUI UI toggle" },
-    { id: "t3", title: "คำว่า saber คืออะไร" },
-    { id: "t4", title: "การแก้ไขข้อผิดพลาด slui" },
-    { id: "t5", title: "Next.js MUI UI toggle" },
-    { id: "t6", title: "คำว่า saber คืออะไร" },
-    { id: "t7", title: "การแก้ไขข้อผิดพลาด slui" },
-    { id: "t8", title: "Next.js MUI UI toggle" },
-    { id: "t9", title: "คำว่า saber คืออะไร" },
-    { id: "t10", title: "การแก้ไขข้อผิดพลาด slui" },
-    { id: "t11", title: "Next.js MUI UI toggle" },
-    { id: "t12", title: "คำว่า saber คืออะไร" },
-    { id: "t13", title: "การแก้ไขข้อผิดพลาด slui" },
-    { id: "t14", title: "Next.js MUI UI toggle" },
-    { id: "t15", title: "คำว่า saber คืออะไร" },
-    { id: "t16", title: "การแก้ไขข้อผิดพลาด slui" },
-    { id: "t17", title: "Next.js MUI UI toggle" },
-    { id: "t18", title: "คำว่า saber คืออะไร" },
-  ];
-
   const items = [
     {
       key: "new",
@@ -109,7 +87,6 @@ export default function NewChatButton({
       <ChatSearchModal
         open={openSearch}
         onClose={() => setOpenSearch(false)}
-        sections={sections}
         onSelect={(item) => {
           // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
           console.log("เลือก:", item);
