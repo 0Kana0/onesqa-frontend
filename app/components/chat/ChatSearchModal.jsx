@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { NetworkStatus } from "@apollo/client";
 import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
 import { GET_CHATS } from "@/graphql/chat/queries";
+import Link from "next/link";
 import {
   Box,
   Dialog,
@@ -29,9 +30,9 @@ import SearchRounded from "@mui/icons-material/SearchRounded";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 
 const normalizeText = (v) => {
-  const s = (v ?? '').trim();
-  return s === '' ? null : s;
-}
+  const s = (v ?? "").trim();
+  return s === "" ? null : s;
+};
 
 export default function ChatSearchModal({
   open,
@@ -68,19 +69,21 @@ export default function ChatSearchModal({
   const vars = {
     user_id: user?.id ?? "",
     search: normalizeText(q),
-    ...(q?.trim() ? {} : { first }),   // ถ้า q มีค่า → ไม่ใส่ first
+    ...(q?.trim() ? {} : { first }), // ถ้า q มีค่า → ไม่ใส่ first
   };
 
-  const { data: chatsData, loading: chatsLoading, error: chatsError, refetch } =
-    useQuery(GET_CHATS, {
-      variables: vars,
-      fetchPolicy: "network-only",
-    });
-
+  const {
+    data: chatsData,
+    loading: chatsLoading,
+    error: chatsError,
+    refetch,
+  } = useQuery(GET_CHATS, {
+    variables: vars,
+    fetchPolicy: "network-only",
+  });
 
   console.log("data modal", chatsData?.chats?.edges);
   console.log(q, first);
-  
 
   useEffect(() => {
     if (!open) setQ("");
@@ -104,7 +107,7 @@ export default function ChatSearchModal({
     );
 
   const sections = chatsData?.chats?.edges.map((edge) => ({
-    id: `t${edge.node.id}`,
+    id: edge.node.id,
     chat_name: edge.node.chat_name,
   }));
 
@@ -157,7 +160,7 @@ export default function ChatSearchModal({
             placeholder={placeholder}
             value={q}
             onChange={(e) => {
-              setQ(e.target.value)
+              setQ(e.target.value);
             }}
             sx={{ flex: 1, fontSize: 14.5, py: 0.5 }}
           />
@@ -194,21 +197,27 @@ export default function ChatSearchModal({
           }}
         >
           {sections?.map((it, idx) => (
-            <ListItemButton
-              key={it.id}
-              onClick={() => {
-                onSelect?.(it);
-                onClose?.();
-              }}
+            <Link
+              key={idx}
+              href={`/onesqa/chat/${it.id}`}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
-              <ListItemIcon>
-                <ChatBubbleOutlineRounded fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary={it.chat_name}
-                primaryTypographyProps={{ fontSize: 14.5 }}
-              />
-            </ListItemButton>
+              <ListItemButton
+                key={it.id}
+                onClick={() => {
+                  onSelect?.(it);
+                  onClose?.();
+                }}
+              >
+                <ListItemIcon>
+                  <ChatBubbleOutlineRounded fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={it.chat_name}
+                  primaryTypographyProps={{ fontSize: 14.5 }}
+                />
+              </ListItemButton>
+            </Link>
           ))}
         </List>
       </DialogContent>

@@ -110,10 +110,6 @@ export default function ChatSidebar() {
       </Box>
     );
 
-  const handleLink = () => {
-    console.log("handleLink");
-  };
-
   const handleOpenMenu = (e, item) => {
     e.preventDefault();
     e.stopPropagation(); // กันไม่ให้ Link ทำงาน
@@ -295,7 +291,6 @@ export default function ChatSidebar() {
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <ListItemButton
-                    onClick={handleLink}
                     sx={{
                       pl: 1.5,
                       pr: 1,
