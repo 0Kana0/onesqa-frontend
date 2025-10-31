@@ -11,6 +11,7 @@ import enMessages from "../messages/en.json"; // ภาษาอังกฤษ
 import thMessages from "../messages/th.json"; // ภาษาไทย
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import { SidebarProvider } from "./context/SidebarContext";
+import { InitTextProvider } from "./context/InitTextContext";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,20 +32,22 @@ export default function Providers({ children }) {
       <AuthProvider>
         <LanguageProvider>
           <SidebarProvider>
-            <NextThemesProvider
-              attribute="class"
-              defaultTheme="light"
-              value={{ light: "light", dark: "dark" }}
-              enableSystem={false}
-            >
-              <MuiThemeProvider>
-                <IntlWrapper>
-                  {children}
-                  {/* ✅ ToastContainer อยู่ข้างนอกทั้งหมด */}
-                  <ToastContainer newestOnTop />
-                </IntlWrapper>
-              </MuiThemeProvider>
-            </NextThemesProvider>
+            <InitTextProvider>
+              <NextThemesProvider
+                attribute="class"
+                defaultTheme="light"
+                value={{ light: "light", dark: "dark" }}
+                enableSystem={false}
+              >
+                <MuiThemeProvider>
+                  <IntlWrapper>
+                    {children}
+                    {/* ✅ ToastContainer อยู่ข้างนอกทั้งหมด */}
+                    <ToastContainer newestOnTop />
+                  </IntlWrapper>
+                </MuiThemeProvider>
+              </NextThemesProvider>
+            </InitTextProvider>
           </SidebarProvider>
         </LanguageProvider>
       </AuthProvider>

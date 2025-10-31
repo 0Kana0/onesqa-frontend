@@ -37,6 +37,7 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
  */
 export default function ChatInputBar({
   value,
+  sending = false,
   model = "1",
   onChange,
   onSend,
@@ -55,7 +56,7 @@ export default function ChatInputBar({
   const fileRef = useRef(null);
 
   const canSend =
-    !loading && !disabled && model !== "0" && String(value ?? "").trim().length > 0;
+    !loading && !disabled && model !== "0" && sending === false && String(value ?? "").trim().length > 0;
 
   const handleKeyDown = (e) => {
     // Enter เพื่อส่ง | Shift+Enter ขึ้นบรรทัดใหม่

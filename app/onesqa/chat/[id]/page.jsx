@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { GET_MESSAGES } from "@/graphql/message/queries";
 import { CREATE_MESSAGE } from "@/graphql/message/mutations";
-import { useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import SendIcon from "@mui/icons-material/Send";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
@@ -24,10 +24,15 @@ import BrushOutlinedIcon from "@mui/icons-material/BrushOutlined";
 import ChatThread from "@/app/components/chat/ChatThread";
 import ChatInputBar from "@/app/components/chat/ChatInputBar";
 import TypingDots from "@/app/components/chat/TypingDots";
+import { useInitText } from "@/app/context/InitTextContext";
 
 const MessagePage = () => {
+  const { initText, setInitText } = useInitText();
+  const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { id } = params;
+  const isNew = searchParams.get("new") === "true";
 
   const tInit = useTranslations("Init");
 
@@ -37,6 +42,8 @@ const MessagePage = () => {
   const [text, setText] = useState("");
   const [question, setQuestion] = useState([]);
   const [answer, setAnswer] = useState([]);
+
+  const ranOnceRef = useRef(false);
 
   const {
     data: messagesData,
@@ -80,6 +87,46 @@ const MessagePage = () => {
   useEffect(() => {
     scrollToBottom(true);
   }, [messagesData?.messages.length, scrollToBottom, answer]);
+
+  const handleMessageInitSubmit = async () => {
+
+    setAnswer([{
+      id: 0,
+      role: 'user',
+      text: initText,
+      createdAt: null
+    }])
+
+    try {
+      const { data } = await createMessage({
+        variables: {
+          input: { 
+            chat_id: id, 
+            message: initText 
+          },
+        },
+      });
+      
+      console.log("✅ Create success:", data.createMessage);
+      
+      refetch()
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  // ✅ trigger เมื่อเพิ่งสร้างแชตใหม่
+  useEffect(() => {
+    if (!isNew) return;            // ต้องเป็นเคสที่ new เท่านั้น
+    if (ranOnceRef.current) return; // กันซ้ำ (รวมเคส Strict Mode)
+
+    ranOnceRef.current = true;
+
+    console.log("isNew", isNew);
+    handleMessageInitSubmit();
+    setInitText("");
+    router.replace(`/onesqa/chat/${id}`); // ล้าง query ออก
+  }, [isNew, router, id]);
   // -----------------------------------------
 
   // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
@@ -102,7 +149,7 @@ const MessagePage = () => {
       </Typography>
     );
 
-  console.log(messagesData?.messages);
+  console.log(messagesData?.messages); 
 
   const handleMessageSubmit = async () => {
     if (!text.trim() || sending) return; // กันกดซ้ำ
@@ -164,6 +211,7 @@ const MessagePage = () => {
         <Box sx={{ display: "flex", gap: 1 }}>
           <ChatInputBar
             value={text}
+            sending={sending}
             onChange={setText}
             onSend={(msg) => {
               // เรียก mutation/ฟังก์ชันส่งข้อความที่คุณมี
@@ -177,7 +225,11 @@ const MessagePage = () => {
             ]}
             onMicClick={() => console.log("mic")}
             onAttachClick={() => console.log("attach menu")}
-            onFilesSelected={(files) => console.log("selected files:", files)}
+            onFilesSelected={(fileList) => {
+                const files = Array.from(fileList); // FileList -> File[]
+                console.log("selected files:", files)
+              }
+            }
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             sx={{ 
               backgroundColor: "background.paper",

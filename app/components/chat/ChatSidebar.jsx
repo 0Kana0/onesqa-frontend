@@ -286,7 +286,7 @@ export default function ChatSidebar() {
 
               return (
                 <Link
-                  key={it.label}
+                  key={it.id}
                   href={it.href}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >

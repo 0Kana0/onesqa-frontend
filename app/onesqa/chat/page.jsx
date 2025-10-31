@@ -29,16 +29,30 @@ import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import BrushOutlinedIcon from "@mui/icons-material/BrushOutlined";
 import ChatInputBar from "@/app/components/chat/ChatInputBar";
 import { useAuth } from "@/app/context/AuthContext";
+import { CREATE_CHAT } from "@/graphql/chat/mutations";
+import { useRouter } from "next/navigation";
+import { GET_CHATS } from "@/graphql/chat/queries";
+import { useInitText } from "@/app/context/InitTextContext";
 
 const ChatPage = () => {
+  const { initText, setInitText } = useInitText();
+  const router = useRouter();
   const { user } = useAuth();
-  const [text, setText] = useState("");
+  const [attachments, setAttachments] = useState([]); // File[]
+
   const [model, setModel] = useState("0");
 
   const tInit = useTranslations("Init");
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
+  const {
+    refetch,
+  } = useQuery(GET_CHATS, {
+    variables: { user_id: user?.id ?? "" },
+    fetchPolicy: "network-only",
+  });
 
   const {
     data: userData,
@@ -51,6 +65,8 @@ const ChatPage = () => {
     },
   });
   console.log(userData?.user?.user_ai);
+
+  const [createChat] = useMutation(CREATE_CHAT);
 
   if (userLoading)
     return (
@@ -66,6 +82,27 @@ const ChatPage = () => {
         ❌ {tInit("error")}
       </Typography>
     );
+
+  const handleCreateChat = async () => {
+    try {
+      const { data } = await createChat({
+        variables: {
+          input: { 
+            ai_id: model, 
+            user_id: user?.id,
+            chat_name: "แชตใหม่"
+          },
+        },
+      });
+
+      console.log("✅ Create success:", data.createChat);
+      refetch()
+      // ✅ ส่งพารามิเตอร์ new=true ไปด้วย
+      router.push(`/onesqa/chat/${data.createChat.id}?new=true`);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <>
@@ -133,13 +170,13 @@ const ChatPage = () => {
           }}
         >
           <ChatInputBar
-            value={text}
+            value={initText}
             model={model}
-            onChange={setText}
+            onChange={setInitText}
             onSend={(msg) => {
               // เรียก mutation/ฟังก์ชันส่งข้อความที่คุณมี
-              console.log("send:", msg);
-              setText(""); // ล้างหลังส่ง
+              handleCreateChat()
+              //setInitText(""); // ล้างหลังส่ง
             }}
             placeholder="ป้อนข้อความ.."
             actions={[
@@ -158,7 +195,11 @@ const ChatPage = () => {
             ]}
             onMicClick={() => console.log("mic")}
             onAttachClick={() => console.log("attach menu")}
-            onFilesSelected={(files) => console.log("selected files:", files)}
+            onFilesSelected={(fileList) => {
+                const files = Array.from(fileList); // FileList -> File[]
+                console.log("selected files:", files)
+              }
+            }
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             sx={{
               backgroundColor: "background.paper",
