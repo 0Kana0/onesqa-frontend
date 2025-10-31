@@ -529,11 +529,7 @@ const ReportPage = () => {
               <TokenUsageCard
                 key={ai.id}
                 title={
-                  ai.model_name === "gpt-4o"
-                    ? "ChatGPT 4o"
-                    : ai.model_name === "gemini-2.5-pro"
-                    ? "Gemini 2.5 Pro"
-                    : ai.model_name
+                  ai.model_use_name
                 }
                 remain={ai.token_count}
                 total={ai.token_all}

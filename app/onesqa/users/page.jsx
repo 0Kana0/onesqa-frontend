@@ -238,6 +238,8 @@ export default function UserPage() {
         aiModels:
           item?.user_ai?.map((ua) => ({
             model: ua?.ai?.model_name || '-',
+            model_use: ua?.ai?.model_use_name || "-",
+            model_type: ua?.ai?.model_type || "-",
             token: ua?.token_count ?? 0,
             token_all: ua?.token_all ?? 0,
           })) || [],
@@ -319,6 +321,8 @@ export default function UserPage() {
         aiModels:
           item?.user_ai?.map((ua) => ({
             model: ua?.ai?.model_name || '-',
+            model_use: ua.ai?.model_use_name || "-",
+            model_type: ua.ai?.model_type || "-",
             token: ua?.token_count ?? 0,
             token_all: ua?.token_all ?? 0,
           })) || [],

@@ -13,7 +13,7 @@ import { useTranslations } from 'next-intl';
 export default function UserGroupSettingCard({
   roleName = "Admin",
   defaultLimit = 1000000,
-  modelOptions = ["Gemini 2.5 Pro", "ChatGPT 4o"],
+  modelOptions = ["Gemini 2.5 Pro", "ChatGPT 5"],
   defaultModel = "Gemini 2.5 Pro",
   onChange,
 }) {

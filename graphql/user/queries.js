@@ -22,6 +22,8 @@ export const GET_USERS = gql`
           token_all
           ai {
             model_name
+            model_use_name
+            model_type
           }
         }
         user_role {
@@ -60,6 +62,8 @@ export const GET_USER = gql`
         average
         ai {
           model_name
+          model_use_name
+          model_type
         }
       }
       user_role {

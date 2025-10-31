@@ -128,11 +128,7 @@ const ChatPage = () => {
           <MenuItem value="0">กรุณาเลือกโมเดลคำตอบ</MenuItem>
           {(userData?.user?.user_ai ?? []).map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
-              {ua.ai?.model_name === "gpt-4o"
-                ? "ChatGPT 4o"
-                : ua.ai?.model_name === "gemini-2.5-pro"
-                ? "Gemini 2.5 Pro"
-                : ua.ai?.model_name}
+              {ua.ai?.model_use_name}
             </MenuItem>
           ))}
         </Select>

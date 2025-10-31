@@ -40,7 +40,7 @@ const SettingPage = () => {
     // },
     // {
     //   id: 2,
-    //   title: "ChatGPT 4o",
+    //   title: "ChatGPT 5",
     //   defaultLimit: 800000000,
     //   used: 150000000,
     //   total: 400000000,
@@ -102,6 +102,8 @@ const SettingPage = () => {
       return {
         id: ai.id,
         title: ai.model_name,
+        model_use: ai?.model_use_name || "-",
+        model_type: ai?.model_type || "-",
         defaultLimit: ai.token_count,
         remain: ai.token_count,
         total: ai.token_all,
@@ -257,11 +259,7 @@ const SettingPage = () => {
               <TokenUsageCardSetting
                 key={card.id}
                 title={
-                  card.title === "gpt-4o"
-                    ? "ChatGPT 4o"
-                    : card.title === "gemini-2.5-pro"
-                    ? "Gemini 2.5 Pro"
-                    : card.title
+                  card.model_use
                 }
                 defaultLimit={card.defaultLimit}
                 remain={card.remain}
@@ -302,7 +300,7 @@ const SettingPage = () => {
                     <UserGroupSettingCard
                       roleName="Admin"
                       defaultLimit={1000000}
-                      modelOptions={["Gemini 2.5 Pro", "ChatGPT 4o"]}
+                      modelOptions={["Gemini 2.5 Pro", "ChatGPT 5"]}
                       defaultModel="Gemini 2.5 Pro"
                       onChange={(field, value) =>
                         handleSettingChange("Admin", field, value)
@@ -341,7 +339,7 @@ const SettingPage = () => {
                     <UserGroupSettingCard
                       roleName="Admin"
                       defaultLimit={1000000}
-                      modelOptions={["Gemini 2.5 Pro", "ChatGPT 4o"]}
+                      modelOptions={["Gemini 2.5 Pro", "ChatGPT 5"]}
                       defaultModel="Gemini 2.5 Pro"
                       onChange={(field, value) =>
                         handleSettingChange("Admin", field, value)

@@ -95,6 +95,8 @@ export default function UserDetailPage() {
           user.user_ai?.map((ai) => ({
             ai_id: ai.ai_id, // ✅ เพิ่ม ai_id ไว้ใช้งานตอน update
             model: ai.ai?.model_name || "-",
+            model_use: ai.ai?.model_use_name || "-",
+            model_type: ai.ai?.model_type || "-",
             remain: ai.token_count || 0,
             token: ai.token_count || 0,
             token_all: ai.token_all || 0,
@@ -272,11 +274,7 @@ export default function UserDetailPage() {
               <TokenLimitCard
                 key={index}
                 title={
-                  ai.model === "gpt-4o"
-                    ? "ChatGPT 4o"
-                    : ai.model === "gemini-2.5-pro"
-                    ? "Gemini 2.5 Pro"
-                    : ai.model
+                  ai.model_use
                 }
                 label={t("label1")}
                 value={ai.token}
@@ -304,11 +302,7 @@ export default function UserDetailPage() {
               <TokenUsageCard
                 key={index}
                 title={
-                  ai.model === "gpt-4o"
-                    ? "ChatGPT 4o"
-                    : ai.model === "gemini-2.5-pro"
-                    ? "Gemini 2.5 Pro"
-                    : ai.model
+                  ai.model_use
                 }
                 remain={ai.remain}
                 total={ai.token_all}
@@ -371,16 +365,12 @@ export default function UserDetailPage() {
                     {Array.from(
                       new Set(
                         userCardTable
-                          .flatMap((u) => u.aiModels?.map((ai) => ai.model) || [])
+                          .flatMap((u) => u.aiModels?.map((ai) => ai.model_use) || [])
                       )
                     ).map((modelName) => (
                       <TableCell key={modelName}>
                         <b>
-                          {modelName === "gpt-4o"
-                            ? "ChatGPT 4o"
-                            : modelName === "gemini-2.5-pro"
-                            ? "Gemini 2.5 Pro"
-                            : modelName}
+                          {modelName}
                         </b>
                       </TableCell>
                     ))}
@@ -388,16 +378,12 @@ export default function UserDetailPage() {
                     {Array.from(
                       new Set(
                         userCardTable
-                          .flatMap((u) => u.aiModels?.map((ai) => ai.model) || [])
+                          .flatMap((u) => u.aiModels?.map((ai) => ai.model_use) || [])
                       )
                     ).map((modelName) => (
                       <TableCell key={modelName}>
                         <b>
-                          {modelName === "gpt-4o"
-                            ? "ChatGPT 4o"
-                            : modelName === "gemini-2.5-pro"
-                            ? "Gemini 2.5 Pro"
-                            : modelName}
+                          {modelName}
                         </b>
                       </TableCell>
                     ))}

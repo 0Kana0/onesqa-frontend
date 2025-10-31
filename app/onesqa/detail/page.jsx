@@ -66,15 +66,13 @@ export default function DetailPage() {
           user.user_ai?.map((ai) => ({
             ai_id: ai.ai_id, // ✅ เพิ่ม ai_id ไว้ใช้งานตอน update
             model: ai.ai?.model_name || "-",
+            model_use: ai.ai?.model_use_name || "-",
+            model_type: ai.ai?.model_type || "-",
             token: ai.token_count || 0,
             token_all: ai.token_all || 0,
             today: ai.today || 0,
             average: ai.average || 0,
           })) || [],
-        chatgpt5Used: 1500000,
-        geminiUsed: 150000,
-        chatgpt5Max: 2000000,
-        geminiMax: 2000000,
       }));
 
       setUserCard(formattedData); // ✅ เก็บเป็น array เสมอ
@@ -148,11 +146,7 @@ export default function DetailPage() {
             <TokenUsageCard
               key={index}
               title={
-                ai.model === "gpt-4o"
-                  ? "ChatGPT 4o"
-                  : ai.model === "gemini-2.5-pro"
-                  ? "Gemini 2.5 Pro"
-                  : ai.model
+                ai.model_use
               }
               remain={ai.token}
               total={ai.token_all}
