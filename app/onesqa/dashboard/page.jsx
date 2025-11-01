@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@apollo/client/react";
+import { NetworkStatus } from "@apollo/client";
+import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
 import { GET_ROLES } from "@/graphql/role/queries";
 import { ONLINE_USERS } from "@/graphql/userStatus/queries";
 import { GET_ME } from "@/graphql/auth/queries";
@@ -11,7 +12,14 @@ import {
   Typography,
   CircularProgress,
   useMediaQuery,
+  Select,
+  MenuItem,
+  TextField,
 } from "@mui/material";
+// ใช้ dayjs (แนะนำเปิด timezone ให้ตรง Asia/Bangkok)
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { useTranslations } from "next-intl";
 import ChatIcon from "@mui/icons-material/Chat";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -23,11 +31,26 @@ import SystemStatusCard from "@/app/components/SystemStatusCard";
 import TokenUsageDashboardBar from "@/app/components/TokenUsageDashboardBar";
 import OnlineUsersListener from "@/app/components/OnlineUsersListener";
 import { useRequireRole } from "@/hook/useRequireRole";
+import {
+  CHART_REPORTS,
+  MESSAGE_REPORTS,
+  TOKEN_REPORTS,
+} from "@/graphql/report/queries";
 
 const DashboardPage = () => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  dayjs.tz.setDefault("Asia/Bangkok"); // เอาออกได้ถ้าไม่อยาก fix timezone
+
   const t = useTranslations("DashboardPage");
+  const tReport = useTranslations("ReportPage");
   const tInit = useTranslations("Init");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
+  const [quickRange, setQuickRange] = useState("30วันย้อนหลัง");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // const { data: meData, loading: meLoading, error: meError } = useQuery(GET_ME);
   // const { data, loading, error, refetch } = useQuery(GET_ROLES);
@@ -43,18 +66,6 @@ const DashboardPage = () => {
     totalTokenCount: 0,
     totalTokenAll: 0,
   });
-
-  const sampleData = [
-    { date: "1 Oct", chatgpt: 900, gemini: 1800, total: 2700 },
-    { date: "3 Oct", chatgpt: 2000, gemini: 2500, total: 3000 },
-    { date: "7 Oct", chatgpt: 2400, gemini: 2200, total: 2600 },
-    { date: "10 Oct", chatgpt: 3100, gemini: 2800, total: 2900 },
-    { date: "14 Oct", chatgpt: 2900, gemini: 3200, total: 3500 },
-    { date: "20 Oct", chatgpt: 4200, gemini: 2700, total: 3800 },
-    { date: "23 Oct", chatgpt: 4000, gemini: 1300, total: 2714 },
-    { date: "27 Oct", chatgpt: 3900, gemini: 1700, total: 2900 },
-    { date: "30 Oct", chatgpt: 3100, gemini: 3600, total: 2800 },
-  ];
 
   const systemData = [
     { label: "API Connection", status: "ปกติ" },
@@ -72,10 +83,39 @@ const DashboardPage = () => {
   });
 
   const {
+    data: messageData,
+    loading: messageLoading,
+    error: messageError,
+  } = useQuery(MESSAGE_REPORTS, {
+    fetchPolicy: "network-only",
+  });
+
+  const {
+    data: tokenData,
+    loading: tokenLoading,
+    error: tokenError,
+  } = useQuery(TOKEN_REPORTS, {
+    fetchPolicy: "network-only",
+  });
+
+  const {
+    data: chartData,
+    loading: chartLoading,
+    error: chartError,
+    networkStatus,
+  } = useQuery(CHART_REPORTS, {
+    fetchPolicy: "network-only",
+    variables: {
+      startDate: startDate,
+      endDate: endDate,
+    },
+  });
+
+  const {
     data: onlineUsersData,
     loading: onlineUsersLoading,
     error: onlineUsersError,
-    refetch
+    refetch,
   } = useQuery(ONLINE_USERS, {
     fetchPolicy: "network-only",
   });
@@ -105,10 +145,14 @@ const DashboardPage = () => {
     redirectTo: "/onesqa/chat",
   });
 
-  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
-  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
+  if (loading) return null; // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null; // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
-  if (aisLoading || onlineUsersLoading)
+  // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
+  const isInitialLoading =
+    networkStatus === NetworkStatus.loading && !chartData?.chartReports;
+
+  if (isInitialLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -116,7 +160,7 @@ const DashboardPage = () => {
       </Box>
     );
 
-  if (aisError || onlineUsersError)
+  if (aisError || onlineUsersError || tokenError || messageError || chartError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -124,6 +168,83 @@ const DashboardPage = () => {
     );
 
   console.log(aisData?.ais);
+  console.log(chartData?.chartReports);
+
+  function pivotUsageByDate(
+    rows,
+    {
+      locale = "en-GB", // 'th-TH' ได้เช่นกัน → "30 ต.ค. 2025"
+      keepZeroDays = false,
+    } = {}
+  ) {
+    if (!Array.isArray(rows) || rows.length === 0) return [];
+
+    const byDate = new Map();
+
+    for (const r of rows) {
+      if (!r || !r.date) continue;
+      const key = r.date; // 'YYYY-MM-DD'
+      if (!byDate.has(key))
+        byDate.set(key, { dateISO: key, chatgpt: 0, gemini: 0 });
+
+      const acc = byDate.get(key);
+      const tokens = Number(r.total_tokens ?? 0) || 0;
+
+      if (/chatgpt/i.test(r.model)) acc.chatgpt += tokens;
+      else if (/gemini/i.test(r.model)) acc.gemini += tokens;
+    }
+
+    const fmt = new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC", // กันสไลด์วันข้ามโซนเวลา
+    });
+
+    let result = [...byDate.values()]
+      .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
+      .map(({ dateISO, chatgpt, gemini }) => {
+        const [y, m, d] = dateISO.split("-").map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        return {
+          date: fmt.format(dt), // -> "30 Oct 2025"
+          chatgpt,
+          gemini,
+          total: chatgpt + gemini,
+        };
+      });
+
+    return result;
+  }
+
+  // ใช้
+  const output = pivotUsageByDate(chartData?.chartReports);
+  console.log(output);
+
+  const getRangeFromQuick = (range) => {
+    const now = dayjs(); // จะใช้ Asia/Bangkok จากด้านบน
+    switch (range) {
+      case "7วันย้อนหลัง": {
+        const s7 = now.subtract(6, "day").startOf("day"); // รวมวันนี้ = 7 วัน
+        return { start: s7, end: now.endOf("day") };
+      }
+      case "30วันย้อนหลัง": {
+        const s30 = now.subtract(29, "day").startOf("day"); // รวมวันนี้ ~30 วัน
+        return { start: s30, end: now.endOf("day") };
+      }
+      case "60วันย้อนหลัง": {
+        const s60 = now.subtract(59, "day").startOf("day"); // รวมวันนี้ ~60 วัน
+        return { start: s60, end: now.endOf("day") };
+      }
+      default:
+        return { start: null, end: null };
+    }
+  };
+  const applyQuickRange = (range) => {
+    const { start, end } = getRangeFromQuick(range);
+    setStartDate(start ? start.format("YYYY-MM-DD") : "");
+    setEndDate(end ? end.format("YYYY-MM-DD") : "");
+  };
 
   const handleDetail = () => {
     console.log("🟠 เปิดรายละเอียดการใช้งาน Token");
@@ -149,8 +270,7 @@ const DashboardPage = () => {
               onDetailClick={handleDetail}
             />
           </Box>
-        )
-      }
+        )}
 
       {/* <OnlineUsersListener 
         online={onlineUsersData?.onlineUsers} 
@@ -172,16 +292,16 @@ const DashboardPage = () => {
       >
         <DashboardStatCard
           title={t("card1")}
-          value="156"
-          percentChange={15}
+          value={messageData?.cardMessageReports?.value.toLocaleString()}
+          percentChange={messageData?.cardMessageReports?.percentChange}
           icon={<ChatIcon />}
           bgColor="primary.minor"
         />
 
         <DashboardStatCard
           title={t("card2")}
-          value="25,600"
-          percentChange={8}
+          value={tokenData?.cardTokenReports?.value.toLocaleString()}
+          percentChange={tokenData?.cardTokenReports?.percentChange}
           icon={<SmartToyIcon />}
           bgColor="primary.minor"
         />
@@ -195,9 +315,75 @@ const DashboardPage = () => {
         />
       </Box>
 
+      {/* 🧩 ส่วนกรองข้อมูล */}
+      <Box
+        sx={{
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
+          borderRadius: 4,
+          p: isMobile ? 1.5 : 2,
+          bgcolor: "background.paper",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+          {tReport("filter1")}
+        </Typography>
+        {/* 🔹 ส่วนค้นหาและกรองข้อมูล */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: isTablet ? "column" : "row", // ✅ สลับแนวตามจอ
+            alignItems: isTablet ? "flex-start" : "center",
+            gap: 2,
+          }}
+        >
+          <Select
+            value={quickRange}
+            onChange={(e) => {
+              const val = e.target.value;
+              setQuickRange(val);
+              applyQuickRange(val); // << เซ็ต start/end ที่นี่
+            }}
+            size="small"
+            sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
+          >
+            <MenuItem value="7วันย้อนหลัง">7วันย้อนหลัง</MenuItem>
+            <MenuItem value="30วันย้อนหลัง">30วันย้อนหลัง</MenuItem>
+            <MenuItem value="60วันย้อนหลัง">60วันย้อนหลัง</MenuItem>
+          </Select>
+
+          {/* วันที่เริ่มต้น */}
+          <TextField
+            label={tReport("startDate")}
+            type="date"
+            value={startDate}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+            }}
+            size="small"
+            sx={{ width: isTablet ? "100%" : 200 }}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          {/* วันที่สิ้นสุด */}
+          <TextField
+            label={tReport("endDate")}
+            type="date"
+            value={endDate}
+            onChange={(e) => {
+              setEndDate(e.target.value);
+            }}
+            size="small"
+            sx={{ width: isTablet ? "100%" : 200 }}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Box>
+      </Box>
+
       <Box>
         <TokensChart
-          data={sampleData}
+          data={output}
           subtitle={t("subtitle2")}
           title={t("title2")}
         />

@@ -288,6 +288,8 @@ export default function UserPage() {
       variables: {
         // ถ้าสกีมามี default page/pageSize ก็ไม่ต้องส่ง
         // ใส่ where ตามฟิลเตอร์หน้า UI (แปลง "ทั้งหมด" -> null)
+        page: page, 
+        pageSize: totalCount,
         where: {
           role: normalize(roleFilter),
           status: normalize(statusFilter),

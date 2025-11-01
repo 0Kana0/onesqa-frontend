@@ -48,7 +48,7 @@ export function exportLogsToExcel(logs, ln = "th") {
 export function exportUsersToExcel(users, ln = "th") {
   // ✅ รวม model ทั้งหมดจากทุก user เพื่อสร้างหัวคอลัมน์แบบ dynamic
   const allModels = Array.from(
-    new Set(users.flatMap((u) => u.aiModels?.map((m) => m.model) || []))
+    new Set(users.flatMap((u) => u.aiModels?.map((m) => m.model_use) || []))
   );
 
   // ✅ แปลงเป็นหัวตาราง "จำนวน <model>"
@@ -67,7 +67,7 @@ export function exportUsersToExcel(users, ln = "th") {
     // map model → token
     const modelTokens = {};
     u.aiModels?.forEach((m) => {
-      modelTokens[m.model] = m.token;
+      modelTokens[m.model_user] = m.token;
     });
 
     return [

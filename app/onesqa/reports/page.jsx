@@ -24,13 +24,22 @@ import {
   CircularProgress,
   useMediaQuery,
 } from "@mui/material";
+// ใช้ dayjs (แนะนำเปิด timezone ให้ตรง Asia/Bangkok)
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import { useTranslations } from "next-intl";
 import { exportReportsToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
+import { GET_REPORTS, TOPFIVE_REPORTS } from "@/graphql/report/queries";
 
 const ReportPage = () => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  dayjs.tz.setDefault("Asia/Bangkok"); // เอาออกได้ถ้าไม่อยาก fix timezone
+
   const client = useApolloClient();
   const t = useTranslations("ReportPage");
   const tInit = useTranslations("Init");
@@ -44,51 +53,51 @@ const ReportPage = () => {
   const [page, setPage] = useState(1);
   const rowsPerPage = 5; // ✅ แสดง 5 แถวต่อหน้า
 
-  const reportRows = [
-    {
-      date: "2025-10-04",
-      user: "นายสมชาย ใจดี",
-      position: "เทคโนโลยีสารสนเทศ",
-      chats: 15,
-      tokens: 2500,
-    },
-    {
-      date: "2025-10-05",
-      user: "นางสาวมาลี สวยงาม",
-      position: "การประเมินคุณภาพ",
-      chats: 8,
-      tokens: 1200,
-    },
-    {
-      date: "2025-10-06",
-      user: "นายวิชัย เก่งมาก",
-      position: "การประเมินคุณภาพ",
-      chats: 12,
-      tokens: 1800,
-    },
-    {
-      date: "2025-10-07",
-      user: "นายวิชัย เก่งมาก",
-      position: "การประเมินคุณภาพ",
-      chats: 12,
-      tokens: 1800,
-    },
-    {
-      date: "2025-10-08",
-      user: "นายวิชัย เก่งมาก",
-      position: "การประเมินคุณภาพ",
-      chats: 12,
-      tokens: 1800,
-    },
-    {
-      date: "2025-10-09",
-      user: "นายวิชัย เก่งมาก",
-      position: "การประเมินคุณภาพ",
-      chats: 12,
-      tokens: 1800,
-    },
-  ];
-  const [totalCount, setTotalCount] = useState(0)
+  // const reportRows = [
+  //   {
+  //     date: "2025-10-04",
+  //     user: "นายสมชาย ใจดี",
+  //     position: "เทคโนโลยีสารสนเทศ",
+  //     chats: 15,
+  //     tokens: 2500,
+  //   },
+  //   {
+  //     date: "2025-10-05",
+  //     user: "นางสาวมาลี สวยงาม",
+  //     position: "การประเมินคุณภาพ",
+  //     chats: 8,
+  //     tokens: 1200,
+  //   },
+  //   {
+  //     date: "2025-10-06",
+  //     user: "นายวิชัย เก่งมาก",
+  //     position: "การประเมินคุณภาพ",
+  //     chats: 12,
+  //     tokens: 1800,
+  //   },
+  //   {
+  //     date: "2025-10-07",
+  //     user: "นายวิชัย เก่งมาก",
+  //     position: "การประเมินคุณภาพ",
+  //     chats: 12,
+  //     tokens: 1800,
+  //   },
+  //   {
+  //     date: "2025-10-08",
+  //     user: "นายวิชัย เก่งมาก",
+  //     position: "การประเมินคุณภาพ",
+  //     chats: 12,
+  //     tokens: 1800,
+  //   },
+  //   {
+  //     date: "2025-10-09",
+  //     user: "นายวิชัย เก่งมาก",
+  //     position: "การประเมินคุณภาพ",
+  //     chats: 12,
+  //     tokens: 1800,
+  //   },
+  // ];
+  const [totalCount, setTotalCount] = useState(0);
 
   const topUsers = [
     {
@@ -136,15 +145,55 @@ const ReportPage = () => {
     fetchPolicy: "network-only",
   });
 
+  const {
+    data: reportsData,
+    loading: reportsLoading,
+    error: reportsError,
+    networkStatus,
+  } = useQuery(GET_REPORTS, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    variables: {
+      page: page,
+      pageSize: rowsPerPage,
+      where: {
+        startDate: startDate,
+        endDate: endDate,
+      },
+    },
+  });
+
+  const {
+    data: topfiveData,
+    loading: topfiveLoading,
+    error: topfiveError,
+  } = useQuery(TOPFIVE_REPORTS, {
+    fetchPolicy: "network-only",
+  });
+
+  useEffect(() => {
+    //console.log(reportsData?.reports?.totalCount);
+    if (!reportsData?.reports?.items.length) {
+      setTotalCount(0);
+      return;
+    }
+
+    setTotalCount(reportsData?.reports?.totalCount);
+  }, [reportsData]);
+
   const { allowed, loading, user } = useRequireRole({
     roles: ["ผู้ดูแลระบบ"],
     redirectTo: "/onesqa/chat",
   });
-  
-  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
-  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
-  if (aisLoading)
+  if (loading) return null; // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null; // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
+
+  // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
+  const isInitialLoading =
+    networkStatus === NetworkStatus.loading && !reportsData;
+
+  if (isInitialLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -152,7 +201,7 @@ const ReportPage = () => {
       </Box>
     );
 
-  if (aisError)
+  if (aisError || reportsError || topfiveError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -160,39 +209,30 @@ const ReportPage = () => {
     );
 
   console.log(aisData?.ais);
+  console.log(reportsData?.reports?.items);
 
-  // utils ช่วยคำนวณขอบเขตวันให้ครอบคลุมทั้งวัน
-  const startOfDay = (d) => {
-    const x = new Date(d);
-    x.setHours(0, 0, 0, 0);
-    return x;
-  };
-  const endOfDay = (d) => {
-    const x = new Date(d);
-    x.setHours(23, 59, 59, 999);
-    return x;
-  };
-
-  // แปลงค่าดรอปดาวน์เป็นช่วงวัน
   const getRangeFromQuick = (range) => {
-    const now = new Date();
+    const now = dayjs(); // จะใช้ Asia/Bangkok จากด้านบน
     switch (range) {
       case "วันนี้": {
-        return { start: startOfDay(now), end: endOfDay(now) };
+        return { start: now.startOf("day"), end: now.endOf("day") };
       }
       case "7วันย้อนหลัง": {
-        const s7 = new Date(now);
-        s7.setDate(now.getDate() - 6); // รวมวันนี้ = 7 วัน
-        return { start: startOfDay(s7), end: endOfDay(now) };
+        const s7 = now.subtract(6, "day").startOf("day"); // รวมวันนี้ = 7 วัน
+        return { start: s7, end: now.endOf("day") };
       }
       case "1เดือนย้อนหลัง": {
-        const s30 = new Date(now);
-        s30.setDate(now.getDate() - 29); // รวมวันนี้ ~30 วัน
-        return { start: startOfDay(s30), end: endOfDay(now) };
+        const s30 = now.subtract(29, "day").startOf("day"); // รวมวันนี้ ~30 วัน
+        return { start: s30, end: now.endOf("day") };
       }
       default:
         return { start: null, end: null };
     }
+  };
+  const applyQuickRange = (range) => {
+    const { start, end } = getRangeFromQuick(range);
+    setStartDate(start ? start.format("YYYY-MM-DD") : "");
+    setEndDate(end ? end.format("YYYY-MM-DD") : "");
   };
 
   // 🔹 ฟังก์ชันกรองข้อมูล
@@ -229,8 +269,24 @@ const ReportPage = () => {
     console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
-  const handleExportExcel = () => {
-    exportReportsToExcel(reportRows);
+  const handleExportExcel = async () => {
+    // เรียกแบบไม่ส่ง variables (ใช้ค่า default ของ schema)
+    const { data } = await client.query({
+      query: GET_REPORTS,
+      fetchPolicy: "network-only",
+      variables: {
+        page: page, 
+        pageSize: totalCount,
+        where: {
+          startDate: startDate,
+          endDate: endDate,
+        },
+      },
+    });
+
+    const reportExcel = data?.reports?.items ?? [];
+
+    exportReportsToExcel(reportExcel);
   };
 
   return (
@@ -281,8 +337,10 @@ const ReportPage = () => {
           <Select
             value={quickRange}
             onChange={(e) => {
-              setQuickRange(e.target.value)
-              setPage(1)
+              const val = e.target.value;
+              setQuickRange(val);
+              applyQuickRange(val); // << เซ็ต start/end ที่นี่
+              setPage(1);
             }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
@@ -299,8 +357,8 @@ const ReportPage = () => {
             type="date"
             value={startDate}
             onChange={(e) => {
-              setStartDate(e.target.value)
-              setPage(1)
+              setStartDate(e.target.value);
+              setPage(1);
             }}
             size="small"
             sx={{ width: isTablet ? "100%" : 200 }}
@@ -313,8 +371,8 @@ const ReportPage = () => {
             type="date"
             value={endDate}
             onChange={(e) => {
-              setEndDate(e.target.value)
-              setPage(1)
+              setEndDate(e.target.value);
+              setPage(1);
             }}
             size="small"
             sx={{ width: isTablet ? "100%" : 200 }}
@@ -379,7 +437,7 @@ const ReportPage = () => {
               </TableHead>
 
               <TableBody>
-                {reportRows.map((row, index) => (
+                {reportsData?.reports?.items?.map((row, index) => (
                   <TableRow key={index} hover>
                     <TableCell>
                       {new Date(row.date).toLocaleDateString("en-GB", {
@@ -389,16 +447,18 @@ const ReportPage = () => {
                       })}
                     </TableCell>
                     <TableCell>{row.user}</TableCell>
-                    <TableCell>{row.position}</TableCell>
-                    <TableCell align="center">{row.chats}</TableCell>
+                    <TableCell>{row.position || "-"}</TableCell>
+                    <TableCell align="center">
+                      {row.chats.toLocaleString()}
+                    </TableCell>
                     <TableCell align="right">
-                      {row.tokens.toLocaleString()}
+                      {Number(row.tokens).toLocaleString()}
                     </TableCell>
                   </TableRow>
                 ))}
 
                 {/* ถ้าไม่มีข้อมูล */}
-                {reportRows.length === 0 && (
+                {reportsData?.reports?.items?.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                       ไม่พบข้อมูล
@@ -456,7 +516,7 @@ const ReportPage = () => {
 
           {/* ลิสต์ผู้ใช้งาน */}
           <Stack spacing={1.5}>
-            {topUsers.map((user) => (
+            {topfiveData?.topFiveReports?.map((user) => (
               <Box
                 key={user.rank}
                 sx={{
@@ -528,9 +588,7 @@ const ReportPage = () => {
             {aisData?.ais?.map((ai) => (
               <TokenUsageCard
                 key={ai.id}
-                title={
-                  ai.model_use_name
-                }
+                title={ai.model_use_name}
                 remain={ai.token_count}
                 total={ai.token_all}
                 today={ai.today}

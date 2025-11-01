@@ -339,6 +339,8 @@ const LogPage = () => {
       query: GET_LOGS,
       fetchPolicy: "network-only",
       variables: {
+        page: page, 
+        pageSize: totalCount,
         where: {
           logType: mapLogFilterToType(logFilter),
           startDate: startDate,

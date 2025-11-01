@@ -8,7 +8,7 @@ import {
   Typography,
   LinearProgress,
   Divider,
-  useMediaQuery
+  useMediaQuery,
 } from "@mui/material";
 import {
   LineChart,
@@ -20,7 +20,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 
 /**
  * TokensChart Component
@@ -34,9 +34,13 @@ export default function TokensChart({
   title = "สถิติการใช้ Tokens รายวัน",
   height = 350,
 }) {
-  const t = useTranslations('TokensChart');
+  const t = useTranslations("TokensChart");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
-  
+
+  // ด้านบนไฟล์
+  const trimYear = (v) =>
+    typeof v === "string" ? v.replace(/\s+\d{4}$/, "") : v;
+
   return (
     <Box
       elevation={3}
@@ -61,7 +65,11 @@ export default function TokensChart({
           margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 12 }}
+            tickFormatter={trimYear}
+          />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip
             contentStyle={{
@@ -72,28 +80,24 @@ export default function TokensChart({
             }}
             formatter={(value) => value.toLocaleString()}
           />
-          {
-            !isMobile && (
-              <Legend
-                verticalAlign="top"
-                align="right"
-                iconType="circle"
-                wrapperStyle={{ fontSize: 12, marginBottom: 10 }}
-              />
-            )
-          }
-
+          {!isMobile && (
+            <Legend
+              verticalAlign="top"
+              align="right"
+              iconType="circle"
+              wrapperStyle={{ fontSize: 12, marginBottom: 10 }}
+            />
+          )}
           {/* เส้น 1: ChatGPT5 */}
           <Line
             type="monotone"
             dataKey="chatgpt"
-            name="ChatGPT5"
+            name="ChatGPT 5"
             stroke="#22c55e"
             strokeWidth={2}
             dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
             activeDot={{ r: 6 }}
           />
-
           {/* เส้น 2: Gemini 2.5 Pro */}
           <Line
             type="monotone"
@@ -104,12 +108,11 @@ export default function TokensChart({
             dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
             activeDot={{ r: 6 }}
           />
-
           {/* เส้น 3: รวม */}
           <Line
             type="monotone"
             dataKey="total"
-            name={t('all')}
+            name={t("all")}
             stroke="#c084fc"
             strokeWidth={2}
             dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
