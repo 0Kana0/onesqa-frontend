@@ -90,7 +90,7 @@ const ChatPage = () => {
           input: { 
             ai_id: model, 
             user_id: user?.id,
-            chat_name: "แชตใหม่"
+            chat_name: initText
           },
         },
       });
