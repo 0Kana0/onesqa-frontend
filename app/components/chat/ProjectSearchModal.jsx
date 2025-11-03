@@ -1,11 +1,11 @@
-// app/components/ChatSearchDialog.jsx
+// app/components/ProjectSearchModal.jsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { NetworkStatus } from "@apollo/client";
 import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
-import { GET_CHATS } from "@/graphql/chat/queries";
+import { GET_CHATGROUPS } from "@/graphql/chatgroup/queries";
 import Link from "next/link";
 import {
   Box,
@@ -24,49 +24,25 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Avatar,
 } from "@mui/material";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
-import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
-import { AI_LOGOS, getAiLogo } from "@/util/aiLogo";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 
 const normalizeText = (v) => {
   const s = (v ?? "").trim();
   return s === "" ? null : s;
 };
 
-export default function ChatSearchModal({
+export default function ProjectSearchModal({
   open,
   onClose,
   onSelect, // (item) => void
-  placeholder = "ค้นหาแชต...",
+  placeholder = "ค้นหากลุ่ม...",
 }) {
   const { user } = useAuth();
   const [q, setQ] = useState("");
   const [first, setFirst] = useState(5);
-
-  // ตัวอย่างข้อมูลให้เหมือนภาพตัวอย่าง
-  // const sections = [
-  //   { id: "t1", chat_name: "การแก้ไขข้อผิดพลาด slui" },
-  //   { id: "t2", chat_name: "Next.js MUI UI toggle" },
-  //   { id: "t3", chat_name: "คำว่า saber คืออะไร" },
-  //   { id: "t4", chat_name: "การแก้ไขข้อผิดพลาด slui" },
-  //   { id: "t5", chat_name: "Next.js MUI UI toggle" },
-  //   { id: "t6", chat_name: "คำว่า saber คืออะไร" },
-  //   { id: "t7", chat_name: "การแก้ไขข้อผิดพลาด slui" },
-  //   { id: "t8", chat_name: "Next.js MUI UI toggle" },
-  //   { id: "t9", chat_name: "คำว่า saber คืออะไร" },
-  //   { id: "t10", chat_name: "การแก้ไขข้อผิดพลาด slui" },
-  //   { id: "t11", chat_name: "Next.js MUI UI toggle" },
-  //   { id: "t12", chat_name: "คำว่า saber คืออะไร" },
-  //   { id: "t13", chat_name: "การแก้ไขข้อผิดพลาด slui" },
-  //   { id: "t14", chat_name: "Next.js MUI UI toggle" },
-  //   { id: "t15", chat_name: "คำว่า saber คืออะไร" },
-  //   { id: "t16", chat_name: "การแก้ไขข้อผิดพลาด slui" },
-  //   { id: "t17", chat_name: "Next.js MUI UI toggle" },
-  //   { id: "t18", chat_name: "คำว่า saber คืออะไร" },
-  // ];
 
   const vars = {
     user_id: user?.id ?? "",
@@ -75,26 +51,26 @@ export default function ChatSearchModal({
   };
 
   const {
-    data: chatsData,
-    loading: chatsLoading,
-    error: chatsError,
+    data: chatgroupsData,
+    loading: chatgroupsLoading,
+    error: chatgroupsError,
     refetch,
     networkStatus,
-  } = useQuery(GET_CHATS, {
+  } = useQuery(GET_CHATGROUPS, {
     variables: vars,
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true,
     skip: !open || !user?.id, // ❗ รอให้ modal เปิดและมี user.id ก่อนค่อยยิง
   });
 
-  console.log("data modal", chatsData?.chats?.edges);
+  console.log("data modal", chatgroupsData?.chatgroups?.edges);
   console.log(q, first);
 
   useEffect(() => {
     if (!open) setQ("");
   }, [open]);
 
-  if (chatsLoading && !open)
+  if (chatgroupsLoading && !open)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <Typography>
@@ -104,17 +80,16 @@ export default function ChatSearchModal({
     );
 
   // ----- สถานะโหลด/ผิดพลาดรวมสองฝั่ง -----
-  if (chatsError)
+  if (chatgroupsError)
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">❌</Alert>
       </Box>
     );
 
-  const sections = chatsData?.chats?.edges.map((edge) => ({
+  const sections = chatgroupsData?.chatgroups?.edges.map((edge) => ({
     id: edge.node.id,
-    chat_name: edge.node.chat_name,
-    model_type: edge.node.ai.model_type,
+    chatgroup_name: edge.node.chatgroup_name,
   }));
 
   console.log(sections);
@@ -124,7 +99,7 @@ export default function ChatSearchModal({
 
   // // เตรียมข้อมูลสำหรับโหมด flat
   // const flat = Array.isArray(sections)
-  //   ? sections.filter((it) => filter(it.chat_name))
+  //   ? sections.filter((it) => filter(it.chatgroup_name))
   //   : [];
 
   return (
@@ -205,31 +180,24 @@ export default function ChatSearchModal({
           {sections?.map((it, idx) => (
             <Link
               key={idx}
-              href={`/onesqa/chat/${it.id}`}
+              href={`/onesqa/chat/group/${it.id}`}
               style={{ textDecoration: "none", color: "inherit" }}
             >
               <ListItemButton
-                key={it.id}
-                onClick={() => {
-                  onSelect?.(it);
-                  onClose?.();
-                }}
-              >
-                <ListItemIcon>
-                  <Avatar
-                    src={getAiLogo(it)}
-                    alt={it.model_type ?? "AI"}
-                    sx={{ width: 20, height: 20, mr: 0.5 }}
-                    imgProps={{
-                      onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
-                    }}
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary={it.chat_name}
-                  primaryTypographyProps={{ fontSize: 14.5 }}
-                />
-              </ListItemButton>
+              key={it.id}
+              onClick={() => {
+                onSelect?.(it);
+                onClose?.();
+              }}
+            >
+              <ListItemIcon>
+                <FolderOutlined fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary={it.chatgroup_name}
+                primaryTypographyProps={{ fontSize: 14.5 }}
+              />
+            </ListItemButton>
             </Link>
           ))}
 

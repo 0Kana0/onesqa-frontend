@@ -25,8 +25,11 @@ import ChatThread from "@/app/components/chat/ChatThread";
 import ChatInputBar from "@/app/components/chat/ChatInputBar";
 import TypingDots from "@/app/components/chat/TypingDots";
 import { useInitText } from "@/app/context/InitTextContext";
+import { useAuth } from "@/app/context/AuthContext";
+import { GET_CHATGROUPS } from "@/graphql/chatgroup/queries";
 
 const MessagePage = () => {
+  const { user } = useAuth();
   const { initText, setInitText } = useInitText();
   const router = useRouter();
   const params = useParams();
@@ -46,11 +49,18 @@ const MessagePage = () => {
   const ranOnceRef = useRef(false);
 
   const {
+    refetch: chatgroupsRefresh,
+  } = useQuery(GET_CHATGROUPS, {
+    variables: { user_id: user?.id ?? "" },
+    fetchPolicy: "network-only",
+  });
+
+  const {
     data: messagesData,
     loading: messagesLoading,
     error: messagesError,
     networkStatus,
-    refetch
+    refetch,
   } = useQuery(GET_MESSAGES, {
     fetchPolicy: "network-only",
     variables: { chat_id: id },
@@ -59,7 +69,7 @@ const MessagePage = () => {
   const [createMessage, { loading: sending }] = useMutation(CREATE_MESSAGE);
 
   // ---------- เพิ่มส่วน autoscroll ----------
-  const listRef = useRef(null);   // กล่องที่เลื่อน
+  const listRef = useRef(null); // กล่องที่เลื่อน
   const bottomRef = useRef(null); // หมุดท้ายรายการ (กันพลาดบางเคส)
 
   const scrollToBottom = useCallback((smooth = false) => {
@@ -78,6 +88,11 @@ const MessagePage = () => {
     });
   }, []);
 
+  // useEffect(() => {
+  //   if (isNew) return;            // ต้องเป็นเคสที่ new เท่านั้น
+  //   if (messagesData?.messages?.length === 0) router.push("/onesqa/chat");
+  // }, [messagesData?.messages]);
+
   // โหลดเสร็จครั้งแรก → เลื่อนไปล่างสุดทันที
   useEffect(() => {
     if (!messagesLoading) scrollToBottom(false);
@@ -89,35 +104,37 @@ const MessagePage = () => {
   }, [messagesData?.messages.length, scrollToBottom, answer]);
 
   const handleMessageInitSubmit = async () => {
-
-    setAnswer([{
-      id: 0,
-      role: 'user',
-      text: initText,
-      createdAt: null
-    }])
+    setAnswer([
+      {
+        id: 0,
+        role: "user",
+        text: initText,
+        createdAt: null,
+      },
+    ]);
 
     try {
       const { data } = await createMessage({
         variables: {
-          input: { 
-            chat_id: id, 
-            message: initText 
+          input: {
+            chat_id: id,
+            message: initText,
           },
         },
       });
-      
+
       console.log("✅ Create success:", data.createMessage);
-      
-      refetch()
+
+      refetch();
+      chatgroupsRefresh();
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   // ✅ trigger เมื่อเพิ่งสร้างแชตใหม่
   useEffect(() => {
-    if (!isNew) return;            // ต้องเป็นเคสที่ new เท่านั้น
+    if (!isNew) return; // ต้องเป็นเคสที่ new เท่านั้น
     if (ranOnceRef.current) return; // กันซ้ำ (รวมเคส Strict Mode)
 
     ranOnceRef.current = true;
@@ -130,8 +147,8 @@ const MessagePage = () => {
   // -----------------------------------------
 
   // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
-    const isInitialLoading =
-      networkStatus === NetworkStatus.loading && !messagesData;
+  const isInitialLoading =
+    networkStatus === NetworkStatus.loading && !messagesData;
 
   // ก่อนหน้าเคยเขียน if (logsLoading) return ... → เปลี่ยนเป็นเช็ค isInitialLoading
   if (isInitialLoading)
@@ -149,34 +166,42 @@ const MessagePage = () => {
       </Typography>
     );
 
-  console.log(messagesData?.messages); 
+  // if (messagesData?.messages?.length === 0)
+  //   return (
+  //     <Typography>
+  //     </Typography>
+  //   );
+
+  console.log(messagesData?.messages);
 
   const handleMessageSubmit = async () => {
     if (!text.trim() || sending) return; // กันกดซ้ำ
 
-    setAnswer([{
-      id: messagesData?.messages.length,
-      role: 'user',
-      text: text,
-      createdAt: null
-    }])
+    setAnswer([
+      {
+        id: messagesData?.messages.length,
+        role: "user",
+        text: text,
+        createdAt: null,
+      },
+    ]);
 
     try {
       const { data } = await createMessage({
         variables: {
-          input: { 
-            chat_id: id, 
-            message: text 
+          input: {
+            chat_id: id,
+            message: text,
           },
         },
       });
-      
+
       console.log("✅ Create success:", data.createMessage);
-      refetch()
+      refetch();
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   return (
     <Container
@@ -190,14 +215,13 @@ const MessagePage = () => {
     >
       {/* โซนข้อความ: เลื่อนเฉพาะส่วนนี้ */}
       <ChatThread messages={messagesData?.messages} />
-      {sending && 
+      {sending && (
         <>
           <ChatThread messages={answer} />
           <TypingDots size={12} color="primary.main" />
         </>
-      }
+      )}
       <Box ref={bottomRef} sx={{ height: 140 }} /> {/* หมุดท้าย */}
-
       {/* แถบพิมพ์: อยู่ล่างเสมอ + กันชน safe-area */}
       <Box
         sx={{
@@ -220,23 +244,32 @@ const MessagePage = () => {
             }}
             placeholder="ป้อนข้อความ.."
             actions={[
-              { key: "deep", label: "Deep Research", onClick: () => console.log("deep"), icon: <ScienceOutlinedIcon /> },
-              { key: "canvas", label: "Canvas", onClick: () => console.log("canvas"), icon: <BrushOutlinedIcon /> },
+              {
+                key: "deep",
+                label: "Deep Research",
+                onClick: () => console.log("deep"),
+                icon: <ScienceOutlinedIcon />,
+              },
+              {
+                key: "canvas",
+                label: "Canvas",
+                onClick: () => console.log("canvas"),
+                icon: <BrushOutlinedIcon />,
+              },
             ]}
             onMicClick={() => console.log("mic")}
             onAttachClick={() => console.log("attach menu")}
             onFilesSelected={(fileList) => {
-                const files = Array.from(fileList); // FileList -> File[]
-                console.log("selected files:", files)
-              }
-            }
+              const files = Array.from(fileList); // FileList -> File[]
+              console.log("selected files:", files);
+            }}
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            sx={{ 
+            sx={{
               backgroundColor: "background.paper",
               boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
               mb: 3,
               height: "100%",
-              width: "100%"
+              width: "100%",
             }} // ปรับแต่งเพิ่มเติมได้
           />
         </Box>

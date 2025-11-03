@@ -33,6 +33,7 @@ import NewProjectModal from "./NewProjectModal";
 import Swal from "sweetalert2";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
+import { useParams, usePathname, useRouter } from "next/navigation";
 
 export default function ProjectSidebar() {
   const { user } = useAuth();
@@ -42,6 +43,16 @@ export default function ProjectSidebar() {
   const [rename, setRename] = useState(null);
   // ---- Modal: โครงการใหม่ (แยกเป็นคอมโพเนนต์) ----
   const [newOpen, setNewOpen] = useState(false);
+
+  const pathname = usePathname();
+  const router = useRouter();
+  const params = useParams();
+  const { id } = params;
+  console.log("find id", id);
+  console.log("pathname", pathname);
+
+  // state ไว้เก็บ chatgroupId ที่ครอบ chat id ปัจจุบัน
+  const [currentGroupId, setCurrentGroupId] = useState(null);
 
   // const items = [
   //   { label: "กลุ่มใหม่", href: "#" },
@@ -85,11 +96,33 @@ export default function ProjectSidebar() {
       .map((n) => ({
         id: n.id,
         label: n.chatgroup_name,
-        href: "#", // เปลี่ยนเป็น `/chatgroups/${n.id}` ได้ถ้าต้องการลิงก์จริง
+        href: `/onesqa/chat/group/${n.id}`, // เปลี่ยนเป็น `/chatgroups/${n.id}` ได้ถ้าต้องการลิงก์จริง
       }));
 
     setItems([...base, ...mapped]);
   }, [chatgroupsData]);
+
+  useEffect(() => {
+    if (!chatgroupsData?.chatgroups || !id) return;
+
+    // หา group ที่มี chat.id ตรงกับ param id
+    const edges = chatgroupsData.chatgroups.edges || [];
+    let foundGroupId = null;
+
+    for (const edge of edges) {
+      const node = edge?.node;
+      if (!node) continue;
+
+      const chats = node.chat || [];
+      const hasChat = chats.some((c) => String(c?.id) === String(id));
+      if (hasChat) {
+        foundGroupId = node.id;
+        break;
+      }
+    }
+
+    setCurrentGroupId(foundGroupId); // ถ้าไม่เจอจะเป็น null
+  }, [chatgroupsData, id]);
 
   console.log(selected);
 
@@ -109,10 +142,6 @@ export default function ProjectSidebar() {
         <Alert severity="error">❌</Alert>
       </Box>
     );
-
-  const handleLink = () => {
-    console.log("handleLink");
-  };
 
   const handleOpenMenu = (e, item) => {
     e.preventDefault();
@@ -160,6 +189,8 @@ export default function ProjectSidebar() {
             console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
             handleCloseMenu();
+            if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
+              router.push("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }
@@ -198,6 +229,8 @@ export default function ProjectSidebar() {
             console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
             handleCloseMenu();
+            if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
+              router.push("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }
@@ -220,8 +253,8 @@ export default function ProjectSidebar() {
   };
   const closeNewProject = () => {
     setNewOpen(false);
-    setRename(null)
-  }
+    setRename(null);
+  };
 
   const handleCreateProject = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
@@ -262,11 +295,11 @@ export default function ProjectSidebar() {
       console.log("✅ Create success:", data.updateChatgroup);
       refetch();
       setNewOpen(false);
-      setRename(null)
+      setRename(null);
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   return (
     <Box sx={{ "& .MuiListItemButton-root": { borderRadius: 1.5 } }}>
@@ -310,6 +343,11 @@ export default function ProjectSidebar() {
               const showMenu = it.label !== "กลุ่มใหม่"; // << เงื่อนไขสำคัญ
               const isActive =
                 showMenu && menuOpen && selected?.label === it.label;
+              const isPage =
+                id === it.id && pathname === `/onesqa/chat/group/${id}`;
+              const isGroup =
+                currentGroupId === it.id &&
+                pathname === `/onesqa/chat/${id}`;
 
               return (
                 <Link
@@ -318,11 +356,14 @@ export default function ProjectSidebar() {
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <ListItemButton
-                    onClick={isNew ? openNewProject : handleLink}
+                    onClick={isNew ? openNewProject : undefined}
                     sx={{
                       pl: 1.5,
                       pr: 1,
                       minHeight: 30,
+                      backgroundColor: isPage || isGroup
+                        ? "rgba(255,255,255,0.2)"
+                        : "transparent",
                       ...(showMenu
                         ? {
                             "& .kebab": {
@@ -391,7 +432,7 @@ export default function ProjectSidebar() {
         onCreate={rename !== null ? handleUpdateproject : handleCreateProject}
         initialName={rename !== null ? rename.label : ""} // ถ้าต้องการค่าเริ่มต้น
         title={rename !== null ? "เเก้ไขชื่อกลุ่ม" : "สร้างกลุ่มใหม่"}
-        label = "ชื่อกลุ่ม"
+        label="ชื่อกลุ่ม"
         confirmLabel={rename !== null ? "เเก้ไข" : "สร้างกลุ่ม"}
       />
     </Box>

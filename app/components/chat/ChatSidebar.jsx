@@ -22,6 +22,7 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  Avatar,
 } from "@mui/material";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -33,6 +34,9 @@ import NewProjectModal from "./NewProjectModal";
 import Swal from "sweetalert2";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import ProjectSearchModal from "./ProjectSearchModal";
+import { getAiLogo, AI_LOGOS } from "@/util/aiLogo";
 
 export default function ChatSidebar() {
   const { user } = useAuth();
@@ -42,6 +46,13 @@ export default function ChatSidebar() {
   const [rename, setRename] = useState(null);
   // ---- Modal: โครงการใหม่ (แยกเป็นคอมโพเนนต์) ----
   const [newOpen, setNewOpen] = useState(false);
+
+  const pathname = usePathname();
+  const router = useRouter();
+  const params = useParams();
+  const { id } = params;
+  console.log("find id", id);
+  console.log("pathname", pathname);
 
   // const items = [
   //   { label: "แชต ONESQA", href: "#" },
@@ -61,13 +72,27 @@ export default function ChatSidebar() {
   const [selected, setSelected] = useState(null);
   const menuOpen = Boolean(menuAnchor);
 
+  // state เปิด/ปิด modal ค้นหา
+  const [openSearch, setOpenSearch] = useState(false);
+
   const {
     data: chatsData,
     loading: chatsLoading,
     error: chatsError,
     refetch,
   } = useQuery(GET_CHATS, {
-    variables: { user_id: user?.id ?? "" },
+    variables: {
+      user_id: user?.id ?? "",
+      chatgroupMode: "NULL",
+    },
+    fetchPolicy: "network-only",
+  });
+
+  const { refetch: chatgroupsRefresh } = useQuery(GET_CHATS, {
+    variables: {
+      user_id: user?.id ?? "",
+      chatgroup_id: id,
+    },
     fetchPolicy: "network-only",
   });
 
@@ -78,18 +103,19 @@ export default function ChatSidebar() {
   useEffect(() => {
     // รอจนกว่าจะมีโครง usersData ก่อน ค่อยประมวลผล
     if (!chatsData?.chats) return;
-  
+
     const base = [];
-  
+
     const mapped = (chatsData?.chats?.edges || [])
       .map((e) => e?.node)
       .filter(Boolean)
       .map((n) => ({
         id: n.id,
+        model_type: n.ai.model_type,
         label: n.chat_name,
         href: `/onesqa/chat/${n.id}`, // เปลี่ยนเป็น `/chats/${n.id}` ได้ถ้าต้องการลิงก์จริง
       }));
-  
+
     setItems([...base, ...mapped]);
   }, [chatsData]);
 
@@ -156,6 +182,8 @@ export default function ChatSidebar() {
             console.log("✅ Delete success:", data.deleteChat);
             refetch();
             handleCloseMenu();
+            if (id === selected?.id && pathname === `/onesqa/chat/${id}`)
+              router.push("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }
@@ -194,6 +222,8 @@ export default function ChatSidebar() {
             console.log("✅ Delete success:", data.deleteChat);
             refetch();
             handleCloseMenu();
+            if (id === selected?.id && pathname === `/onesqa/chat/${id}`)
+              router.push("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }
@@ -208,6 +238,32 @@ export default function ChatSidebar() {
       });
     }
   };
+  const handleUpdateGroup = async () => {
+    setRename(selected);
+    setOpenSearch(true);
+    handleCloseMenu();
+  };
+  const handleUpdateGroupData = async (item) => {
+    console.log("rename", rename);
+
+    try {
+      // ✅ เรียก mutation ไป backend
+      const { data } = await updateChat({
+        variables: {
+          id: rename?.id,
+          input: {
+            chatgroup_id: item.id,
+          },
+        },
+      });
+      console.log("✅ Update success:", data.updateChat);
+      refetch();
+      if (id === item.id && pathname === `/onesqa/chat/group/${id}`)
+        chatgroupsRefresh();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const openNewProject = (e) => {
     e?.preventDefault?.();
@@ -216,8 +272,8 @@ export default function ChatSidebar() {
   };
   const closeNewProject = () => {
     setNewOpen(false);
-    setRename(null)
-  }
+    setRename(null);
+  };
   const handleUpdateChat = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
     console.log("เเก้ไขชื่อเเชต:", name);
@@ -236,11 +292,11 @@ export default function ChatSidebar() {
       console.log("✅ Create success:", data.updateChat);
       refetch();
       setNewOpen(false);
-      setRename(null)
+      setRename(null);
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   return (
     <Box sx={{ "& .MuiListItemButton-root": { borderRadius: 1.5 } }}>
@@ -283,6 +339,7 @@ export default function ChatSidebar() {
               const showMenu = it.label !== "กลุ่มใหม่"; // << เงื่อนไขสำคัญ
               const isActive =
                 showMenu && menuOpen && selected?.label === it.label;
+              const isPage = id === it.id && pathname === `/onesqa/chat/${id}`;
 
               return (
                 <Link
@@ -295,6 +352,9 @@ export default function ChatSidebar() {
                       pl: 1.5,
                       pr: 1,
                       minHeight: 30,
+                      backgroundColor: isPage
+                        ? "rgba(255,255,255,0.2)"
+                        : "transparent",
                       ...(showMenu
                         ? {
                             "& .kebab": {
@@ -311,6 +371,15 @@ export default function ChatSidebar() {
                     }}
                     disableRipple
                   >
+                    <Avatar
+                      src={getAiLogo(it)}
+                      alt={it.model_type ?? "AI"}
+                      sx={{ width: 20, height: 20, mr: 0.5 }}
+                      imgProps={{
+                        onError: (e) =>
+                          (e.currentTarget.src = AI_LOGOS.default),
+                      }}
+                    />
                     <ListItemText
                       primary={it.label}
                       primaryTypographyProps={{ fontSize: 14 }}
@@ -343,9 +412,11 @@ export default function ChatSidebar() {
         open={menuOpen}
         onClose={handleCloseMenu}
         onRename={handleRename}
+        onChangeGroup={handleUpdateGroup}
         onDelete={handleDelete}
         // ปรับข้อความได้ตามบริบท เช่น "กลุ่ม"
         renameLabel="เปลี่ยนชื่อเเชต"
+        changeGroupLabel="ย้ายไปยังโครงการ"
         deleteLabel="ลบเเชต"
         // paperSx={{ minWidth: 200 }} // ถ้าต้องการปรับแต่งเพิ่ม
       />
@@ -357,9 +428,24 @@ export default function ChatSidebar() {
         onCreate={handleUpdateChat}
         initialName={rename?.label} // ถ้าต้องการค่าเริ่มต้น
         title={"เเก้ไขชื่อเเชต"}
-        label = "ชื่อเเชต"
+        label="ชื่อเเชต"
         confirmLabel={"เเก้ไข"}
       />
+
+      {openSearch && (
+        <ProjectSearchModal
+          open={openSearch}
+          onClose={() => setOpenSearch(false)}
+          onSelect={(item) => {
+            // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
+            console.log("เลือก:", item);
+            handleUpdateGroupData(item);
+            // ตัวอย่าง: ไปหน้าแชตของ item.id
+            // router.push(`/chat/${item.id}`);
+            setOpenSearch(false);
+          }}
+        />
+      )}
     </Box>
   );
 }

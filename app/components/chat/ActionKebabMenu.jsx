@@ -5,14 +5,20 @@ import * as React from "react";
 import { Menu, MenuItem, Divider, ListItemIcon } from "@mui/material";
 import EditRounded from "@mui/icons-material/EditRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import { FolderOutlined } from "@mui/icons-material";
+import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
 
 export default function ActionKebabMenu({
   anchorEl,
   open,
   onClose,
   onRename,
+  onChangeGroup,
+  onDeleteGroup,
   onDelete,
   renameLabel = "เปลี่ยนชื่อโครงการ",
+  changeGroupLabel = null,
+  deleteGroupLabel = null,
   deleteLabel = "ลบโครงการ",
   dense = true,
   paperSx, // ปรับแต่งสไตล์เพิ่มเติมได้
@@ -51,6 +57,34 @@ export default function ActionKebabMenu({
         </ListItemIcon>
         {renameLabel}
       </MenuItem>
+
+      {
+        changeGroupLabel !== null && (
+          <MenuItem
+            onClick={handleClick(onChangeGroup)}
+            sx={{ py: 1, px: 1, fontSize: 13.5, "& .MuiListItemIcon-root": { minWidth: 30 } }}
+          >
+            <ListItemIcon>
+              <FolderOutlined fontSize="small" />
+            </ListItemIcon>
+            {changeGroupLabel}
+          </MenuItem>
+        )
+      }    
+
+      {
+        deleteGroupLabel !== null && (
+          <MenuItem
+            onClick={handleClick(onDeleteGroup)}
+            sx={{ py: 1, px: 1, fontSize: 13.5, "& .MuiListItemIcon-root": { minWidth: 30 } }}
+          >
+            <ListItemIcon>
+              <RedoOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            {deleteGroupLabel}
+          </MenuItem>
+        )
+      }    
 
       <Divider sx={{ my: 0.25 }} />
 

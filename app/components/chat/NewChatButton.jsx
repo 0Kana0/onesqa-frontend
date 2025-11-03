@@ -84,17 +84,21 @@ export default function NewChatButton({
         </List>
       </Paper>
 
-      <ChatSearchModal
-        open={openSearch}
-        onClose={() => setOpenSearch(false)}
-        onSelect={(item) => {
-          // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
-          console.log("เลือก:", item);
-          // ตัวอย่าง: ไปหน้าแชตของ item.id
-          // router.push(`/chat/${item.id}`);
-          setOpenSearch(false);
-        }}
-      />
+      {
+        openSearch && (
+          <ChatSearchModal
+            open={openSearch}
+            onClose={() => setOpenSearch(false)}
+            onSelect={(item) => {
+              // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
+              console.log("เลือก:", item);
+              // ตัวอย่าง: ไปหน้าแชตของ item.id
+              // router.push(`/chat/${item.id}`);
+              setOpenSearch(false);
+            }}
+          />
+        )
+      }
     </>
   );
 }

@@ -22,6 +22,8 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  Avatar,
+  ListItemIcon,
 } from "@mui/material";
 import { useTranslations } from "next-intl";
 import { GET_USER } from "@/graphql/user/queries";
@@ -33,6 +35,7 @@ import { CREATE_CHAT } from "@/graphql/chat/mutations";
 import { useRouter } from "next/navigation";
 import { GET_CHATS } from "@/graphql/chat/queries";
 import { useInitText } from "@/app/context/InitTextContext";
+import { getAiLogo, AI_LOGOS } from "../../../util/aiLogo";
 
 const ChatPage = () => {
   const { initText, setInitText } = useInitText();
@@ -47,10 +50,11 @@ const ChatPage = () => {
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
-  const {
-    refetch,
-  } = useQuery(GET_CHATS, {
-    variables: { user_id: user?.id ?? "" },
+  const { refetch } = useQuery(GET_CHATS, {
+    variables: {
+      user_id: user?.id ?? "",
+      chatgroupMode: "NULL",
+    },
     fetchPolicy: "network-only",
   });
 
@@ -87,16 +91,16 @@ const ChatPage = () => {
     try {
       const { data } = await createChat({
         variables: {
-          input: { 
-            ai_id: model, 
+          input: {
+            ai_id: model,
             user_id: user?.id,
-            chat_name: initText
+            chat_name: initText,
           },
         },
       });
 
       console.log("✅ Create success:", data.createChat);
-      refetch()
+      refetch();
       // ✅ ส่งพารามิเตอร์ new=true ไปด้วย
       router.push(`/onesqa/chat/${data.createChat.id}?new=true`);
     } catch (error) {
@@ -128,6 +132,14 @@ const ChatPage = () => {
           <MenuItem value="0">กรุณาเลือกโมเดลคำตอบ</MenuItem>
           {(userData?.user?.user_ai ?? []).map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
+              <Avatar
+                src={getAiLogo(ua.ai)}
+                alt={ua.ai?.model_type ?? "AI"}
+                sx={{ width: 20, height: 20, mr: 0.5 }}
+                imgProps={{
+                  onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
+                }}
+              />
               {ua.ai?.model_use_name}
             </MenuItem>
           ))}
@@ -171,7 +183,7 @@ const ChatPage = () => {
             onChange={setInitText}
             onSend={(msg) => {
               // เรียก mutation/ฟังก์ชันส่งข้อความที่คุณมี
-              handleCreateChat()
+              handleCreateChat();
               //setInitText(""); // ล้างหลังส่ง
             }}
             placeholder="ป้อนข้อความ.."
@@ -192,10 +204,9 @@ const ChatPage = () => {
             onMicClick={() => console.log("mic")}
             onAttachClick={() => console.log("attach menu")}
             onFilesSelected={(fileList) => {
-                const files = Array.from(fileList); // FileList -> File[]
-                console.log("selected files:", files)
-              }
-            }
+              const files = Array.from(fileList); // FileList -> File[]
+              console.log("selected files:", files);
+            }}
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             sx={{
               backgroundColor: "background.paper",
