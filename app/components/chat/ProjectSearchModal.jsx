@@ -24,10 +24,12 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  useMediaQuery
 } from "@mui/material";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import { useSidebar } from "@/app/context/SidebarContext";
 
 const normalizeText = (v) => {
   const s = (v ?? "").trim();
@@ -41,6 +43,11 @@ export default function ProjectSearchModal({
   placeholder = "ค้นหากลุ่ม...",
 }) {
   const { user } = useAuth();
+  const { toggle } = useSidebar(); // ✅ ดึงจาก Context
+  
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
   const [q, setQ] = useState("");
   const [first, setFirst] = useState(5);
 
@@ -165,6 +172,7 @@ export default function ProjectSearchModal({
       >
         <List
           disablePadding
+          onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
           sx={{
             px: 2.5,
             py: 1,

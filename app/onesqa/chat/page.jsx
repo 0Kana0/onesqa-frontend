@@ -32,13 +32,15 @@ import BrushOutlinedIcon from "@mui/icons-material/BrushOutlined";
 import ChatInputBar from "@/app/components/chat/ChatInputBar";
 import { useAuth } from "@/app/context/AuthContext";
 import { CREATE_CHAT } from "@/graphql/chat/mutations";
+import { MULTIPLE_UPLOAD } from "@/graphql/file/mutations";
 import { useRouter } from "next/navigation";
 import { GET_CHATS } from "@/graphql/chat/queries";
 import { useInitText } from "@/app/context/InitTextContext";
 import { getAiLogo, AI_LOGOS } from "../../../util/aiLogo";
 
 const ChatPage = () => {
-  const { initText, setInitText } = useInitText();
+  const client = useApolloClient();
+  const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
   const router = useRouter();
   const { user } = useAuth();
   const [attachments, setAttachments] = useState([]); // File[]
@@ -71,6 +73,9 @@ const ChatPage = () => {
   console.log(userData?.user?.user_ai);
 
   const [createChat] = useMutation(CREATE_CHAT);
+  const [mutate, { loading, error }] = useMutation(MULTIPLE_UPLOAD, {
+    client,
+  });
 
   if (userLoading)
     return (
@@ -86,6 +91,22 @@ const ChatPage = () => {
         ❌ {tInit("error")}
       </Typography>
     );
+
+  console.log(initAttachments);
+
+  const onClear = () => setInitAttachments([]);
+  const handleSubmitFile = async () => {
+    if (!initAttachments.length) return;
+    const { data } = await mutate({
+      variables: {
+        files: initAttachments,
+      },
+    });
+    console.log(data);
+    setInitAttachments(data?.multipleUpload)
+    //onClear();
+    handleCreateChat()
+  };
 
   const handleCreateChat = async () => {
     try {
@@ -181,10 +202,21 @@ const ChatPage = () => {
             value={initText}
             model={model}
             onChange={setInitText}
-            onSend={(msg) => {
-              // เรียก mutation/ฟังก์ชันส่งข้อความที่คุณมี
-              handleCreateChat();
-              //setInitText(""); // ล้างหลังส่ง
+            attachments={initAttachments}
+            setAttachments={setInitAttachments}
+            onSend={async (msg) => {
+              try {
+                const hasFiles = (initAttachments?.length ?? 0) > 0;
+                if (hasFiles) {
+                  await handleSubmitFile(); // มีไฟล์ -> ใช้อันบน
+                } else {
+                  await handleCreateChat(); // ไม่มีไฟล์ -> ใช้อันล่าง
+                  // หรือถ้าฟังก์ชันของคุณต้องการข้อความ: await handleCreateChat(msg);
+                }
+                // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
+              } catch (err) {
+                console.error(err);
+              }
             }}
             placeholder="ป้อนข้อความ.."
             actions={[
@@ -207,7 +239,7 @@ const ChatPage = () => {
               const files = Array.from(fileList); // FileList -> File[]
               console.log("selected files:", files);
             }}
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4"
             sx={{
               backgroundColor: "background.paper",
               boxShadow: "0 3px 8px rgba(0,0,0,0.05)",

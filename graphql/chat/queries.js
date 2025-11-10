@@ -46,6 +46,9 @@ export const GET_CHAT = gql`
       chatgroup_id
       createdAt
       updatedAt
+      ai {
+        model_type
+      }
     }
   }
 `;

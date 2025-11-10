@@ -22,6 +22,7 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  useMediaQuery
 } from "@mui/material";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -34,11 +35,17 @@ import Swal from "sweetalert2";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter } from "next/navigation";
+import { useSidebar } from "@/app/context/SidebarContext";
 
 export default function ProjectSidebar() {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { toggle } = useSidebar(); // ✅ ดึงจาก Context
+
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
   const [open, setOpen] = useState(true);
   const [rename, setRename] = useState(null);
   // ---- Modal: โครงการใหม่ (แยกเป็นคอมโพเนนต์) ----
@@ -163,6 +170,10 @@ export default function ProjectSidebar() {
   };
   const handleDelete = async () => {
     //console.log("delete:", selected?.id, selected?.label);
+
+    // ปิด sidebar บนจอเล็ก
+    if (isTablet) toggle();
+
     if (theme === "dark") {
       Swal.fire({
         title: tDelete("title1"),
@@ -352,6 +363,7 @@ export default function ProjectSidebar() {
               return (
                 <Link
                   key={it.label}
+                  onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
                   href={it.href}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >

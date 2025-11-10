@@ -9,16 +9,22 @@ import ChatBubble from "./ChatBubble";
  * @param {Array<{id:string|number, role:'user'|'assistant', text:string, time?:string|number|Date}>} messages
  * @param {boolean} dense - ระยะห่างแถวแชตเล็กลง
  */
-export default function ChatThread({ messages = [], dense = false }) {
+export default function ChatThread({ messages = [], dense = false, onChangeEdit = () => {}, chat = [], edit_status = true, sending = false }) {
   return (
     <Box sx={{ width: "100%" }}>
       <Stack spacing={dense ? 1 : 2}>
         {messages.map((m) => (
           <ChatBubble
             key={m.id}
+            id={m.id}
             role={m.role}
             text={m.text}
+            files={m.files}
             time={m.createdAt}
+            onChangeEdit={onChangeEdit}
+            chat={chat}
+            edit_status={edit_status}
+            sending={sending}
           />
         ))}
       </Stack>

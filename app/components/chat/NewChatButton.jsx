@@ -1,8 +1,7 @@
 // app/components/ChatQuickActions.jsx
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   List,
@@ -10,21 +9,26 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
+  useMediaQuery,
 } from "@mui/material";
 import CreateOutlinedIcon from "@mui/icons-material/CreateOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ChatSearchModal from "./ChatSearchModal";
+import { useSidebar } from "@/app/context/SidebarContext";
 
-export default function NewChatButton({
-  onNewChat,   // (optional) callback เมื่อกด "แชตใหม่"
-  onSearch,    // (optional) callback เมื่อกด "ค้นหาแชต"
+export default function ChatQuickActions({
+  onNewChat,          // (optional)
+  onSearch,           // (optional)
   disabledNew = false,
   disabledSearch = false,
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  
-  // state เปิด/ปิด modal ค้นหา
+  const { toggle } = useSidebar();
+
+  // < md = ปิด sidebar หลังคลิก
+  const isTablet = useMediaQuery("(max-width:1200px)");
+
   const [openSearch, setOpenSearch] = useState(false);
 
   const items = [
@@ -32,14 +36,23 @@ export default function NewChatButton({
       key: "new",
       label: "แชตใหม่",
       icon: <CreateOutlinedIcon fontSize="small" />,
-      onClick: () => router.push("/onesqa/chat"),
+      href: "/onesqa/chat",
+      onClick: () => {
+        onNewChat?.();
+        router.push("/onesqa/chat");
+        // ปิด sidebar บนจอเล็ก
+        if (isTablet) toggle();
+      },
       disabled: disabledNew,
     },
     {
       key: "search",
       label: "ค้นหาแชต",
       icon: <SearchOutlinedIcon fontSize="small" />,
-      onClick: () => setOpenSearch(true),
+      onClick: () => {
+        onSearch?.();
+        setOpenSearch(true);
+      },
       disabled: disabledSearch,
     },
   ];
@@ -55,22 +68,28 @@ export default function NewChatButton({
               mb: 0.5,
               px: 1,
             },
-            "& .MuiListItemIcon-root": {
-              minWidth: 32,
-            },
+            "& .MuiListItemIcon-root": { minWidth: 32 },
           }}
         >
           {items.map((it) => {
-            const selected = pathname === it.href;
+            const isActive = it.href ? pathname.startsWith(it.href) : false;
+
             return (
               <ListItemButton
                 key={it.key}
-                onClick={it.onClick}
+                onClick={(e) => {
+                  // เรียก action หลัก
+                  it.onClick?.(e);
+                }}
                 disabled={it.disabled}
+                selected={isActive}
                 disableRipple
                 sx={{
                   "& .MuiListItemIcon-root": { color: "common.white" },
                   "& .MuiListItemText-primary": { color: "common.white" },
+                  "&.Mui-selected": {
+                    bgcolor: (t) => `${t.palette.common.white}22`,
+                  },
                 }}
               >
                 <ListItemIcon>{it.icon}</ListItemIcon>
@@ -84,21 +103,18 @@ export default function NewChatButton({
         </List>
       </Paper>
 
-      {
-        openSearch && (
-          <ChatSearchModal
-            open={openSearch}
-            onClose={() => setOpenSearch(false)}
-            onSelect={(item) => {
-              // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
-              console.log("เลือก:", item);
-              // ตัวอย่าง: ไปหน้าแชตของ item.id
-              // router.push(`/chat/${item.id}`);
-              setOpenSearch(false);
-            }}
-          />
-        )
-      }
+      {openSearch && (
+        <ChatSearchModal
+          open={openSearch}
+          onClose={() => setOpenSearch(false)}
+          onSelect={(item) => {
+            console.log("เลือก:", item);
+            // ตัวอย่าง: ไปหน้าแชตของ item.id
+            // router.push(`/chat/${item.id}`);
+            setOpenSearch(false);
+          }}
+        />
+      )}
     </>
   );
 }

@@ -1,28 +1,22 @@
 'use client';
-import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 
 const InitTextContext = createContext(null);
 
 export function InitTextProvider({ children }) {
   const [initText, setInitText] = useState('');
-
-  // (ตัวเลือก) ให้ค้างหลัง refresh
-  // useEffect(() => {
-  //   const saved = localStorage.getItem('shared:initText');
-  //   if (saved !== null) setInitText(saved);
-  // }, []);
-  // useEffect(() => {
-  //   localStorage.setItem('shared:initText', initText);
-  // }, [initText]);
+  const [initAttachments, setInitAttachments] = useState([]); // 👈 new
 
   const value = useMemo(
     () => ({
       initText,
       setInitText,
+      initAttachments,          // 👈 new
+      setInitAttachments,       // 👈 new
       clear: () => setInitText(''),
       append: (s) => setInitText((prev) => prev + s),
     }),
-    [initText]
+    [initText, initAttachments] // 👈 include attachments in deps
   );
 
   return (

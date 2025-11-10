@@ -8,6 +8,12 @@ export const GET_MESSAGES = gql`
       text
       createdAt
       updatedAt
+      files {
+        id
+        file_name
+        original_name
+        stored_path
+      }
     }
   }
 `;

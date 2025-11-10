@@ -2,8 +2,9 @@
 
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@apollo/client/react";
-import { useRouter, usePathname } from "next/navigation";
+import { NetworkStatus } from "@apollo/client";
+import { useQuery, useMutation, useApolloClient } from "@apollo/client/react";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import ReactCountryFlag from "react-country-flag";
 import { LOGOUT } from "@/graphql/auth/mutations";
 import {
@@ -34,12 +35,16 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { useTranslations } from "next-intl";
 import { useSidebar } from "../../context/SidebarContext"; // ✅ ใช้ context
 import NotificationListener from "../NotificationListener";
+import { GET_CHAT } from "@/graphql/chat/queries";
+import { getAiLogo, AI_LOGOS } from "@/util/aiLogo";
 
 export default function Header() {
   const router = useRouter();
+  const params = useParams();
   const { user, logoutContext } = useAuth();
   const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
   const [hasNotification, setHasNotification] = useState(false);
+  const { id } = params;
 
   console.log(user);
   const t = useTranslations("LogoutAlert");
@@ -61,6 +66,17 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
 
   const { handleLanguageChange, locale } = useLanguage();
+  
+  const {
+    data: chatData,
+    loading: chatLoading,
+    error: chatError,
+  } = useQuery(GET_CHAT, {
+    variables: {
+      id: id ?? 0,
+    },
+    fetchPolicy: "network-only",
+  });
 
   // ✅ ป้องกัน hydration mismatch
   useEffect(() => setMounted(true), []);
@@ -207,7 +223,29 @@ export default function Header() {
               </IconButton>
             ) : (
               <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                {pageNameCheck()}
+                {pathname.startsWith("/onesqa/chat") && !pathname.startsWith("/onesqa/chat/group") && id !== undefined ? (
+                  <Box sx={{
+                    display: "flex",
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1
+                  }}>
+                    {pageNameCheck()}
+                    <Avatar
+                      src={getAiLogo(chatData?.chat?.ai)}
+                      alt={chatData?.chat?.ai?.model_type ?? "AI"}
+                      sx={{ bgcolor: "grey.200", color: "text.secondary", width: 25, height: 25 }}
+                      imgProps={{
+                        onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
+                      }}
+                  />
+                  </Box>
+                ) : (
+                  <>
+                    {pageNameCheck()}
+                  </>
+                )}
+
               </Typography>
             )
           }

@@ -223,12 +223,7 @@ export default function Sidebar() {
       ) : (
         <Box sx={{ p: 0.5 }}>
           <NewChatButton/>
-          <ProjectSidebar
-            onCreateProject={() => {/* เปิด dialog สร้างโครงการ */}}
-            onOpenFolder={(name) => {/* เปิด drawer/โหลดรายการในโฟลเดอร์ */}}
-            onOpenItem={(title) => {/* เปิดรายละเอียดโครงการ */}}
-            onShowAll={() => {/* เปิดหน้ารายการทั้งหมด */}}
-          />
+          <ProjectSidebar/>
           <ChatSidebar />
         </Box>
       )}

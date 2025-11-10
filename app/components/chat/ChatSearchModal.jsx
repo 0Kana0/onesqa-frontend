@@ -25,11 +25,13 @@ import {
   Alert,
   CircularProgress,
   Avatar,
+  useMediaQuery
 } from "@mui/material";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 import { AI_LOGOS, getAiLogo } from "@/util/aiLogo";
+import { useSidebar } from "@/app/context/SidebarContext";
 
 const normalizeText = (v) => {
   const s = (v ?? "").trim();
@@ -43,6 +45,11 @@ export default function ChatSearchModal({
   placeholder = "ค้นหาแชต...",
 }) {
   const { user } = useAuth();
+  const { toggle } = useSidebar(); // ✅ ดึงจาก Context
+
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
   const [q, setQ] = useState("");
   const [first, setFirst] = useState(5);
 
@@ -190,6 +197,7 @@ export default function ChatSearchModal({
       >
         <List
           disablePadding
+          onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
           sx={{
             px: 2.5,
             py: 1,

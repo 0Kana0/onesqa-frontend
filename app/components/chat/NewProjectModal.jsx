@@ -12,8 +12,10 @@ import {
   TextField,
   Button,
   Box,
+  useMediaQuery
 } from "@mui/material";
 import CloseRounded from "@mui/icons-material/CloseRounded";
+import { useSidebar } from "@/app/context/SidebarContext";
 
 export default function NewProjectModal({
   open,
@@ -25,6 +27,11 @@ export default function NewProjectModal({
   placeholder = "เช่น ระบบบริหารจัดการ X",
   confirmLabel = "สร้างกลุ่ม",
 }) {
+  const { toggle } = useSidebar();
+
+  // < md = ปิด sidebar หลังคลิก
+  const isTablet = useMediaQuery("(max-width:1200px)");
+
   const [name, setName] = useState(initialName);
 
   useEffect(() => {
@@ -36,6 +43,9 @@ export default function NewProjectModal({
     const n = name.trim();
     if (!n) return;
     onCreate?.(n);
+
+    // ปิด sidebar บนจอเล็ก
+    if (isTablet) toggle();
   };
 
   return (

@@ -15,7 +15,8 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { GET_MESSAGES } from "@/graphql/message/queries";
-import { CREATE_MESSAGE } from "@/graphql/message/mutations";
+import { CREATE_MESSAGE, UPDATE_MESSAGE } from "@/graphql/message/mutations";
+import { MULTIPLE_UPLOAD } from "@/graphql/file/mutations";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import SendIcon from "@mui/icons-material/Send";
@@ -27,14 +28,18 @@ import TypingDots from "@/app/components/chat/TypingDots";
 import { useInitText } from "@/app/context/InitTextContext";
 import { useAuth } from "@/app/context/AuthContext";
 import { GET_CHATGROUPS } from "@/graphql/chatgroup/queries";
+import { GET_CHAT } from "@/graphql/chat/queries";
 
 const MessagePage = () => {
+  const client = useApolloClient();
   const { user } = useAuth();
-  const { initText, setInitText } = useInitText();
+  const { initText, setInitText, initAttachments, setInitAttachments } =
+    useInitText();
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const { id } = params;
+  const [attachments, setAttachments] = useState([]); // File[]
   const isNew = searchParams.get("new") === "true";
 
   const tInit = useTranslations("Init");
@@ -43,14 +48,13 @@ const MessagePage = () => {
   const isTablet = useMediaQuery("(max-width:1200px)");
 
   const [text, setText] = useState("");
+  const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState([]);
   const [answer, setAnswer] = useState([]);
 
   const ranOnceRef = useRef(false);
 
-  const {
-    refetch: chatgroupsRefresh,
-  } = useQuery(GET_CHATGROUPS, {
+  const { refetch: chatgroupsRefresh } = useQuery(GET_CHATGROUPS, {
     variables: { user_id: user?.id ?? "" },
     fetchPolicy: "network-only",
   });
@@ -66,7 +70,22 @@ const MessagePage = () => {
     variables: { chat_id: id },
   });
 
+  const {
+    data: chatData,
+    loading: chatLoading,
+    error: chatError,
+  } = useQuery(GET_CHAT, {
+    variables: {
+      id: id ?? "",
+    },
+    fetchPolicy: "network-only",
+  });
+
   const [createMessage, { loading: sending }] = useMutation(CREATE_MESSAGE);
+  const [updateMessage, { loading: editSending }] = useMutation(UPDATE_MESSAGE);
+  const [mutate, { loading, error }] = useMutation(MULTIPLE_UPLOAD, {
+    client,
+  });
 
   // ---------- เพิ่มส่วน autoscroll ----------
   const listRef = useRef(null); // กล่องที่เลื่อน
@@ -104,14 +123,25 @@ const MessagePage = () => {
   }, [messagesData?.messages.length, scrollToBottom, answer]);
 
   const handleMessageInitSubmit = async () => {
+    console.log("initAttachments", initAttachments);
+
     setAnswer([
       {
         id: 0,
         role: "user",
         text: initText,
+        files: initAttachments,
         createdAt: null,
       },
     ]);
+
+    // เหลือแค่ id กับ filename
+    const fileMessageList = (initAttachments ?? [])
+      .map((it) => ({
+        id: it?.id ?? it?.attachment_id ?? it?.file_id ?? null,
+        filename: it?.filename ?? it?.name ?? it?.file_name ?? "",
+      }))
+      .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
 
     try {
       const { data } = await createMessage({
@@ -119,6 +149,7 @@ const MessagePage = () => {
           input: {
             chat_id: id,
             message: initText,
+            fileMessageList,
           },
         },
       });
@@ -142,8 +173,17 @@ const MessagePage = () => {
     console.log("isNew", isNew);
     handleMessageInitSubmit();
     setInitText("");
+    setInitAttachments([]);
     router.replace(`/onesqa/chat/${id}`); // ล้าง query ออก
   }, [isNew, router, id]);
+
+  useEffect(() => {
+    if (!messagesData?.messages.length) {
+      return;
+    }
+
+    setMessages(messagesData?.messages)
+  }, [messagesData]);
   // -----------------------------------------
 
   // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
@@ -159,7 +199,7 @@ const MessagePage = () => {
       </Box>
     );
 
-  if (messagesError)
+  if (messagesError || chatError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -172,16 +212,40 @@ const MessagePage = () => {
   //     </Typography>
   //   );
 
-  console.log(messagesData?.messages);
+  console.log(messages);
+  console.log("attachments", attachments);
 
-  const handleMessageSubmit = async () => {
+  const onClear = () => setAttachments([]);
+  const handleSubmitFile = async () => {
+    if (!attachments.length) return;
+    const { data } = await mutate({
+      variables: {
+        files: attachments,
+      },
+    });
+    console.log(data?.multipleUpload);
+    //onClear();
+    handleMessageSubmitFile(data?.multipleUpload);
+  };
+  const handleMessageSubmitFile = async (uploads) => {
     if (!text.trim() || sending) return; // กันกดซ้ำ
+
+    // เหลือแค่ id กับ filename
+    const fileMessageList = (uploads ?? [])
+      .map((it) => ({
+        id: it?.id ?? it?.attachment_id ?? it?.file_id ?? null,
+        filename: it?.filename ?? it?.name ?? it?.file_name ?? "",
+      }))
+      .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
+
+    console.log(fileMessageList);
 
     setAnswer([
       {
-        id: messagesData?.messages.length,
+        id: messages.length,
         role: "user",
         text: text,
+        files: uploads,
         createdAt: null,
       },
     ]);
@@ -192,11 +256,104 @@ const MessagePage = () => {
           input: {
             chat_id: id,
             message: text,
+            fileMessageList,
           },
         },
       });
 
       console.log("✅ Create success:", data.createMessage);
+      refetch();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleMessageSubmit = async () => {
+    if (!text.trim() || sending) return; // กันกดซ้ำ
+
+    // เหลือแค่ id กับ filename
+    const fileMessageList = (attachments ?? [])
+      .map((it) => ({
+        id: it?.id ?? it?.attachment_id ?? it?.file_id ?? null,
+        filename: it?.filename ?? it?.name ?? it?.file_name ?? "",
+      }))
+      .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
+
+    const sendAttachments = attachments;
+    const sendText = text;
+
+    setText(""); // ล้างหลังส่ง
+    setAttachments([]);
+
+    setAnswer([
+      {
+        id: messages.length,
+        role: "user",
+        text: sendText,
+        files: sendAttachments,
+        createdAt: null,
+      },
+    ]);
+
+    try {
+      const { data } = await createMessage({
+        variables: {
+          input: {
+            chat_id: id,
+            message: sendText,
+            fileMessageList,
+          },
+        },
+      });
+
+      console.log("✅ Create success:", data.createMessage);
+      refetch();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleMessageEdit = async (edit_id, edit_text) => {
+    console.log(edit_id, edit_text);
+    if (!edit_text.trim() || editSending) return; // กันกดซ้ำ
+
+    const edit_message = messages.filter(m => Number(m.id) === Number(edit_id))
+    console.log("edit_message", edit_message);
+
+    // เหลือแค่ id กับ filename
+    const fileMessageList = (edit_message[0].files ?? [])
+      .map((it) => ({
+        id: it?.id ?? it?.attachment_id ?? it?.file_id ?? null,
+        filename: it?.filename ?? it?.name ?? it?.file_name ?? "",
+      }))
+      .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
+    
+    console.log(messages);
+    setMessages(prev => prev.filter(m => Number(m.id) < Number(edit_id)));
+
+    setAnswer([
+      {
+        id: edit_id + 1,
+        role: "user",
+        text: edit_text,
+        files: edit_message[0].files,
+        createdAt: null,
+      },
+    ]);
+
+    try {
+      const { data } = await updateMessage({
+        variables: {
+          id: edit_id,
+          input: {
+            chat_id: id,
+            message: edit_text,
+            fileMessageList
+          },
+        },
+      });
+
+      console.log("✅ Update success:", data.updateMessage);
       refetch();
     } catch (error) {
       console.log(error);
@@ -214,10 +371,15 @@ const MessagePage = () => {
       }}
     >
       {/* โซนข้อความ: เลื่อนเฉพาะส่วนนี้ */}
-      <ChatThread messages={messagesData?.messages} />
-      {sending && (
+      <ChatThread
+        messages={messages}
+        onChangeEdit={handleMessageEdit}
+        chat={chatData?.chat?.ai}
+        sending={Boolean(sending || editSending)}
+      />
+      {(sending || editSending) && (
         <>
-          <ChatThread messages={answer} />
+          <ChatThread messages={answer} edit_status={false} />
           <TypingDots size={12} color="primary.main" />
         </>
       )}
@@ -237,10 +399,24 @@ const MessagePage = () => {
             value={text}
             sending={sending}
             onChange={setText}
-            onSend={(msg) => {
+            attachments={attachments}
+            setAttachments={setAttachments}
+            onSend={async (msg) => {
               // เรียก mutation/ฟังก์ชันส่งข้อความที่คุณมี
-              handleMessageSubmit();
+              try {
+                const hasFiles = (attachments?.length ?? 0) > 0;
+                if (hasFiles) {
+                  await handleSubmitFile(); // มีไฟล์ -> ใช้อันบน
+                } else {
+                  await handleMessageSubmit(); // ไม่มีไฟล์ -> ใช้อันล่าง
+                  // หรือถ้าฟังก์ชันของคุณต้องการข้อความ: await handleCreateChat(msg);
+                }
+                // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
+              } catch (err) {
+                console.error(err);
+              }
               setText(""); // ล้างหลังส่ง
+              setAttachments([]);
             }}
             placeholder="ป้อนข้อความ.."
             actions={[
@@ -263,7 +439,7 @@ const MessagePage = () => {
               const files = Array.from(fileList); // FileList -> File[]
               console.log("selected files:", files);
             }}
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4"
             sx={{
               backgroundColor: "background.paper",
               boxShadow: "0 3px 8px rgba(0,0,0,0.05)",

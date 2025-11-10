@@ -7,3 +7,11 @@ export const CREATE_MESSAGE = gql`
     }
   }
 `;
+
+export const UPDATE_MESSAGE = gql`
+  mutation updateMessage($id: ID!, $input: MessageInput!)  {
+    updateMessage(id: $id, input: $input) {
+      text
+    }
+  }
+`;
