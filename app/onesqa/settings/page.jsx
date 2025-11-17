@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { Box, Button, Typography, CircularProgress, useMediaQuery} from "@mui/material";
+import { Box, Button, Typography, CircularProgress, useMediaQuery } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy"; // 🤖 AI
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive"; // 🌐 Model
 import HubIcon from "@mui/icons-material/Hub";
@@ -11,18 +11,32 @@ import TokenUsageCardSetting from "@/app/components/TokenUsageCardSetting";
 import UserGroupSettingCard from "@/app/components/UserGroupSettingCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import GroupTokenTable from "@/app/components/GroupTokenTable";
-import { useTranslations } from 'next-intl';
+import Swal from "sweetalert2";
+import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 import { UPDATE_AI } from "@/graphql/ai/mutations";
 import { GET_AIS } from "@/graphql/ai/queries";
 import { useRequireRole } from "@/hook/useRequireRole";
+import { GET_PROMPTS } from "@/graphql/prompt/queries";
+import ActionTextField from "@/app/components/ActionTextField";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import {
+  CREATE_PROMPT,
+  DELETE_PROMPT,
+  UPDATE_PROMPT,
+} from "@/graphql/prompt/mutations";
 
 const SettingPage = () => {
+  const { theme } = useTheme();
+
   const [selected, setSelected] = useState("AI");
   const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
   const [resetTrigger, setResetTrigger] = useState(0); // ✅ ตัวแปร trigger
 
-  const t = useTranslations('SettingPage');
+  const t = useTranslations("SettingPage");
   const tInit = useTranslations("Init");
+  const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
+
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
@@ -83,6 +97,10 @@ const SettingPage = () => {
     },
   ]);
 
+  // สำเนาข้อมูลจาก DB สำหรับแก้ไขแบบ controlled
+  const [persistedEdits, setPersistedEdits] = useState([]);
+  const [newPrompts, setNewPrompts] = useState([]);
+
   const modelOptions = ["Gemini 2.5 Pro", "ChatGPT 5"];
 
   const {
@@ -92,8 +110,22 @@ const SettingPage = () => {
   } = useQuery(GET_AIS, {
     fetchPolicy: "network-only",
   });
-    
+
+  const {
+    data: promptsData,
+    loading: promptsLoading,
+    error: promptsError,
+    refetch: promptsRefetch,
+  } = useQuery(GET_PROMPTS, {
+    fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
+  });
+
   const [updateAi] = useMutation(UPDATE_AI);
+
+  const [createPrompt] = useMutation(CREATE_PROMPT);
+  const [updatePrompt] = useMutation(UPDATE_PROMPT);
+  const [deletePrompt] = useMutation(DELETE_PROMPT);
 
   useEffect(() => {
     if (!aisData?.ais.length) return;
@@ -116,30 +148,148 @@ const SettingPage = () => {
     setCards(transformed);
   }, [aisData, resetTrigger]);
 
+  useEffect(() => {
+    const rows = Array.isArray(promptsData?.prompts) ? promptsData.prompts : [];
+    // ✅ อย่าชี้ array เดิมจาก cache: ทำสำเนา (กันการกลายพันธุ์ cache)
+    setPersistedEdits(rows.map((p) => ({ ...p })));
+  }, [promptsData?.prompts, resetTrigger]); // ✅ ผูกกับฟิลด์ที่ใช้จริง
+
   console.log(cards);
 
   const { allowed, loading, user } = useRequireRole({
     roles: ["ผู้ดูแลระบบ"],
     redirectTo: "/onesqa/chat",
   });
-    
-  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
-  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
-  if (aisLoading)
+  if (loading) return null; // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null; // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
+
+  if (aisLoading || promptsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
         <Typography>{tInit("loading")}...</Typography>
       </Box>
     );
-    
-  if (aisError)
+
+  if (aisError || promptsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
       </Typography>
     );
+
+  // ด้านบนใน component
+  const LIMIT = 5;
+  const totalCount = (persistedEdits?.length || 0) + (newPrompts?.length || 0);
+  const canAdd = totalCount < LIMIT;
+
+  const handleAddNewPrompt = () => {
+    if (!canAdd) return; // ป้องกันระดับโค้ด
+    setNewPrompts((prev) => [
+      ...prev,
+      {
+        tempId: `new-${Date.now()}`,
+        prompt_title: "",
+        prompt_detail: "",
+      },
+    ]);
+  };
+  // ------- เปลี่ยนค่าของรายการใหม่ -------
+  const updateNew = (tempId, field, value) => {
+    setNewPrompts((prev) =>
+      prev.map((p) => (p.tempId === tempId ? { ...p, [field]: value } : p))
+    );
+  };
+  const handleDeleteNew = (tempId) => {
+    setNewPrompts((prev) => prev.filter((p) => p.tempId !== tempId));
+  };
+
+  // ------- เปลี่ยนค่าของรายการจาก DB -------
+  const updatePersisted = (id, field, value) => {
+    setPersistedEdits((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+  // ตัวอย่าง: ลบ/แก้ไขของรายการที่มาจาก DB (คุณอาจผูกกับ API จริง)
+  const handleDeletePersisted = async (id) => {
+    // TODO: เรียก API ลบ แล้วรีเฟรชข้อมูล
+    if (theme === "dark") {
+      Swal.fire({
+        title: tDelete("title1"),
+        text: tDelete("text1"),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
+        cancelButtonColor: "#3E8EF7",
+        confirmButtonText: tDelete("confirm"),
+        cancelButtonText: tDelete("cancel"),
+        background: "#2F2F30", // สีพื้นหลังดำ
+        color: "#fff", // สีข้อความเป็นขาว
+        titleColor: "#fff", // สี title เป็นขาว
+        textColor: "#fff", // สี text เป็นขาว
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            // ✅ เรียก mutation ไป backend
+            const { data } = await deletePrompt({
+              variables: {
+                id: id,
+              },
+            });
+            console.log("✅ Delete success:", data.deletePrompt);
+            await promptsRefetch();
+          } catch (error) {
+            console.log(error);
+          }
+
+          Swal.fire({
+            title: tDelete("title2"),
+            text: tDelete("text2"),
+            icon: "success",
+            confirmButtonColor: "#3E8EF7",
+            background: "#2F2F30", // สีพื้นหลังดำ
+            color: "#fff", // สีข้อความเป็นขาว
+            titleColor: "#fff", // สี title เป็นขาว
+            textColor: "#fff", // สี text เป็นขาว
+          });
+        }
+      });
+    } else {
+      Swal.fire({
+        title: tDelete("title1"),
+        text: tDelete("text1"),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
+        cancelButtonColor: "#3E8EF7",
+        confirmButtonText: tDelete("confirm"),
+        cancelButtonText: tDelete("cancel"),
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            // ✅ เรียก mutation ไป backend
+            const { data } = await deletePrompt({
+              variables: {
+                id: id,
+              },
+            });
+            console.log("✅ Delete success:", data.deletePrompt);
+            await promptsRefetch();
+          } catch (error) {
+            console.log(error);
+          }
+
+          Swal.fire({
+            title: tDelete("title2"),
+            text: tDelete("text2"),
+            icon: "success",
+            confirmButtonColor: "#3E8EF7",
+          });
+        }
+      });
+    }
+  };
 
   // 🔹 เมื่อมีการเปลี่ยนแปลงช่องกรอก
   const handleTokenChange = (id, model, value) => {
@@ -188,35 +338,105 @@ const SettingPage = () => {
   };
 
   const handleReset = () => {
+    setNewPrompts([])
     setResetTrigger((prev) => prev + 1); // ✅ trigger ให้ useEffect ทำงานใหม่
   };
 
   const handleSubmit = async () => {
-    console.log(cards);
+    if (selected === "AI") {
+      console.log("selected", selected);
 
-    try {
-      // ✅ ใช้ Promise.all เพื่ออัปเดตพร้อมกันทั้งหมด
-      const results = await Promise.all(
-        cards.map(async (card) => {
-          const { data } = await updateAi({
-            variables: {
-              id: card.id, // id ของ AI record
-              input: {
-                token_count: Number(card.defaultLimit),
-                token_all: Number(card.defaultLimit),
-                activity: card.enabled,
+      // เเก้ไขข้อมูลที่มีอยุ่แล้ว
+      // helper เช็กช่องว่าง/null
+      const isEmpty = (val) => !val || String(val).trim() === "";
+
+      // ... ในฟังก์ชันบันทึก ...
+      try {
+        // ✅ กรองเฉพาะรายการที่มีทั้ง title และ detail
+        const validPersistedEdits = persistedEdits.filter(
+          (p) => !isEmpty(p.prompt_title) && !isEmpty(p.prompt_detail)
+        );
+
+        const results = await Promise.all(
+          validPersistedEdits.map(async (persisted) => {
+            const { data } = await updatePrompt({
+              variables: {
+                id: persisted.id, // id ของ AI record
+                input: {
+                  prompt_title: persisted.prompt_title,
+                  prompt_detail: persisted.prompt_detail,
+                  // locale: persisted.locale,
+                  locale: "th",
+                },
               },
-            },
-          });
-          return data.updateAi;
-        })
-      );
+            });
+            return data.updatePrompt;
+          })
+        );
 
-      console.log("✅ Update success:", results);
-    } catch (error) {
-      console.log(error); 
+        console.log("✅ Update success:", results);
+      } catch (error) {
+        console.log(error);
+      }
+
+      // เพิ่มข้อมูลเข้ามาใหม่
+      try {
+        // ✅ กรองเฉพาะรายการที่มีทั้ง title และ detail
+        const validNewPrompts = newPrompts.filter(
+          (p) => !isEmpty(p.prompt_title) && !isEmpty(p.prompt_detail)
+        );
+
+        const results = await Promise.all(
+          validNewPrompts.map(async (persisted) => {
+            const { data } = await createPrompt({
+              variables: {
+                input: {
+                  prompt_title: persisted.prompt_title,
+                  prompt_detail: persisted.prompt_detail,
+                  // locale: persisted.locale,
+                  locale: "th",
+                },
+              },
+            });
+            return data.createPrompt;
+          })
+        );
+
+        console.log("✅ Create success:", results);
+      } catch (error) {
+        console.log(error);
+      }
+
+      setNewPrompts([]);
+      await promptsRefetch();
+      
+    } else if (selected === "Model") {
+      try {
+        // ✅ ใช้ Promise.all เพื่ออัปเดตพร้อมกันทั้งหมด
+        const results = await Promise.all(
+          cards.map(async (card) => {
+            const { data } = await updateAi({
+              variables: {
+                id: card.id, // id ของ AI record
+                input: {
+                  token_count: Number(card.defaultLimit),
+                  token_all: Number(card.defaultLimit),
+                  activity: card.enabled,
+                },
+              },
+            });
+            return data.updateAi;
+          })
+        );
+
+        console.log("✅ Update success:", results);
+      } catch (error) {
+        console.log(error);
+      }
+    } else if (selected === "Tokens") {
+
     }
-  }
+  };
 
   const buttons = [
     { label: "AI", icon: <SmartToyIcon />, value: "AI" },
@@ -244,6 +464,66 @@ const SettingPage = () => {
             <Typography variant="body1" sx={{ mt: 1 }} color="text.secondary">
               {t('aisubtitle1')}
             </Typography>
+
+            {(persistedEdits ?? []).map((prompt) => (
+              <ActionTextField
+                sx={{
+                  my: 2
+                }}
+                key={prompt.id}
+                titleValue={prompt.prompt_title}
+                titlePlaceholder="หัวข้อ"
+                detailValue={prompt.prompt_detail}
+                detailPlaceholder="รายละเอียด"
+                onTitleChange={(v) =>
+                  updatePersisted(prompt.id, "prompt_title", v)
+                }
+                onDetailChange={(v) =>
+                  updatePersisted(prompt.id, "prompt_detail", v)
+                }
+                onDelete={() => handleDeletePersisted(prompt.id)}
+              />
+            ))}
+            {(persistedEdits.length === 0 && newPrompts.length === 0) && (
+              <Box sx={{ textAlign: "center", my: 5 }}>
+                <Typography variant="body1" color="text.secondary">
+                  ไม่มีรายการ prompt
+                </Typography>
+              </Box>
+            )}
+
+            {newPrompts.map((p) => (
+              <ActionTextField
+                sx={{
+                  my: 2
+                }}
+                key={p.tempId}
+                titleValue={p.prompt_title}
+                titlePlaceholder="หัวข้อ"
+                detailValue={p.prompt_detail}
+                detailPlaceholder="รายละเอียด"
+                onTitleChange={(v) => updateNew(p.tempId, "prompt_title", v)}
+                onDetailChange={(v) => updateNew(p.tempId, "prompt_detail", v)}
+                onDelete={() => handleDeleteNew(p.tempId)}
+              />
+            ))}
+
+            <Box sx={{ textAlign: "center" }}>
+              <Button
+                variant="contained"
+                startIcon={<AddRoundedIcon />}
+                onClick={handleAddNewPrompt}
+                disabled={!canAdd} // ✅ ปิดปุ่มเมื่อครบโควตา
+                sx={{
+                  bgcolor: "#1976d2",
+                  color: "white",
+                  px: 2.5,
+                  "&:hover": { bgcolor: "#1565c0" },
+                }}
+              >
+                เพิ่ม Prompt ใหม่
+              </Button>
+            </Box>
           </Box>
         );
       case "Model":

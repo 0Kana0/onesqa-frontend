@@ -20,7 +20,11 @@ function IntlWrapper({ children }) {
   const { locale } = useLanguage();
   const messages = locale === "th" ? thMessages : enMessages;
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider 
+      locale={locale} 
+      timeZone="Asia/Bangkok"   // 👈 ใส่ตรงนี้
+      messages={messages}
+    >
       {children}
     </NextIntlClientProvider>
   );

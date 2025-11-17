@@ -37,6 +37,8 @@ import { useRouter } from "next/navigation";
 import { GET_CHATS } from "@/graphql/chat/queries";
 import { useInitText } from "@/app/context/InitTextContext";
 import { getAiLogo, AI_LOGOS } from "../../../util/aiLogo";
+import PromptList from "@/app/components/chat/PromptList";
+import { GET_PROMPTS } from "@/graphql/prompt/queries";
 
 const ChatPage = () => {
   const client = useApolloClient();
@@ -46,6 +48,16 @@ const ChatPage = () => {
   const [attachments, setAttachments] = useState([]); // File[]
 
   const [model, setModel] = useState("0");
+
+  const [active, setActive] = useState(null);
+
+  // const steps = [
+  //   { prompt_title: "มาตรฐานการประเมินคุณภาพภายนอก" },
+  //   { prompt_title: "ขั้นตอนการประเมินคุณภาพภายนอก" },
+  //   { prompt_title: "เกณฑ์การให้คะแนนการประเมิน" },
+  //   { prompt_title: "เกณฑ์การให้คะแนนการประเมินเกณฑ์การให้คะแนนการประเมิน" },
+  //   { prompt_title: "เกณฑ์การให้คะแนนการประเมินเกณฑ์การให้คะแนนการประเมิน" },
+  // ];
 
   const tInit = useTranslations("Init");
 
@@ -70,14 +82,23 @@ const ChatPage = () => {
       id: user?.id,
     },
   });
-  console.log(userData?.user?.user_ai);
+
+  const {
+    data: promptsData,
+    loading: promptsLoading,
+    error: promptsError,
+    refetch: promptsRefetch,
+  } = useQuery(GET_PROMPTS, {
+    fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
+  });
 
   const [createChat] = useMutation(CREATE_CHAT);
   const [mutate, { loading, error }] = useMutation(MULTIPLE_UPLOAD, {
     client,
   });
 
-  if (userLoading)
+  if (userLoading || promptsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -85,7 +106,7 @@ const ChatPage = () => {
       </Box>
     );
 
-  if (userError)
+  if (userError || promptsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -195,7 +216,6 @@ const ChatPage = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            mb: 5,
           }}
         >
           <ChatInputBar
@@ -246,6 +266,23 @@ const ChatPage = () => {
               height: "100%",
               width: "100%",
             }} // ปรับแต่งเพิ่มเติมได้
+          />
+        </Box>
+
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mb: 1,
+          }}
+        >
+          <PromptList
+            steps={promptsData.prompts}
+            activeIndex={active}
+            onChange={setActive}
           />
         </Box>
       </Container>

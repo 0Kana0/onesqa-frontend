@@ -29,6 +29,8 @@ import { useInitText } from "@/app/context/InitTextContext";
 import { useAuth } from "@/app/context/AuthContext";
 import { GET_CHATGROUPS } from "@/graphql/chatgroup/queries";
 import { GET_CHAT } from "@/graphql/chat/queries";
+import PromptList from "@/app/components/chat/PromptList";
+import { GET_PROMPTS } from "@/graphql/prompt/queries";
 
 const MessagePage = () => {
   const client = useApolloClient();
@@ -51,6 +53,8 @@ const MessagePage = () => {
   const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState([]);
   const [answer, setAnswer] = useState([]);
+
+  const [active, setActive] = useState(null);
 
   const ranOnceRef = useRef(false);
 
@@ -79,6 +83,16 @@ const MessagePage = () => {
       id: id ?? "",
     },
     fetchPolicy: "network-only",
+  });
+
+  const {
+    data: promptsData,
+    loading: promptsLoading,
+    error: promptsError,
+    refetch: promptsRefetch,
+  } = useQuery(GET_PROMPTS, {
+    fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
 
   const [createMessage, { loading: sending }] = useMutation(CREATE_MESSAGE);
@@ -120,7 +134,7 @@ const MessagePage = () => {
   // มีข้อความใหม่ใน state → เลื่อนแบบ smooth
   useEffect(() => {
     scrollToBottom(true);
-  }, [messagesData?.messages.length, scrollToBottom, answer]);
+  }, [messagesData?.messages.length, scrollToBottom, answer, messages]);
 
   const handleMessageInitSubmit = async () => {
     console.log("initAttachments", initAttachments);
@@ -191,7 +205,7 @@ const MessagePage = () => {
     networkStatus === NetworkStatus.loading && !messagesData;
 
   // ก่อนหน้าเคยเขียน if (logsLoading) return ... → เปลี่ยนเป็นเช็ค isInitialLoading
-  if (isInitialLoading)
+  if (isInitialLoading || promptsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -199,7 +213,7 @@ const MessagePage = () => {
       </Box>
     );
 
-  if (messagesError || chatError)
+  if (messagesError || chatError || promptsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -453,6 +467,22 @@ const MessagePage = () => {
         {/* กันรอยบาก/แถบล่างมือถือ */}
         <Box sx={{ height: "env(safe-area-inset-bottom)" }} />
       </Box>
+      <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mb: 1,
+          }}
+        >
+          <PromptList
+            steps={promptsData.prompts}
+            activeIndex={active}
+            onChange={setActive}
+          />
+        </Box>
     </Container>
   );
 };

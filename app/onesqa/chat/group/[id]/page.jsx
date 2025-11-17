@@ -54,6 +54,8 @@ import Swal from "sweetalert2";
 import { UPDATE_CHATGROUP } from "@/graphql/chatgroup/mutations";
 import ProjectSearchModal from "@/app/components/chat/ProjectSearchModal";
 import { getAiLogo, AI_LOGOS } from "../../../../../util/aiLogo";
+import PromptList from "@/app/components/chat/PromptList";
+import { GET_PROMPTS } from "@/graphql/prompt/queries";
 
 const ChatgroupPage = () => {
   const client = useApolloClient();
@@ -69,6 +71,8 @@ const ChatgroupPage = () => {
   const [attachments, setAttachments] = useState([]); // File[]
 
   const [model, setModel] = useState("0");
+
+  const [active, setActive] = useState(null);
 
   const [items, setItems] = useState([]);
 
@@ -102,6 +106,16 @@ const ChatgroupPage = () => {
     fetchPolicy: "network-only",
   });
   console.log(chatsData?.chats?.edges);
+
+  const {
+    data: promptsData,
+    loading: promptsLoading,
+    error: promptsError,
+    refetch: promptsRefetch,
+  } = useQuery(GET_PROMPTS, {
+    fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
+  });
 
   const { refetch: chatsRefresh } = useQuery(GET_CHATS, {
     variables: {
@@ -161,7 +175,7 @@ const ChatgroupPage = () => {
     setItems([...base, ...mapped]);
   }, [chatsData]);
 
-  if (userLoading || chatsLoading || chatgroupLoading)
+  if (userLoading || chatsLoading || chatgroupLoading || promptsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -169,7 +183,7 @@ const ChatgroupPage = () => {
       </Box>
     );
 
-  if (userError || chatsError || chatgroupError)
+  if (userError || chatsError || chatgroupError || promptsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -517,6 +531,23 @@ const ChatgroupPage = () => {
               height: "100%",
               width: "100%",
             }} // ปรับแต่งเพิ่มเติมได้
+          />
+        </Box>
+
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mb: 1,
+          }}
+        >
+          <PromptList
+            steps={promptsData.prompts}
+            activeIndex={active}
+            onChange={setActive}
           />
         </Box>
 
