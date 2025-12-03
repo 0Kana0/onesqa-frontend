@@ -27,17 +27,19 @@ import ChatInputBar from "@/app/components/chat/ChatInputBar";
 import TypingDots from "@/app/components/chat/TypingDots";
 import { useInitText } from "@/app/context/InitTextContext";
 import { useAuth } from "@/app/context/AuthContext";
+import { useTheme } from "next-themes";
 import { GET_CHATGROUPS } from "@/graphql/chatgroup/queries";
 import { GET_CHAT } from "@/graphql/chat/queries";
 import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
+import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 
 const MessagePage = () => {
   const client = useApolloClient();
   const { user } = useAuth();
-  const { initText, setInitText, initAttachments, setInitAttachments } =
-    useInitText();
+  const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
   const router = useRouter();
+  const { theme } = useTheme();
   const params = useParams();
   const searchParams = useSearchParams();
   const { id } = params;
@@ -55,6 +57,7 @@ const MessagePage = () => {
   const [answer, setAnswer] = useState([]);
 
   const [active, setActive] = useState(null);
+  const [sending, setSending] = useState(false);
 
   const ranOnceRef = useRef(false);
 
@@ -95,7 +98,7 @@ const MessagePage = () => {
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
 
-  const [createMessage, { loading: sending }] = useMutation(CREATE_MESSAGE);
+  const [createMessage, { loading: createSending }] = useMutation(CREATE_MESSAGE);
   const [updateMessage, { loading: editSending }] = useMutation(UPDATE_MESSAGE);
   const [mutate, { loading, error }] = useMutation(MULTIPLE_UPLOAD, {
     client,
@@ -173,7 +176,9 @@ const MessagePage = () => {
       refetch();
       chatgroupsRefresh();
     } catch (error) {
-      console.log(error);
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
     }
   };
 
@@ -232,19 +237,27 @@ const MessagePage = () => {
   const onClear = () => setAttachments([]);
   const handleSubmitFile = async () => {
     if (!attachments.length) return;
-    const { data } = await mutate({
-      variables: {
-        files: attachments,
-      },
-    });
-    console.log(data?.multipleUpload);
-    //onClear();
-    handleMessageSubmitFile(data?.multipleUpload);
+    try {
+      const { data } = await mutate({
+        variables: {
+          files: attachments,
+          ai_id: chatData?.chat?.ai_id,
+          user_id: user?.id,
+        },
+      });
+      console.log(data?.multipleUpload);
+      //onClear();
+      handleMessageSubmitFile(data?.multipleUpload);
+    } catch (error) {
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
+    }
   };
   const handleMessageSubmitFile = async (uploads) => {
-    if (!text.trim() || sending) return; // กันกดซ้ำ
+    if (!text.trim() || createSending) return; // กันกดซ้ำ / กันข้อความว่าง
 
-    // เหลือแค่ id กับ filename
+    // เตรียมข้อมูลไฟล์ส่งหลังบ้าน
     const fileMessageList = (uploads ?? [])
       .map((it) => ({
         id: it?.id ?? it?.attachment_id ?? it?.file_id ?? null,
@@ -254,60 +267,27 @@ const MessagePage = () => {
 
     console.log(fileMessageList);
 
-    setAnswer([
-      {
-        id: messages.length,
-        role: "user",
-        text: text,
-        files: uploads,
-        createdAt: null,
-      },
-    ]);
-
-    try {
-      const { data } = await createMessage({
-        variables: {
-          input: {
-            chat_id: id,
-            message: text,
-            fileMessageList,
-          },
-        },
-      });
-
-      console.log("✅ Create success:", data.createMessage);
-      refetch();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleMessageSubmit = async () => {
-    if (!text.trim() || sending) return; // กันกดซ้ำ
-
-    // เหลือแค่ id กับ filename
-    const fileMessageList = (attachments ?? [])
-      .map((it) => ({
-        id: it?.id ?? it?.attachment_id ?? it?.file_id ?? null,
-        filename: it?.filename ?? it?.name ?? it?.file_name ?? "",
-      }))
-      .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
-
-    const sendAttachments = attachments;
+    // เก็บค่าเดิมไว้เผื่อ restore ตอน error
     const sendText = text;
+    const sendUploads = uploads;
 
-    setText(""); // ล้างหลังส่ง
-    setAttachments([]);
+    // เริ่มส่งแล้ว กันกดซ้ำ
+    setSending(true);
 
+    // โชว์ข้อความ user แบบ optimistic ก่อน
     setAnswer([
       {
         id: messages.length,
         role: "user",
         text: sendText,
-        files: sendAttachments,
+        files: sendUploads,
         createdAt: null,
       },
     ]);
+
+    // 🔹 เคลียร์ input ตอนเริ่มส่งไปหลังบ้านเลย
+    setText("");
+    setAttachments([]); // ถ้า state ชื่อไม่ตรงก็เปลี่ยนเป็นของโปรเจคจริง
 
     try {
       const { data } = await createMessage({
@@ -323,16 +303,88 @@ const MessagePage = () => {
       console.log("✅ Create success:", data.createMessage);
       refetch();
     } catch (error) {
-      console.log(error);
+      // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
+      setText(sendText);
+      setAttachments(sendUploads);
+
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleMessageSubmit = async () => {
+    if (!text.trim() || createSending) return; // กันกดซ้ำ / กันข้อความว่าง
+
+    // เตรียมข้อมูลไฟล์ส่งหลังบ้าน
+    const fileMessageList = (attachments ?? [])
+      .map((it) => ({
+        id: it?.id ?? it?.attachment_id ?? it?.file_id ?? null,
+        filename: it?.filename ?? it?.name ?? it?.file_name ?? "",
+      }))
+      .filter((x) => x.id != null && x.filename);
+
+    // เก็บค่าเดิมไว้เผื่อ restore ตอน error
+    const sendAttachments = attachments;
+    const sendText = text;
+
+    // เริ่มส่งแล้ว กันกดซ้ำ
+    setSending(true);
+
+    // โชว์ message ฝั่ง user แบบ optimistic ก่อน
+    setAnswer([
+      {
+        id: messages.length,
+        role: "user",
+        text: sendText,
+        files: sendAttachments,
+        createdAt: null,
+      },
+    ]);
+
+    // 🔹 เคลียร์ช่องกรอก + ไฟล์ ตอน "เริ่มส่ง" เลย
+    setText(""); // ล้างหลังส่ง
+    setAttachments([]);
+
+    try {
+      const { data } = await createMessage({
+        variables: {
+          input: {
+            chat_id: id,
+            message: sendText,
+            fileMessageList,
+          },
+        },
+      });
+
+      console.log("✅ Create success:", data.createMessage);
+      refetch();
+    } catch (error) {
+      // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
+      setText(sendText);
+      setAttachments(sendAttachments);
+
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
+    } finally {
+      setSending(false);
     }
   };
 
   const handleMessageEdit = async (edit_id, edit_text) => {
     console.log(edit_id, edit_text);
-    if (!edit_text.trim() || editSending) return; // กันกดซ้ำ
+    if (!edit_text.trim() || editSending) return; // กันกดซ้ำ / กันข้อความว่าง
 
-    const edit_message = messages.filter(m => Number(m.id) === Number(edit_id))
+    const edit_message = messages.filter(
+      (m) => Number(m.id) === Number(edit_id)
+    );
     console.log("edit_message", edit_message);
+
+    // ถ้าไม่เจอข้อความที่จะ edit ก็ไม่ต้องทำต่อ
+    if (!edit_message[0]) return;
 
     // เหลือแค่ id กับ filename
     const fileMessageList = (edit_message[0].files ?? [])
@@ -341,13 +393,22 @@ const MessagePage = () => {
         filename: it?.filename ?? it?.name ?? it?.file_name ?? "",
       }))
       .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
-    
-    console.log(messages);
-    setMessages(prev => prev.filter(m => Number(m.id) < Number(edit_id)));
 
+    // 🔹 backup ไว้เผื่อ rollback ตอน error
+    const prevMessages = messages;
+
+    console.log(messages);
+
+    // เริ่มส่งแล้ว กันกดซ้ำ
+    setSending(true);
+
+    // 🔹 ตัด history message ตั้งแต่ edit_id ขึ้นไป (ทำตอนเริ่มส่งเลย)
+    setMessages((prev) => prev.filter((m) => Number(m.id) < Number(edit_id)));
+
+    // โชว์ข้อความใหม่ของ user แบบ optimistic
     setAnswer([
       {
-        id: edit_id + 1,
+        id: Number(edit_id) + 1,
         role: "user",
         text: edit_text,
         files: edit_message[0].files,
@@ -362,7 +423,7 @@ const MessagePage = () => {
           input: {
             chat_id: id,
             message: edit_text,
-            fileMessageList
+            fileMessageList,
           },
         },
       });
@@ -370,7 +431,14 @@ const MessagePage = () => {
       console.log("✅ Update success:", data.updateMessage);
       refetch();
     } catch (error) {
-      console.log(error);
+      // 🔹 ถ้ามี error จากหลังบ้าน → rollback messages กลับของเดิม
+      setMessages(prevMessages);
+
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -389,9 +457,9 @@ const MessagePage = () => {
         messages={messages}
         onChangeEdit={handleMessageEdit}
         chat={chatData?.chat?.ai}
-        sending={Boolean(sending || editSending)}
+        sending={Boolean(createSending || editSending)}
       />
-      {(sending || editSending) && (
+      {(createSending || editSending) && (
         <>
           <ChatThread messages={answer} edit_status={false} />
           <TypingDots size={12} color="primary.main" />
@@ -411,7 +479,7 @@ const MessagePage = () => {
         <Box sx={{ display: "flex", gap: 1 }}>
           <ChatInputBar
             value={text}
-            sending={sending}
+            sending={createSending}
             onChange={setText}
             attachments={attachments}
             setAttachments={setAttachments}
@@ -429,8 +497,8 @@ const MessagePage = () => {
               } catch (err) {
                 console.error(err);
               }
-              setText(""); // ล้างหลังส่ง
-              setAttachments([]);
+              // setText(""); // ล้างหลังส่ง
+              // setAttachments([]);
             }}
             placeholder="ป้อนข้อความ.."
             actions={[

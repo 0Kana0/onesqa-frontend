@@ -26,7 +26,7 @@ const PromptList = ({ steps = [], activeIndex = 0, onChange }) => {
               borderRadius: 2,
               border: "1px solid",
               borderColor: "primary.main",
-              bgcolor: selected ? "primary.main" : "#fff",
+              bgcolor: selected ? "primary.main" : "background.paper",
               px: 2,
               py: 0.5,
               display: "flex",
@@ -41,8 +41,8 @@ const PromptList = ({ steps = [], activeIndex = 0, onChange }) => {
                 height: 28,
                 borderRadius: "50%",
                 border: "1px solid",
-                borderColor: "primary.main",
-                bgcolor: selected ? "#fff" : "#fff",
+                borderColor: selected ? "#fff" : "background.text",
+                bgcolor: selected ? "#fff" : "background.paper",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -53,7 +53,7 @@ const PromptList = ({ steps = [], activeIndex = 0, onChange }) => {
                 variant="body2"
                 sx={{
                   fontWeight: 600,
-                  color: selected ? "primary.main" : "primary.main",
+                  color: selected ? "primary.main" : "background.text",
                 }}
               >
                 {index + 1}
@@ -65,7 +65,7 @@ const PromptList = ({ steps = [], activeIndex = 0, onChange }) => {
               variant="body2"
               sx={{
                 whiteSpace: "nowrap",
-                color: selected ? "#fff" : "primary.main",
+                color: selected ? "#fff" : "background.text",
               }}
             >
               {step.prompt_title}

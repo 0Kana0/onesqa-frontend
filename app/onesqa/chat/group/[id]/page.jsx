@@ -56,6 +56,7 @@ import ProjectSearchModal from "@/app/components/chat/ProjectSearchModal";
 import { getAiLogo, AI_LOGOS } from "../../../../../util/aiLogo";
 import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
+import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 
 const ChatgroupPage = () => {
   const client = useApolloClient();
@@ -372,15 +373,23 @@ const ChatgroupPage = () => {
   const onClear = () => setInitAttachments([]);
   const handleSubmitFile = async () => {
     if (!initAttachments.length) return;
-    const { data } = await mutate({
-      variables: {
-        files: initAttachments,
-      },
-    });
-    console.log(data);
-    setInitAttachments(data?.multipleUpload)
-    //onClear();
-    handleCreateChat()
+    try {
+      const { data } = await mutate({
+        variables: {
+          files: initAttachments,
+          ai_id: model,
+          user_id: user?.id,
+        },
+      });
+      console.log(data);
+      setInitAttachments(data?.multipleUpload)
+      //onClear();
+      handleCreateChat()
+    } catch (error) {
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
+    }
   };
 
   const handleCreateChat = async () => {
@@ -401,7 +410,9 @@ const ChatgroupPage = () => {
       router.push(`/onesqa/chat/${data.createChat.id}?new=true`);
       //refetch();
     } catch (error) {
-      console.log(error);
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
     }
   };
 

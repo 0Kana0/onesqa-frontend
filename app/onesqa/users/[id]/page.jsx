@@ -28,13 +28,16 @@ import TokenLimitCard from "@/app/components/TokenLimitCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import ActionBar from "@/app/components/ActionBar";
 import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
 import { useSidebar } from "../../../context/SidebarContext"; // ✅ ใช้ context
 import { formatTokens } from "@/util/formatTokens";
 import { useRequireRole } from "@/hook/useRequireRole";
+import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 
 export default function UserDetailPage() {
   const params = useParams();
   const { id } = params;
+  const { theme } = useTheme();
   const t = useTranslations("UserDetailPage");
   const tInit = useTranslations("Init");
   const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
@@ -213,7 +216,9 @@ export default function UserDetailPage() {
 
       console.log("✅ Update success:", data.updateUser);
     } catch (error) {
-      console.log(error);
+      showErrorAlert(error, theme, {
+        title: "ตั้งค่าจำนวน Token ของ User ไม่สำเร็จ",
+      });
     }
   };
 

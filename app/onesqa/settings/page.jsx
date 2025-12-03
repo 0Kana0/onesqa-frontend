@@ -25,6 +25,7 @@ import {
   DELETE_PROMPT,
   UPDATE_PROMPT,
 } from "@/graphql/prompt/mutations";
+import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 
 const SettingPage = () => {
   const { theme } = useTheme();
@@ -376,7 +377,9 @@ const SettingPage = () => {
 
         console.log("✅ Update success:", results);
       } catch (error) {
-        console.log(error);
+        showErrorAlert(error, theme, {
+          title: "ตั้งค่า Prompt ไม่สำเร็จ",
+        });
       }
 
       // เพิ่มข้อมูลเข้ามาใหม่
@@ -404,7 +407,9 @@ const SettingPage = () => {
 
         console.log("✅ Create success:", results);
       } catch (error) {
-        console.log(error);
+        showErrorAlert(error, theme, {
+          title: "ตั้งค่า Prompt ไม่สำเร็จ",
+        });
       }
 
       setNewPrompts([]);
@@ -431,7 +436,9 @@ const SettingPage = () => {
 
         console.log("✅ Update success:", results);
       } catch (error) {
-        console.log(error);
+        showErrorAlert(error, theme, {
+          title: "ตั้งค่า AI ไม่สำเร็จ",
+        });
       }
     } else if (selected === "Tokens") {
 

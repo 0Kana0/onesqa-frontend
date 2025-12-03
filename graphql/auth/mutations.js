@@ -29,6 +29,7 @@ export const SIGNIN_WITH_ID = gql`
   mutation signinWithIdennumber($input: SigninWithIdInput!) {
     signinWithIdennumber(input: $input) {
       message
+      method
     }
   }
 `;

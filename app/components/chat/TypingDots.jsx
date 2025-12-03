@@ -27,7 +27,7 @@ export default function TypingDots({
       display: "flex",
       gap: 1.5
     }}>
-      <Avatar sx={{ bgcolor: "grey.200", color: "text.secondary" }}>
+      <Avatar sx={{ bgcolor: "background.paper", color: "text.secondary" }}>
         <SmartToyOutlinedIcon />
       </Avatar>
       <Box

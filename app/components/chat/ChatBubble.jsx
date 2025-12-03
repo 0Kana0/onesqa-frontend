@@ -10,6 +10,7 @@ import {
   IconButton,
   Tooltip,
   InputBase,
+  Link as MuiLink,           // ⭐ NEW
 } from "@mui/material";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
@@ -19,6 +20,10 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FileCard from "./FileCard";
 import { getAiLogo, AI_LOGOS } from "@/util/aiLogo";
+
+// ⭐ NEW: สำหรับ render markdown (รองรับ table / list / bold / code / ฯลฯ)
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function formatTime(dt) {
   try {
@@ -46,6 +51,238 @@ function toPlainString(val) {
   return val == null ? "" : String(val);
 }
 
+function CodeBlock({ children, ...props }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const textToCopy = Array.isArray(children)
+    ? children.join("")
+    : String(children || "").replace(/\n$/, "");
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (e) {
+      console.error("Copy failed", e);
+    }
+  };
+
+  return (
+    <Box sx={{ position: "relative", my: 1 }}>
+      <Box
+        component="pre"
+        sx={{
+          fontFamily: "monospace",
+          fontSize: "0.875rem",
+          p: 1.5,
+          borderRadius: 1,
+          overflowX: "auto",
+          bgcolor: "background.default",
+        }}
+      >
+        <Box component="code" {...props}>
+          {textToCopy}
+        </Box>
+      </Box>
+
+      <Tooltip title={copied ? "คัดลอกแล้ว" : "คัดลอกโค้ด"}>
+        <IconButton
+          size="small"
+          onClick={handleCopy}
+          sx={{
+            position: "absolute",
+            top: 4,
+            right: 4,
+          }}
+        >
+          <ContentCopyIcon fontSize="inherit" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+}
+
+function normalizeGeminiText(raw) {
+  if (typeof raw !== "string") return raw;
+
+  // รวม line ending ให้เหลือ \n เดียว
+  let text = raw.replace(/\r\n/g, "\n");
+
+  // บีบช่องว่าง “หลัง bullet/ตัวเลข” ให้เหลือ 1 ช่อง
+  //    เคสแบบ: "*         รูปภาพ..." หรือ "1.      ข้อความ..."
+  text = text
+    // bullet list: *, -, +
+    .replace(
+      /^([ \t]*[*\-+])[ \t]+(.*)$/gm,
+      (m, marker, rest) => `${marker} ${rest.trimStart()}`
+    )
+    // numbered list: 1. 2. ฯลฯ
+    .replace(
+      /^([ \t]*\d+\.)[ \t]+(.*)$/gm,
+      (m, marker, rest) => `${marker} ${rest.trimStart()}`
+    );
+
+  return text;
+}
+
+/**
+ * ⭐ NEW: ตัวแปลงข้อความ Gemini (Markdown/GFM) → MUI component
+ */
+function GeminiMarkdown({ content }) {
+  const rawText = typeof content === "string" ? content : toPlainString(content);
+  const text = normalizeGeminiText(rawText);   // 👈 แทรกตรงนี้
+  //console.log(text);
+  
+  if (!text) return null;
+
+  return (
+    <Box
+      sx={{
+        // ปรับ margin ย่อหน้าให้สวยใน bubble
+        "& p": { mb: 1 },
+        "& p:last-of-type": { mb: 0 },
+        "& ul, & ol": { mb: 1.2, pl: 3 },
+        "& h1, & h2, & h3, & h4": { mt: 1, mb: 0.5, fontWeight: 700 },
+        "& table": {
+          borderCollapse: "collapse",
+          width: "100%",
+          my: 1,
+        },
+        "& th, & td": {
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+          px: 1,
+          py: 0.5,
+          fontSize: "0.875rem",
+        },
+        "& th": {
+          fontWeight: 600,
+          bgcolor: "action.hover",
+        },
+      }}
+    >
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        // ไม่อนุญาต HTML ตรง ๆ เพื่อกัน XSS
+        skipHtml
+        components={{
+          h1: ({ node, ...props }) => (
+            <Typography variant="h5" {...props} />
+          ),
+          h2: ({ node, ...props }) => (
+            <Typography variant="h6" {...props} />
+          ),
+          h3: ({ node, ...props }) => (
+            <Typography variant="subtitle1" fontWeight={700} {...props} />
+          ),
+          h4: ({ node, ...props }) => (
+            <Typography variant="subtitle2" fontWeight={700} {...props} />
+          ),
+          p: ({ node, ...props }) => (
+            <Typography
+              {...props}
+              sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+            />
+          ),
+          strong: ({ node, ...props }) => (
+            <Box component="strong" fontWeight={700} {...props} />
+          ),
+          em: ({ node, ...props }) => (
+            <Box component="em" sx={{ fontStyle: "italic" }} {...props} />
+          ),
+          del: ({ node, ...props }) => (
+            <Box
+              component="del"
+              sx={{ textDecoration: "line-through" }}
+              {...props}
+            />
+          ),
+          ul: ({ node, ordered, ...props }) => <Box component="ul" {...props} />,
+          ol: ({ node, ordered, ...props }) => <Box component="ol" {...props} />,
+          li: ({ node, ...props }) => <Box component="li" {...props} />,
+          hr: () => (
+            <Box
+              component="hr"
+              sx={{ my: 1.5, border: 0, borderTop: "1px solid", borderColor: "divider" }}
+            />
+          ),
+          blockquote: ({ node, ...props }) => (
+            <Box
+              component="blockquote"
+              sx={{
+                borderLeft: 3,
+                borderColor: "divider",
+                pl: 2,
+                ml: 0,
+                my: 1,
+                py: 0.5,
+                fontStyle: "italic",
+                bgcolor: "action.hover",
+              }}
+              {...props}
+            />
+          ),
+          a: ({ node, href, ...props }) => (
+            <MuiLink
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"              // กันไม่ให้ theme primary มาเปลี่ยนสี
+              sx={{
+                color: "#3E8EF7",
+                textDecorationColor: "#3E8EF7",
+                "&:hover": {
+                  color: "#3E8EF7",
+                  textDecorationColor: "#3E8EF7",
+                  textDecoration: "underline",
+                },
+              }}
+              {...props}
+            />
+          ),
+          code: ({ node, inline, className, children, ...props }) => {
+            if (inline) {
+              // inline code: `foo`
+              return (
+                <Box
+                  component="code"
+                  sx={{
+                    fontFamily: "monospace",
+                    fontSize: "0.875rem",
+                    px: 0.5,
+                    borderRadius: 0.5,
+                    bgcolor: "action.hover",
+                  }}
+                  {...props}
+                >
+                  {children}
+                </Box>
+              );
+            }
+
+            // block code: ``` ... ```
+            return <CodeBlock {...props}>{children}</CodeBlock>;
+          },
+          table: ({ node, ...props }) => (
+            <Box component="table" {...props} />
+          ),
+          thead: ({ node, ...props }) => (
+            <Box component="thead" {...props} />
+          ),
+          tbody: ({ node, ...props }) => (
+            <Box component="tbody" {...props} />
+          ),
+          tr: ({ node, isHeader, ...props }) => <Box component="tr" {...props} />,
+          th: ({ node, ...props }) => <Box component="th" {...props} />,
+          td: ({ node, ...props }) => <Box component="td" {...props} />,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </Box>
+  );
+}
+
 /**
  * ChatBubble
  * @param {'user'|'assistant'} role
@@ -54,8 +291,8 @@ function toPlainString(val) {
  * @param {Array} files
  * @param {boolean} showAvatar
  * @param {boolean} enableCopy
- * @param {(newText: string) => void} onEdit   // callback เมื่อกดบันทึกข้อความที่แก้
- * @param {boolean} editable                   // เปิด/ปิดปุ่มแก้ไข (default true เฉพาะ user)
+ * @param {(newText: string) => void} onEdit
+ * @param {boolean} editable
  */
 export default function ChatBubble({
   id,
@@ -70,29 +307,26 @@ export default function ChatBubble({
   onChangeEdit = () => {},
   chat = [],
   edit_status = true,
-  sending = false
+  sending = false,
 }) {
   const isUser = role === "user";
-  //console.log(chat);
 
   // ====== Edit state ======
   const initialPlain = toPlainString(text);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(initialPlain);
 
-  // sync draft ถ้า text จาก parent เปลี่ยน และตอนนี้ไม่ได้แก้ไขอยู่
   useEffect(() => {
     if (!isEditing) setDraft(toPlainString(text));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text]);
+
   useEffect(() => {
     if (sending) setIsEditing(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sending]);
 
   const startEdit = () => {
-    console.log(id);
-
     setDraft(toPlainString(text));
     setIsEditing(true);
   };
@@ -101,7 +335,6 @@ export default function ChatBubble({
     setIsEditing(false);
   };
   const saveEdit = () => {
-    console.log(draft);
     onChangeEdit(id, draft);
     setIsEditing(false);
   };
@@ -109,8 +342,7 @@ export default function ChatBubble({
   const bubbleSx = {
     px: 2,
     py: 1.5,
-    // ขยายเต็มเมื่อแก้ไข
-    maxWidth: isEditing && !sending ? "100%" : { xs: "85%", sm: "70%" },
+    maxWidth: isEditing && !sending ? "100%" : { xs: "100%", sm: "100%" },
     width: isEditing && !sending ? "100%" : "auto",
     bgcolor: isUser ? "primary.main" : "background.paper",
     color: isUser ? "primary.contrastText" : "text.primary",
@@ -175,7 +407,7 @@ export default function ChatBubble({
           </Stack>
         )}
 
-        {/* ====== Bubble area: switch between view / edit ====== */}
+        {/* ====== Bubble area: view / edit ====== */}
         <Paper sx={bubbleSx}>
           {isEditing && !sending ? (
             <InputBase
@@ -203,11 +435,19 @@ export default function ChatBubble({
               }}
             />
           ) : (
-            <Typography
-              sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
-            >
-              {text}
-            </Typography>
+            <>
+              {isUser ? (
+                // ⭐ ฝั่ง user: ยังใช้ Typography ธรรมดา → flow เดิม
+                <Typography
+                  sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                >
+                  {text}
+                </Typography>
+              ) : (
+                // ⭐ ฝั่ง assistant: ใช้ GeminiMarkdown แทน Typography
+                <GeminiMarkdown content={text} />
+              )}
+            </>
           )}
         </Paper>
 
@@ -220,7 +460,6 @@ export default function ChatBubble({
         >
           <Typography variant="caption">{formatTime(time)}</Typography>
 
-          {/* โหมดแก้ไข: แสดงปุ่มบันทึก/ยกเลิก */}
           {isEditing && !sending ? (
             <>
               <Tooltip title="ยกเลิก">
@@ -253,7 +492,7 @@ export default function ChatBubble({
                     size="small"
                     onClick={startEdit}
                     sx={{ ml: -0.5 }}
-                    disabled={Boolean(sending)}                     // ✅ disable เมื่อส่งอยู่
+                    disabled={Boolean(sending)}
                   >
                     <EditRoundedIcon fontSize="inherit" />
                   </IconButton>

@@ -45,7 +45,7 @@ export default function AlertCard({
       </Box>
 
       {/* ปุ่มขวา */}
-      <Button
+      {/* <Button
         variant="outlined"
         size="small"
         onClick={onDetailClick}
@@ -61,7 +61,7 @@ export default function AlertCard({
         }}
       >
         {t('button1')}
-      </Button>
+      </Button> */}
     </Box>
   );
 }

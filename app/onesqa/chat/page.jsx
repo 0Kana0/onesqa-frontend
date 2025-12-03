@@ -25,6 +25,7 @@ import {
   Avatar,
   ListItemIcon,
 } from "@mui/material";
+import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { GET_USER } from "@/graphql/user/queries";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
@@ -39,12 +40,14 @@ import { useInitText } from "@/app/context/InitTextContext";
 import { getAiLogo, AI_LOGOS } from "../../../util/aiLogo";
 import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
+import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 
 const ChatPage = () => {
   const client = useApolloClient();
   const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
   const router = useRouter();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [attachments, setAttachments] = useState([]); // File[]
 
   const [model, setModel] = useState("0");
@@ -118,15 +121,23 @@ const ChatPage = () => {
   const onClear = () => setInitAttachments([]);
   const handleSubmitFile = async () => {
     if (!initAttachments.length) return;
-    const { data } = await mutate({
-      variables: {
-        files: initAttachments,
-      },
-    });
-    console.log(data);
-    setInitAttachments(data?.multipleUpload)
-    //onClear();
-    handleCreateChat()
+    try {
+      const { data } = await mutate({
+        variables: {
+          files: initAttachments,
+          ai_id: model,
+          user_id: user?.id,
+        },
+      });
+      console.log(data);
+      setInitAttachments(data?.multipleUpload)
+      //onClear();
+      handleCreateChat()
+    } catch (error) {
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
+    }
   };
 
   const handleCreateChat = async () => {
@@ -146,7 +157,9 @@ const ChatPage = () => {
       // ✅ ส่งพารามิเตอร์ new=true ไปด้วย
       router.push(`/onesqa/chat/${data.createChat.id}?new=true`);
     } catch (error) {
-      console.log(error);
+      showErrorAlert(error, theme, {
+        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+      });
     }
   };
 

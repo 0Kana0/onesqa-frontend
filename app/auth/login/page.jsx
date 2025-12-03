@@ -17,19 +17,22 @@ import {
   Link,
   useMediaQuery
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client/react";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "next-themes";
 import { useTranslations } from 'next-intl';
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import { SIGNIN, SIGNIN_WITH_ID, VERIFY_SIGNIN_WITH_ID } from "@/graphql/auth/mutations";
 import { useRedirectIfAuthed } from "../../components/ui/useAuthGuard"
+import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 
 export default function LoginPage() {
   useRedirectIfAuthed()
   const router = useRouter();
+  const { theme } = useTheme();
   const { accessTokenContext, userContext } = useAuth();
   const t = useTranslations('LoginPage');
 
@@ -46,6 +49,41 @@ export default function LoginPage() {
   const [channel, setChannel] = useState("sms"); // sms | email
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  const [lockRemaining, setLockRemaining] = useState(null); // วินาทีที่เหลือ
+
+  const formatTime = (totalSeconds) => {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    const mm = String(m).padStart(2, "0");
+    const ss = String(s).padStart(2, "0");
+    return `${mm}:${ss} นาที`;
+  };
+
+  const [method, setMethod] = useState("");
+
+  // useEffect สำหรับ countdown
+  useEffect(() => {
+    if (lockRemaining === null) return;
+
+    const timer = setInterval(() => {
+      setLockRemaining((prev) => {
+        if (prev === null) return null;
+
+        if (prev <= 1) {
+          // หมดเวลาแล้ว
+          clearInterval(timer);
+          setLoginError("");      // เคลียร์ข้อความ error
+          return null;            // หยุด countdown
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lockRemaining]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -98,7 +136,34 @@ export default function LoginPage() {
           router.push("/onesqa/chat");
         }
       } catch (error) {
-        console.log(error);
+        // 👉 ดึงข้อความ error มาเก็บใน state
+        const message = extractErrorMessage(error, "บันทึกข้อมูลไม่สำเร็จ");
+        // แสดง error เฉพาะกรณีที่ข้อความไม่ใช่ 2 ข้อความนี้
+        if (
+          message !== "ชื่อผู้ใช้งานห้ามเป็นค่าว่าง" &&
+          message !== "รหัสผ่านห้ามเป็นค่าว่าง"
+        ) {
+          setLoginError(message);
+        }
+
+        // ถ้าเป็นข้อความล็อก ให้ดึง mm:ss มาแล้วเริ่ม countdown
+        if (message.includes("บัญชีนี้ถูกล็อกชั่วคราว")) {
+          // match mm:ss ตรงไหนก็ได้ในข้อความ
+          const match = message.match(/(\d{1,2}):(\d{2})/);
+          if (match) {
+            const mm = parseInt(match[1], 10);
+            const ss = parseInt(match[2], 10);
+            const totalSeconds = mm * 60 + ss;
+            console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
+            setLockRemaining(totalSeconds);
+          }
+        } else {
+          setLockRemaining(null)
+        }
+
+        showErrorAlert(error, theme, {
+          title: "ไม่สามารถเข้าสู่ระบบได้",
+        });
       }
 
     } else if (role === "external") {
@@ -123,8 +188,11 @@ export default function LoginPage() {
       
         // แสดงช่องกรอก OTP
         setShowOTP(true);
+        setMethod(sendResult.data.signinWithIdennumber.method)
       } catch (error) {
-        console.log(error);
+        showErrorAlert(error, theme, {
+          title: "รับเลข OTP ไม่สำเร็จ",
+        });
       }
     }
   };
@@ -152,7 +220,9 @@ export default function LoginPage() {
 
       console.log(resendResult);
     } catch (error) {
-      console.log(error);
+      showErrorAlert(error, theme, {
+        title: "รับเลข OTP ไม่สำเร็จ",
+      });
     }
   };
 
@@ -190,7 +260,35 @@ export default function LoginPage() {
         router.push("/onesqa/chat");
       }
     } catch (error) {
-      console.log(error);
+      // 👉 ดึงข้อความ error มาเก็บใน state
+      const message = extractErrorMessage(error, "บันทึกข้อมูลไม่สำเร็จ");
+      // แสดง error เฉพาะกรณีที่ข้อความไม่ใช่ 2 ข้อความนี้
+      if (
+        message !== "เลขบัตรประชาชนห้ามเป็นค่าว่าง" &&
+        message !== "เลขบัตรประชาชนต้องมี 13 หลัก" &&
+        message !== "เลข OTP ห้ามเป็นค่าว่าง"
+      ) {
+        setLoginError(message);
+      }
+
+      // ถ้าเป็นข้อความล็อก ให้ดึง mm:ss มาแล้วเริ่ม countdown
+      if (message.includes("บัญชีนี้ถูกล็อกชั่วคราว")) {
+        // match mm:ss ตรงไหนก็ได้ในข้อความ
+        const match = message.match(/(\d{1,2}):(\d{2})/);
+        if (match) {
+          const mm = parseInt(match[1], 10);
+          const ss = parseInt(match[2], 10);
+          const totalSeconds = mm * 60 + ss;
+          console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
+          setLockRemaining(totalSeconds);
+        }
+      } else {
+        setLockRemaining(null)
+      }
+
+      showErrorAlert(error, theme, {
+        title: "ไม่สามารถเข้าสู่ระบบได้",
+      });
     }
   };
 
@@ -246,7 +344,14 @@ export default function LoginPage() {
           <ToggleButtonGroup
             value={role}
             exclusive
-            onChange={(e, newRole) => newRole && setRole(newRole)}
+            onChange={(e, newRole) => {
+              if (!newRole) return;
+
+              setRole(newRole);
+              setLoginError("");
+              setLockRemaining(null);
+              setOtp("");
+            }}
             fullWidth
             sx={{
               mb: 3,
@@ -320,6 +425,21 @@ export default function LoginPage() {
           {/* ฟอร์มสลับตาม role */}
           {role === "staff" && (
             <Box component="form" onSubmit={handleSubmit}>
+              {/* แสดง error บนสุด */}
+              {loginError && (
+                <Typography
+                  variant="body2"
+                  color="error"
+                  sx={{ mt: 1, mb: 1 }}
+                >
+                  {lockRemaining !== null
+                    ? `บัญชีนี้ถูกล็อกชั่วคราว กรุณารอสักครู่เพื่อเข้าสู่ระบบอีกครั้ง ${formatTime(
+                        lockRemaining
+                      )}`
+                    : loginError}
+                </Typography>
+              )}
+              
               <TextField
                 fullWidth
                 margin="normal"
@@ -353,6 +473,21 @@ export default function LoginPage() {
 
           {role === "external" && (
             <Box component="form" onSubmit={handleSubmit}>
+              {/* แสดง error บนสุด */}
+              {loginError && (
+                <Typography
+                  variant="body2"
+                  color="error"
+                  sx={{ mt: 1, mb: 1 }}
+                >
+                  {lockRemaining !== null
+                    ? `บัญชีนี้ถูกล็อกชั่วคราว กรุณารอสักครู่เพื่อเข้าสู่ระบบอีกครั้ง ${formatTime(
+                        lockRemaining
+                      )}`
+                    : loginError}
+                </Typography>
+              )}
+
               <TextField
                 fullWidth
                 margin="normal"
@@ -380,7 +515,17 @@ export default function LoginPage() {
                 <RadioGroup
                   row
                   value={channel}
-                  onChange={(e) => setChannel(e.target.value)}
+                  onChange={(e) => {
+                    const nextChannel = e.target.value;
+
+                    // ถ้าเปลี่ยนช่องทางให้ซ่อน OTP ก่อน
+                    if (nextChannel !== channel) {
+                      setShowOTP(false);
+                      setOtp("")
+                    }
+
+                    setChannel(nextChannel);
+                  }}                  
                   sx={{
                     display: "flex",
                     justifyContent: "center", // ✅ จัดทั้งกลุ่มให้อยู่กลาง
@@ -431,45 +576,60 @@ export default function LoginPage() {
                   <Typography
                     variant="body2"
                     align="left"
-                    sx={{ fontWeight: "500" }}
+                    sx={{ fontWeight: 500 }}
                   >
-                    {t('title4p1')} 0629088xxx {t('title4p2')}
+                    {t(channel === "sms" ? "title4p1phone" : "title4p1email")} {method} {t("title4p2")}
                   </Typography>
+
                   <TextField
                     fullWidth
                     margin="normal"
-                    label={t('otp1')}
-                    placeholder={t('otp2')}
+                    label={t("otp1")}
+                    placeholder={t("otp2")}
                     value={otp}
                     sx={{ mb: 2 }}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, ""); // 👈 กรองเอาเฉพาะตัวเลข
+                      const value = e.target.value.replace(/\D/g, "");
                       setOtp(value);
                     }}
                     inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();       // ❌ กันไม่ให้ form ข้างนอก submit เอง
+                        handleOtpSubmit(e);       // ✅ ทำงานเหมือนกดปุ่ม
+                      }
+                    }}
                   />
-                  <Typography variant="body2" align="left" sx={{ fontWeight: "500" }}>
-                    {t('recheck1')}
+
+                  <Typography
+                    variant="body2"
+                    align="left"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    {t("recheck1")}
                     <Link
                       component="button"
                       variant="body2"
-                      underline="none"   // ❌ ตัดเส้นขีดใต้
+                      underline="none"
                       sx={{ color: "#3E8EF7", cursor: "pointer" }}
-                      onClick={(e) => handleResendOtp(e)}
+                      onClick={(e) => {
+                        e.preventDefault();       // กันไม่ให้ไปยุ่งกับ form
+                        e.stopPropagation();      // กัน event เด้งไปถึง parent
+                        handleResendOtp(e);
+                      }}
                     >
-                      {t('recheck2')}
+                      {t("recheck2")}
                     </Link>
                   </Typography>
 
                   <Button
-                    type="submit"
+                    type="button"                  // ❗ ไม่ใช้ submit เพื่อไม่ไปชน form ใหญ่
                     variant="contained"
-                    //color="secondary"
                     fullWidth
                     onClick={(e) => handleOtpSubmit(e)}
                     sx={{ mt: 2, bgcolor: "#3E8EF7" }}
                   >
-                    {t('button1')}
+                    {t("button1")}
                   </Button>
                 </Box>
               )}

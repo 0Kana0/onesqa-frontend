@@ -7,6 +7,7 @@ import Badge from "@mui/material/Badge";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export default function NotificationListener({
   user_id,
@@ -18,6 +19,7 @@ export default function NotificationListener({
   const WS_ENDPOINT = process.env.NEXT_PUBLIC_WS_ENDPOINT;
 
   const alert = localStorage.getItem("alert");
+  const router = useRouter();
 
   const {
     refetch,
@@ -84,6 +86,11 @@ export default function NotificationListener({
                 pauseOnHover: true,
                 draggable: true,
                 theme: "light",
+                onClick: () => {
+                  setHasNotification(false)
+                  localStorage.removeItem("alert");
+                  router.push(`/onesqa/notification`); // 👈 หน้าเป้าหมาย
+                },
               }
             );
           }
