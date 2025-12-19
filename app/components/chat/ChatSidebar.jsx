@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { NetworkStatus } from "@apollo/client";
 import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
@@ -23,7 +23,7 @@ import {
   Alert,
   CircularProgress,
   Avatar,
-  useMediaQuery
+  useMediaQuery,
 } from "@mui/material";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -40,7 +40,10 @@ import ProjectSearchModal from "./ProjectSearchModal";
 import { getAiLogo, AI_LOGOS } from "@/util/aiLogo";
 import { useSidebar } from "@/app/context/SidebarContext";
 
+const PAGE_SIZE = 15; // ✅ lazy loading
+
 export default function ChatSidebar() {
+  const client = useApolloClient();
   const { user } = useAuth();
   const { theme } = useTheme();
   const { toggle } = useSidebar(); // ✅ ดึงจาก Context
@@ -72,28 +75,38 @@ export default function ChatSidebar() {
   //   { label: "แชต CRPU2", href: "#" },
   //   { label: "แชต UAT2", href: "#" },
   // ];
-  const [items, setItems] = useState([]);
 
   // --- เมนูจุดสามจุด ---
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selected, setSelected] = useState(null);
   const menuOpen = Boolean(menuAnchor);
 
+  // ===============================
+  // ✅ lazy loading states
+  // ===============================
+  const [edges, setEdges] = useState([]);
+  const [endCursor, setEndCursor] = useState(null);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  const loaderRef = useRef(null);
+
   // state เปิด/ปิด modal ค้นหา
   const [openSearch, setOpenSearch] = useState(false);
 
-  const {
-    data: chatsData,
-    loading: chatsLoading,
-    error: chatsError,
-    refetch,
-  } = useQuery(GET_CHATS, {
-    variables: {
-      user_id: user?.id ?? "",
-      chatgroupMode: "NULL",
-    },
-    fetchPolicy: "network-only",
-  });
+  const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery(
+    GET_CHATS,
+    {
+      variables: {
+        user_id: user?.id ?? "",
+        chatgroupMode: "NULL",
+        first: PAGE_SIZE,
+        after: null,
+      },
+      skip: !user?.id,
+      notifyOnNetworkStatusChange: true,
+      fetchPolicy: "network-only",
+    }
+  );
 
   const { refetch: chatgroupsRefresh } = useQuery(GET_CHATS, {
     variables: {
@@ -107,36 +120,114 @@ export default function ChatSidebar() {
   const [updateChat] = useMutation(UPDATE_CHAT);
   const [deleteChat] = useMutation(DELETE_CHAT);
 
+  // ===============================
+  // รวม edges (กัน duplicate)
+  // ===============================
   useEffect(() => {
-    // รอจนกว่าจะมีโครง usersData ก่อน ค่อยประมวลผล
-    if (!chatsData?.chats) return;
+    const conn = data?.chats;
+    if (!conn) return;
 
-    const base = [];
+    const incoming = conn.edges ?? [];
+    const seen = new Set();
+    const merged = [];
 
-    const mapped = (chatsData?.chats?.edges || [])
-      .map((e) => e?.node)
-      .filter(Boolean)
-      .map((n) => ({
-        id: n.id,
-        model_type: n.ai.model_type,
-        label: n.chat_name,
-        href: `/onesqa/chat/${n.id}`, // เปลี่ยนเป็น `/chats/${n.id}` ได้ถ้าต้องการลิงก์จริง
-      }));
+    for (const e of incoming) {
+      if (!seen.has(e.cursor)) {
+        seen.add(e.cursor);
+        merged.push(e);
+      }
+    }
 
-    setItems([...base, ...mapped]);
-  }, [chatsData]);
+    setEdges(merged);
+    setEndCursor(conn.pageInfo?.endCursor ?? null);
+    setHasNextPage(Boolean(conn.pageInfo?.hasNextPage));
+  }, [data?.chats]);
 
-  if (chatsLoading)
+  // ===============================
+  // โหลดเพิ่ม
+  // ===============================
+  const loadMore = useCallback(async () => {
+    if (!hasNextPage || !endCursor) return;
+
+    const res = await fetchMore({
+      variables: {
+        user_id: user?.id,
+        chatgroupMode: "NULL",
+        first: PAGE_SIZE,
+        after: endCursor,
+      },
+    });
+
+    const conn = res?.data?.chats;
+    if (!conn) return;
+
+    setEdges((prev) => {
+      const seen = new Set(prev.map((e) => e.cursor));
+      const merged = [...prev];
+      for (const e of conn.edges ?? []) {
+        if (!seen.has(e.cursor)) {
+          seen.add(e.cursor);
+          merged.push(e);
+        }
+      }
+      return merged;
+    });
+
+    setEndCursor(conn.pageInfo?.endCursor ?? null);
+    setHasNextPage(Boolean(conn.pageInfo?.hasNextPage));
+  }, [fetchMore, endCursor, hasNextPage, user?.id]);
+
+  // ===============================
+  // IntersectionObserver
+  // ===============================
+  useEffect(() => {
+    const el = loaderRef.current;
+    if (!el || !hasNextPage) return;
+
+    let locked = false;
+    const io = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting && !locked) {
+          locked = true;
+          try {
+            await loadMore();
+          } finally {
+            setTimeout(() => (locked = false), 150);
+          }
+        }
+      },
+      { threshold: 0 }
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasNextPage, loadMore]);
+
+  // ===============================
+  // แปลงเป็น items (เหมือนเดิม)
+  // ===============================
+  const items = useMemo(
+    () =>
+      edges
+        .map((e) => e.node)
+        .filter(Boolean)
+        .map((n) => ({
+          id: n.id,
+          model_type: n.ai.model_type,
+          label: n.chat_name,
+          href: `/onesqa/chat/${n.id}`,
+        })),
+    [edges]
+  );
+
+  if (loading && networkStatus === NetworkStatus.loading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
-        <Typography>
-          <CircularProgress />
-        </Typography>
+        <CircularProgress />
       </Box>
     );
 
-  // ----- สถานะโหลด/ผิดพลาดรวมสองฝั่ง -----
-  if (chatsError)
+  if (error)
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">❌</Alert>
@@ -268,9 +359,14 @@ export default function ChatSidebar() {
         },
       });
       console.log("✅ Update success:", data.updateChat);
-      refetch();
-      if (id === item.id && pathname === `/onesqa/chat/group/${id}`)
-        chatgroupsRefresh();
+      // refetch();
+      // if (id === item.id && pathname === `/onesqa/chat/group/${id}`)
+      //   console.log("dasddsaddda");
+
+      //   chatgroupsRefresh();
+      await client.refetchQueries({
+        include: [GET_CHATS],
+      });
     } catch (error) {
       console.log(error);
     }
@@ -295,7 +391,7 @@ export default function ChatSidebar() {
         variables: {
           id: rename?.id,
           input: {
-            user_id: user.id,
+            user_id: user?.id,
             chat_name: name,
           },
         },
@@ -413,6 +509,39 @@ export default function ChatSidebar() {
                 </Link>
               );
             })}
+
+            {items.length === 0 && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <Typography variant="caption" sx={{ opacity: 0.6 }}>
+                  -- ไม่มีแชต --
+                </Typography>
+              </Box>
+            )}
+
+            {/* ✅ Sentinel */}
+            <Box
+              ref={loaderRef}
+              sx={{ display: "flex", justifyContent: "center", py: 1 }}
+            >
+              {networkStatus === NetworkStatus.fetchMore && (
+                <Typography variant="caption" sx={{ opacity: 0.6 }}>
+                  Loading...
+                </Typography>
+              )}
+              {!hasNextPage && items.length > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{ opacity: 0.6 }}
+                ></Typography>
+              )}
+            </Box>
           </List>
         </Collapse>
       </List>
@@ -428,7 +557,7 @@ export default function ChatSidebar() {
         onDelete={handleDelete}
         // ปรับข้อความได้ตามบริบท เช่น "กลุ่ม"
         renameLabel="เปลี่ยนชื่อเเชต"
-        changeGroupLabel="ย้ายไปยังโครงการ"
+        changeGroupLabel="ย้ายไปยังกลุ่ม"
         deleteLabel="ลบเเชต"
         // paperSx={{ minWidth: 200 }} // ถ้าต้องการปรับแต่งเพิ่ม
       />

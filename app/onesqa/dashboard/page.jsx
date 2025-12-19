@@ -36,6 +36,7 @@ import {
   MESSAGE_REPORTS,
   TOKEN_REPORTS,
 } from "@/graphql/report/queries";
+import { USER_COUNT_REPORTS } from "@/graphql/user_count/queries";
 
 const DashboardPage = () => {
   dayjs.extend(utc);
@@ -99,6 +100,14 @@ const DashboardPage = () => {
   });
 
   const {
+    data: userCountData,
+    loading: userCountLoading,
+    error: userCountError,
+  } = useQuery(USER_COUNT_REPORTS, {
+    fetchPolicy: "network-only",
+  });
+
+  const {
     data: chartData,
     loading: chartLoading,
     error: chartError,
@@ -141,7 +150,7 @@ const DashboardPage = () => {
   }, [aisData]);
 
   const { allowed, loading, user } = useRequireRole({
-    roles: ["ผู้ดูแลระบบ"],
+    roles: ["ผู้ดูแลระบบ", "superadmin"],
     redirectTo: "/onesqa/chat",
   });
 
@@ -160,7 +169,7 @@ const DashboardPage = () => {
       </Box>
     );
 
-  if (aisError || onlineUsersError || tokenError || messageError || chartError)
+  if (aisError || onlineUsersError || tokenError || messageError || chartError || userCountError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -308,8 +317,8 @@ const DashboardPage = () => {
 
         <DashboardStatCard
           title={t("card3")}
-          value="12"
-          percentChange={-3}
+          value={userCountData?.cardUserCountReports?.value.toLocaleString()}
+          percentChange={userCountData?.cardUserCountReports?.percentChange}
           icon={<GroupIcon />}
           bgColor="primary.minor"
         />

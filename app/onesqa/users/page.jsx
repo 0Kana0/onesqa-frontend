@@ -22,27 +22,36 @@ import {
   Chip,
   Switch,
   IconButton,
-  Pagination,
   CircularProgress,
   useMediaQuery,
 } from "@mui/material";
 import { GET_USERS } from "@/graphql/user/queries";
-import { UPDATE_USER } from "@/graphql/user/mutations";
+import { GET_ROLES } from "@/graphql/role/queries";
+import { UPDATE_USER, SYNC_USERS } from "@/graphql/user/mutations";
+import { useTheme } from "next-themes";
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionIcon from "@mui/icons-material/Description";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import { useTranslations } from "next-intl";
 import { exportUsersToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
+import SmartPagination from "@/app/components/SmartPagination";
+import {
+  closeLoading,
+  showLoading,
+  showSuccessAlert,
+} from "@/util/loadingModal";
+import { showErrorAlert } from "@/util/errorAlert";
 
-const normalize = (v) => (v === 'ทั้งหมด' || v === '' || v == null ? null : v);
+const normalize = (v) => (v === "ทั้งหมด" || v === "" || v == null ? null : v);
 const normalizeText = (v) => {
-  const s = (v ?? '').trim();
-  return s === '' ? null : s;
-}
+  const s = (v ?? "").trim();
+  return s === "" ? null : s;
+};
 
 export default function UserPage() {
   const client = useApolloClient();
+  const { theme } = useTheme();
   const router = useRouter();
   const t = useTranslations("UserPage");
   const tInit = useTranslations("Init");
@@ -57,7 +66,7 @@ export default function UserPage() {
   const rowsPerPage = 5; // ✅ แสดง 5 แถวต่อหน้า
 
   const [users, setUsers] = useState([]);
-  const [totalCount, setTotalCount] = useState(0)
+  const [totalCount, setTotalCount] = useState(0);
 
   const [pendingIds, setPendingIds] = useState(new Set());
   const isPending = useCallback((id) => pendingIds.has(id), [pendingIds]);
@@ -66,20 +75,30 @@ export default function UserPage() {
     data: usersData,
     loading: usersLoading,
     error: usersError,
-    networkStatus
+    refetch: usersRefetch,
+    networkStatus,
   } = useQuery(GET_USERS, {
     fetchPolicy: "cache-and-network",
     notifyOnNetworkStatusChange: true,
     variables: {
-      page: page, 
+      page: page,
       pageSize: rowsPerPage,
       where: {
         role: normalize(roleFilter),
         status: normalize(statusFilter),
-        search: normalizeText(search)
-      }
+        search: normalizeText(search),
+      },
     },
   });
+
+  const {
+    data: rolesData,
+    loading: rolesLoading,
+    error: rolesError,
+  } = useQuery(GET_ROLES, {
+    fetchPolicy: "network-only",
+  });
+
   //console.log(usersData);
 
   // ✅ state ของ users (เก็บค่า aiAccess แบบ toggle ได้)
@@ -147,6 +166,8 @@ export default function UserPage() {
   // ]);
 
   const [updateUser] = useMutation(UPDATE_USER);
+  const [syncUsersFromApi, { loading: syncUsersFromApiSending }] =
+    useMutation(SYNC_USERS);
 
   // ✅ เมื่อ toggle ปุ่ม
   const handleToggleAccess = useCallback(
@@ -202,6 +223,98 @@ export default function UserPage() {
     [users, pendingIds, updateUser]
   );
 
+  const roles = rolesData?.roles ?? [];
+  const getRoleIdByName = useCallback(
+    (name) => {
+      const found = roles.find((r) => r.role_name === name);
+      return found?.id ?? null;
+    },
+    [roles]
+  );
+  const handleToggleAccessAdmin = useCallback(
+    async (id, nextChecked, login_type) => {
+      // กันกดซ้ำถ้ายิงอยู่
+      if (pendingIds.has(id)) return;
+
+      const current = users.find((u) => u.id === id);
+      if (!current) return;
+
+      // เก็บค่าเดิมไว้ rollback
+      const prevRoleName = current.role;
+
+      const currentLoginType = login_type || current.login_type;
+
+      // role พื้นฐานตาม login_type
+      const getBaseRoleNameByLoginType = (lt) => {
+        if (lt === "INSPEC") return "ผู้ประเมินภายนอก";
+        // DEFAULT = NORMAL หรืออื่น ๆ
+        return "เจ้าหน้าที่";
+      };
+
+      // nextChecked = true  -> ผู้ดูแลระบบ
+      // nextChecked = false -> map ตาม login_type
+      const nextRoleName = nextChecked
+        ? "ผู้ดูแลระบบ"
+        : getBaseRoleNameByLoginType(currentLoginType);
+
+      const nextRoleId = getRoleIdByName(nextRoleName);
+
+      if (!nextRoleId) {
+        console.error("ไม่พบ role_id ของ:", nextRoleName);
+        return;
+      }
+
+      // 1) ล็อกปุ่มแถวนั้น
+      setPendingIds((prev) => {
+        const s = new Set(prev);
+        s.add(id);
+        return s;
+      });
+
+      // 2) optimistic update
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, role: nextRoleName } : u))
+      );
+
+      try {
+        // 3) ยิงจริงไป backend ด้วย role_id
+        const formattedRoleInput = [
+          {
+            role_id: nextRoleId,
+            role_name: nextRoleName,
+          },
+        ];
+
+        const { data } = await updateUser({
+          variables: {
+            id,
+            input: {
+              user_role: formattedRoleInput, // ✅ ส่งเป็น id แล้ว
+            },
+          },
+        });
+
+        setUsers((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, role: nextRoleName } : u))
+        );
+      } catch (err) {
+        console.error("Update role failed:", err);
+        // 5) rollback
+        setUsers((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, role: prevRoleName } : u))
+        );
+      } finally {
+        // 6) ปลดล็อก
+        setPendingIds((prev) => {
+          const s = new Set(prev);
+          s.delete(id);
+          return s;
+        });
+      }
+    },
+    [users, pendingIds, updateUser, getRoleIdByName, roles]
+  );
+
   //console.log(usersData?.users?.items);
 
   // ✅ useEffect
@@ -221,23 +334,24 @@ export default function UserPage() {
     const formattedData = items.map((item) => {
       const lastLogin =
         item?.loginAt && dayjs(item.loginAt).isValid()
-          ? dayjs(item.loginAt).format('YYYY-MM-DD HH:mm:ss')
-          : '-';
+          ? dayjs(item.loginAt).format("YYYY-MM-DD HH:mm:ss")
+          : "-";
 
       return {
         id: item?.id,
-        name: `${item?.firstname || ''} ${item?.lastname || ''}`.trim(),
-        email: item?.email || '-',
-        role: item?.user_role?.[0]?.role?.role_name || 'ไม่ระบุ',
-        position: item?.position || '-',
-        status: item?.is_online ? 'ใช้งานอยู่' : 'ไม่ใช้งาน',
-        phone: item?.phone || '-',
-        group: item?.group_name || '-',
+        name: `${item?.firstname || ""} ${item?.lastname || ""}`.trim(),
+        email: item?.email || "-",
+        role: item?.user_role?.[0]?.role?.role_name || "ไม่ระบุ",
+        position: item?.position || "-",
+        status: item?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+        phone: item?.phone || "-",
+        group: item?.group_name || "-",
         aiAccess: !!item?.ai_access,
+        login_type: item?.login_type,
         lastLogin,
         aiModels:
           item?.user_ai?.map((ua) => ({
-            model: ua?.ai?.model_name || '-',
+            model: ua?.ai?.model_name || "-",
             model_use: ua?.ai?.model_use_name || "-",
             model_type: ua?.ai?.model_type || "-",
             token: ua?.token_count ?? 0,
@@ -253,19 +367,21 @@ export default function UserPage() {
   console.log(users);
 
   const { allowed, loading, user } = useRequireRole({
-    roles: ["ผู้ดูแลระบบ"],
+    roles: ["ผู้ดูแลระบบ", "superadmin"],
     redirectTo: "/onesqa/chat",
   });
-    
-  if (loading) return null;     // หรือใส่ Skeleton ก็ได้
-  if (!allowed) return null;    // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
+
+  if (loading) return null; // หรือใส่ Skeleton ก็ได้
+  if (!allowed) return null; // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
+
+  console.log("usersError", usersError);
 
   // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
   const isInitialLoading =
     networkStatus === NetworkStatus.loading && !usersData;
-  
+
   // ก่อนหน้าเคยเขียน if (logsLoading) return ... → เปลี่ยนเป็นเช็ค isInitialLoading
-  if (isInitialLoading) 
+  if (isInitialLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -273,22 +389,42 @@ export default function UserPage() {
       </Box>
     );
 
-  if (usersError)
+  if (usersError || rolesError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
       </Typography>
     );
 
+  const handleSyncUsers = async () => {
+    try {
+      showLoading("กำลัง Sync ข้อมูลผู้ใช้...");
+
+      const { data } = await syncUsersFromApi();
+
+      console.log("✅ Create success:", data?.syncUsersFromApi);
+      usersRefetch();
+
+      closeLoading();
+      await showSuccessAlert({
+        title: "สำเร็จ",
+        text: "ดำเนินการเรียบร้อย",
+      });
+    } catch (error) {
+      closeLoading();
+      showErrorAlert(error, theme, { title: "Sync ข้อมูล User ไม่สำเร็จ" });
+    }
+  };
+
   const handleExportExcel = async () => {
     // ดึงข้อมูลแบบ network-only เพื่อให้สดใหม่
     const { data } = await client.query({
       query: GET_USERS,
-      fetchPolicy: 'network-only',
+      fetchPolicy: "network-only",
       variables: {
         // ถ้าสกีมามี default page/pageSize ก็ไม่ต้องส่ง
         // ใส่ where ตามฟิลเตอร์หน้า UI (แปลง "ทั้งหมด" -> null)
-        page: page, 
+        page: page,
         pageSize: totalCount,
         where: {
           role: normalize(roleFilter),
@@ -306,23 +442,24 @@ export default function UserPage() {
     const transformed = items.map((item, idx) => {
       const lastLogin =
         item?.loginAt && dayjs(item.loginAt).isValid()
-          ? dayjs(item.loginAt).format('YYYY-MM-DD HH:mm:ss')
-          : '-';
+          ? dayjs(item.loginAt).format("YYYY-MM-DD HH:mm:ss")
+          : "-";
 
       return {
         id: item?.id ?? `row-${idx}`,
-        fullName: `${item?.firstname || ''} ${item?.lastname || ''}`.trim() || '-',
-        email: item?.email || '-',
-        phone: item?.phone || '-',
-        role: item?.user_role?.[0]?.role?.role_name || 'ไม่ระบุ',
-        position: item?.position || '-',
-        group: item?.group_name || '-',
-        status: item?.is_online ? 'ใช้งานอยู่' : 'ไม่ใช้งาน', // ถ้าหมายถึง AI access ให้เปลี่ยนเป็น item?.ai_access
+        fullName:
+          `${item?.firstname || ""} ${item?.lastname || ""}`.trim() || "-",
+        email: item?.email || "-",
+        phone: item?.phone || "-",
+        role: item?.user_role?.[0]?.role?.role_name || "ไม่ระบุ",
+        position: item?.position || "-",
+        group: item?.group_name || "-",
+        status: item?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน", // ถ้าหมายถึง AI access ให้เปลี่ยนเป็น item?.ai_access
         aiAccess: !!item?.ai_access,
         lastLogin,
         aiModels:
           item?.user_ai?.map((ua) => ({
-            model: ua?.ai?.model_name || '-',
+            model: ua?.ai?.model_name || "-",
             model_use: ua.ai?.model_use_name || "-",
             model_type: ua.ai?.model_type || "-",
             token: ua?.token_count ?? 0,
@@ -355,7 +492,7 @@ export default function UserPage() {
     setSearch("");
     setRoleFilter("ทั้งหมด");
     setStatusFilter("ทั้งหมด");
-    setPage(1)
+    setPage(1);
     console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
@@ -366,7 +503,7 @@ export default function UserPage() {
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
       <UserTableToolbar
-        onRefresh={() => console.log("🔄 เชื่อมต่อข้อมูลผู้ใช้งาน")}
+        onRefresh={() => handleSyncUsers()}
         onExport={() => handleExportExcel()}
         onClearFilters={handleClearFilters}
       />
@@ -398,8 +535,8 @@ export default function UserPage() {
             placeholder="ค้นหาผู้ใช้งาน..."
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
+              setSearch(e.target.value);
+              setPage(1);
             }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
@@ -415,23 +552,30 @@ export default function UserPage() {
           <Select
             value={roleFilter}
             onChange={(e) => {
-              setRoleFilter(e.target.value)
-              setPage(1)
+              setRoleFilter(e.target.value);
+              setPage(1);
             }}
             size="small"
-            sx={{ width: isTablet ? "100%" : "none" }}
+            sx={{ width: isTablet ? "100%" : "auto" }}
           >
+            {/* ตัวเลือกทั้งหมด */}
             <MenuItem value="ทั้งหมด">บทบาททั้งหมด</MenuItem>
-            <MenuItem value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</MenuItem>
-            <MenuItem value="เจ้าหน้าที่">เจ้าหน้าที่</MenuItem>
-            <MenuItem value="ผู้ประเมินภายนอก">ผู้ประเมินภายนอก</MenuItem>
+
+            {/* ดึงจาก roles และตัด superadmin ออก */}
+            {roles
+              ?.filter((role) => role.role_name !== "superadmin")
+              .map((role) => (
+                <MenuItem key={role.id} value={role.role_name}>
+                  {role.role_name}
+                </MenuItem>
+              ))}
           </Select>
 
           <Select
             value={statusFilter}
             onChange={(e) => {
-              setStatusFilter(e.target.value)
-              setPage(1)
+              setStatusFilter(e.target.value);
+              setPage(1);
             }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none" }}
@@ -483,34 +627,37 @@ export default function UserPage() {
                   <TableCell>{t("tablecell3")}</TableCell>
                   <TableCell>{t("tablecell4")}</TableCell>
                   <TableCell>{t("tablecell5")}</TableCell>
+                  {user?.role_name === "superadmin" && (
+                    <TableCell>Admin</TableCell>
+                  )}
                   <TableCell>{t("tablecell6")}</TableCell>
                   <TableCell>{t("tablecell7")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user, index) => (
+                {users.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Typography fontWeight="bold">{user.name}</Typography>
+                      <Typography fontWeight="bold">{item.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {user.email}
+                        {item.email}
                       </Typography>
                     </TableCell>
 
                     <TableCell>
                       <Chip
-                        label={user.role}
+                        label={item.role}
                         sx={{
                           bgcolor:
-                            user.role === "ผู้ดูแลระบบ"
+                            item.role === "ผู้ดูแลระบบ"
                               ? "#FCE4EC" // ชมพู
-                              : user.role === "ผู้ประเมินภายนอก"
+                              : item.role === "ผู้ประเมินภายนอก"
                               ? "#E3F2FD" // ฟ้าอ่อน
                               : "#FFF3E0", // ส้มอ่อน
                           color:
-                            user.role === "ผู้ดูแลระบบ"
+                            item.role === "ผู้ดูแลระบบ"
                               ? "#D81B60"
-                              : user.role === "ผู้ประเมินภายนอก"
+                              : item.role === "ผู้ประเมินภายนอก"
                               ? "#1976D2"
                               : "#F57C00",
                           fontWeight: 500,
@@ -518,18 +665,18 @@ export default function UserPage() {
                       />
                     </TableCell>
 
-                    <TableCell>{user.position}</TableCell>
+                    <TableCell>{item.position}</TableCell>
 
                     <TableCell>
                       <Chip
-                        label={user.status}
+                        label={item.status}
                         sx={{
                           bgcolor:
-                            user.status === "ใช้งานอยู่"
+                            item.status === "ใช้งานอยู่"
                               ? "#E6F7E6"
                               : "#E0E0E0",
                           color:
-                            user.status === "ใช้งานอยู่" ? "green" : "gray",
+                            item.status === "ใช้งานอยู่" ? "green" : "gray",
                           fontWeight: 500,
                         }}
                       />
@@ -537,19 +684,38 @@ export default function UserPage() {
 
                     <TableCell>
                       <Switch
-                        checked={user.aiAccess}
+                        checked={item.aiAccess}
                         color="primary"
-                        onChange={(e) => handleToggleAccess(user.id, e.target.checked)}
-                        disabled={isPending(user.id)}  // ✅ กันกดติด ๆ กัน
+                        onChange={(e) =>
+                          handleToggleAccess(item.id, e.target.checked)
+                        }
+                        disabled={isPending(item.id)} // ✅ กันกดติด ๆ กัน
                       />
                     </TableCell>
 
-                    <TableCell>{user.lastLogin}</TableCell>
+                    {user?.role_name === "superadmin" && (
+                      <TableCell>
+                        <Switch
+                          checked={item.role === "ผู้ดูแลระบบ"} // ✅ ถ้าเป็นผู้ดูแลระบบ = true
+                          color="primary"
+                          onChange={(e) =>
+                            handleToggleAccessAdmin(
+                              item.id,
+                              e.target.checked,
+                              item.login_type
+                            )
+                          }
+                          disabled={isPending(item.id)} // ✅ กันกดติด ๆ กัน
+                        />
+                      </TableCell>
+                    )}
+
+                    <TableCell>{item.lastLogin}</TableCell>
 
                     <TableCell>
                       <IconButton
                         color="primary"
-                        onClick={() => handleClick(user.id)}
+                        onClick={() => handleClick(item.id)}
                         sx={{
                           "&:hover": { transform: "scale(1.1)" },
                           transition: "transform 0.2s ease-in-out",
@@ -565,7 +731,7 @@ export default function UserPage() {
                 {users.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                      ไม่พบข้อมูล
+                      ไม่พบข้อมูลผู้ใช้งาน
                     </TableCell>
                   </TableRow>
                 )}
@@ -581,11 +747,11 @@ export default function UserPage() {
               mt: 2,
             }}
           >
-            <Pagination
-              count={Math.ceil(totalCount / rowsPerPage)}
+            <SmartPagination
               page={page}
-              onChange={handleChangePage}
-              color="primary"
+              totalPages={Math.ceil(totalCount / rowsPerPage)}
+              disabled={usersLoading}
+              onChange={(newPage) => setPage(newPage)}
             />
           </Box>
         </Box>

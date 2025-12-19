@@ -16,7 +16,6 @@ import {
   TableRow,
   Select,
   MenuItem,
-  Pagination,
   TextField,
   Avatar,
   Stack,
@@ -34,6 +33,7 @@ import { useTranslations } from "next-intl";
 import { exportReportsToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
 import { GET_REPORTS, TOPFIVE_REPORTS } from "@/graphql/report/queries";
+import SmartPagination from "@/app/components/SmartPagination";
 
 const ReportPage = () => {
   dayjs.extend(utc);
@@ -182,7 +182,7 @@ const ReportPage = () => {
   }, [reportsData]);
 
   const { allowed, loading, user } = useRequireRole({
-    roles: ["ผู้ดูแลระบบ"],
+    roles: ["ผู้ดูแลระบบ", "superadmin"],
     redirectTo: "/onesqa/chat",
   });
 
@@ -461,7 +461,7 @@ const ReportPage = () => {
                 {reportsData?.reports?.items?.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                      ไม่พบข้อมูล
+                      ไม่พบข้อมูลรายงาน
                     </TableCell>
                   </TableRow>
                 )}
@@ -478,11 +478,11 @@ const ReportPage = () => {
               mt: 2,
             }}
           >
-            <Pagination
-              count={Math.ceil(totalCount / rowsPerPage)}
+            <SmartPagination
               page={page}
-              onChange={handleChangePage}
-              color="primary"
+              totalPages={Math.ceil(totalCount / rowsPerPage)}
+              disabled={reportsLoading}
+              onChange={(newPage) => setPage(newPage)}
             />
           </Box>
         </Box>
@@ -562,6 +562,14 @@ const ReportPage = () => {
                 </Box>
               </Box>
             ))}
+
+            {topfiveData?.topFiveReports?.length === 0 && (
+              <Box sx={{ textAlign: "center", my: 5 }}>
+                <Typography variant="body1" color="text.secondary">
+                  ไม่พบข้อมูลอันดับของผู้ใช้งาน
+                </Typography>
+              </Box>
+            )}
           </Stack>
         </Box>
 

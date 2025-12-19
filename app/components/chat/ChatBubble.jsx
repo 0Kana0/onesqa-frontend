@@ -106,24 +106,73 @@ function CodeBlock({ children, ...props }) {
 function normalizeGeminiText(raw) {
   if (typeof raw !== "string") return raw;
 
-  // รวม line ending ให้เหลือ \n เดียว
-  let text = raw.replace(/\r\n/g, "\n");
+  const fenceRegex = /```[\s\S]*?```/g; // จับ block ```...``` รวมหลายบรรทัด
 
-  // บีบช่องว่าง “หลัง bullet/ตัวเลข” ให้เหลือ 1 ช่อง
-  //    เคสแบบ: "*         รูปภาพ..." หรือ "1.      ข้อความ..."
-  text = text
-    // bullet list: *, -, +
-    .replace(
-      /^([ \t]*[*\-+])[ \t]+(.*)$/gm,
-      (m, marker, rest) => `${marker} ${rest.trimStart()}`
-    )
-    // numbered list: 1. 2. ฯลฯ
-    .replace(
-      /^([ \t]*\d+\.)[ \t]+(.*)$/gm,
-      (m, marker, rest) => `${marker} ${rest.trimStart()}`
+  let result = "";
+  let lastIndex = 0;
+  let match;
+
+  // helper: แก้เฉพาะส่วนที่ "ไม่ใช่" code block
+  const transformNonCode = (text) => {
+    if (!text) return text;
+
+    // 1) normalize \r\n → \n
+    let t = text.replace(/\r\n/g, "\n");
+
+    // 2) ลด indent 4+ ช่องสำหรับบรรทัด markdown element
+    //    2.1 bullet / numbered / quote
+    t = t.replace(
+      /^[ \t]{4,}(([*\-+]|>|\d+\.)[ \t]+.*)$/gm,
+      "$1"
     );
 
-  return text;
+    //    2.2 heading (#...), หรือบรรทัดที่เริ่มด้วย ** / __
+    t = t.replace(
+      /^[ \t]{4,}((\#{1,6}|[*_]{2}).*)$/gm,
+      "$1"
+    );
+
+    // 3) บีบช่องว่างหลัง bullet/ตัวเลข ให้เหลือ 1 ช่อง
+    //    เช่น "*         ข้อความ" → "* ข้อความ"
+    t = t
+      // bullet list: *, -, +
+      .replace(
+        /^([ \t]*[*\-+])[ \t]+(.*)$/gm,
+        (m, marker, rest) => `${marker} ${rest.trimStart()}`
+      )
+      // numbered list: 1. 2. 3.
+      .replace(
+        /^([ \t]*\d+\.)[ \t]+(.*)$/gm,
+        (m, marker, rest) => `${marker} ${rest.trimStart()}`
+      );
+
+    // 4) ตัด inline backtick `...` → เหลือแค่ข้อความด้านใน
+    //    ใช้ pattern ที่ไม่ไปยุ่งกับ ``` (สามตัวติด)
+    t = t.replace(/(^|[^`])`([^`\n]+)`(?!`)/g, (m, prefix, inner) => {
+      return `${prefix}${inner}`;
+    });
+
+    // 5) escape < และ > เพื่อไม่ให้ skipHtml กินข้อความ
+    t = t.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    return t;
+  };
+
+  // วนจับทุก code block ```...``` แล้วจัดการแยกส่วน
+  while ((match = fenceRegex.exec(raw)) !== null) {
+    const before = raw.slice(lastIndex, match.index); // นอกโค้ด
+    const codeBlock = match[0];                       // ```...``` ทั้งก้อน
+
+    result += transformNonCode(before); // แก้เฉพาะ before
+    result += codeBlock;                // code block ไม่แตะ
+    lastIndex = fenceRegex.lastIndex;
+  }
+
+  // ส่วนท้ายหลัง code block สุดท้าย (หรือทั้งสตริงถ้าไม่มี ``` เลย)
+  const tail = raw.slice(lastIndex);
+  result += transformNonCode(tail);
+
+  return result;
 }
 
 /**
@@ -131,15 +180,14 @@ function normalizeGeminiText(raw) {
  */
 function GeminiMarkdown({ content }) {
   const rawText = typeof content === "string" ? content : toPlainString(content);
-  const text = normalizeGeminiText(rawText);   // 👈 แทรกตรงนี้
-  //console.log(text);
-  
+  const text = normalizeGeminiText(rawText); // ถ้ามี normalize อยู่แล้ว
+
   if (!text) return null;
+  console.log(text);
 
   return (
     <Box
       sx={{
-        // ปรับ margin ย่อหน้าให้สวยใน bubble
         "& p": { mb: 1 },
         "& p:last-of-type": { mb: 0 },
         "& ul, & ol": { mb: 1.2, pl: 3 },
@@ -163,27 +211,42 @@ function GeminiMarkdown({ content }) {
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        // ไม่อนุญาต HTML ตรง ๆ เพื่อกัน XSS
         skipHtml
         components={{
+          // ✅ h1–h4: กำหนด component ให้เป็นแท็ก h1-h4 จริง ๆ
           h1: ({ node, ...props }) => (
-            <Typography variant="h5" {...props} />
+            <Typography variant="h5" component="h1" {...props} />
           ),
           h2: ({ node, ...props }) => (
-            <Typography variant="h6" {...props} />
+            <Typography variant="h6" component="h2" {...props} />
           ),
           h3: ({ node, ...props }) => (
-            <Typography variant="subtitle1" fontWeight={700} {...props} />
-          ),
-          h4: ({ node, ...props }) => (
-            <Typography variant="subtitle2" fontWeight={700} {...props} />
-          ),
-          p: ({ node, ...props }) => (
             <Typography
+              variant="subtitle1"
+              component="h3"
+              fontWeight={700}
               {...props}
-              sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
             />
           ),
+          h4: ({ node, ...props }) => (
+            <Typography
+              variant="subtitle2"
+              component="h4"
+              fontWeight={700}
+              {...props}
+            />
+          ),
+
+          // ✅ p: อย่าให้เป็น <p> จริง ให้เป็น <div> แทน
+          p: ({ node, ...props }) => (
+            <Typography
+              component="div"                    // ← จุดสำคัญ
+              variant="body1"
+              sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+              {...props}
+            />
+          ),
+
           strong: ({ node, ...props }) => (
             <Box component="strong" fontWeight={700} {...props} />
           ),
@@ -197,15 +260,27 @@ function GeminiMarkdown({ content }) {
               {...props}
             />
           ),
-          ul: ({ node, ordered, ...props }) => <Box component="ul" {...props} />,
-          ol: ({ node, ordered, ...props }) => <Box component="ol" {...props} />,
+
+          ul: ({ node, ordered, ...props }) => (
+            <Box component="ul" {...props} />
+          ),
+          ol: ({ node, ordered, ...props }) => (
+            <Box component="ol" {...props} />
+          ),
           li: ({ node, ...props }) => <Box component="li" {...props} />,
+
           hr: () => (
             <Box
               component="hr"
-              sx={{ my: 1.5, border: 0, borderTop: "1px solid", borderColor: "divider" }}
+              sx={{
+                my: 1.5,
+                border: 0,
+                borderTop: "1px solid",
+                borderColor: "divider",
+              }}
             />
           ),
+
           blockquote: ({ node, ...props }) => (
             <Box
               component="blockquote"
@@ -222,12 +297,14 @@ function GeminiMarkdown({ content }) {
               {...props}
             />
           ),
+
+          // 🔗 link: สี #3E8EF7
           a: ({ node, href, ...props }) => (
             <MuiLink
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              color="inherit"              // กันไม่ให้ theme primary มาเปลี่ยนสี
+              color="inherit"
               sx={{
                 color: "#3E8EF7",
                 textDecorationColor: "#3E8EF7",
@@ -240,29 +317,22 @@ function GeminiMarkdown({ content }) {
               {...props}
             />
           ),
+
+          // 🧠 code: inline / block แยกกัน
           code: ({ node, inline, className, children, ...props }) => {
             if (inline) {
-              // inline code: `foo`
+              // ✅ inline code: ให้เป็นข้อความปกติ ไม่ต้องกล่อง ไม่ต้อง monospace
               return (
-                <Box
-                  component="code"
-                  sx={{
-                    fontFamily: "monospace",
-                    fontSize: "0.875rem",
-                    px: 0.5,
-                    borderRadius: 0.5,
-                    bgcolor: "action.hover",
-                  }}
-                  {...props}
-                >
+                <span {...props}>
                   {children}
-                </Box>
+                </span>
               );
             }
 
-            // block code: ``` ... ```
-            return <CodeBlock {...props}>{children}</CodeBlock>;
+            // ✅ block code: ``` ... ``` ยังเป็น CodeBlock (มีปุ่ม copy) ตามเดิม
+            return <CodeBlock className={className} {...props}>{children}</CodeBlock>;
           },
+
           table: ({ node, ...props }) => (
             <Box component="table" {...props} />
           ),
@@ -272,7 +342,7 @@ function GeminiMarkdown({ content }) {
           tbody: ({ node, ...props }) => (
             <Box component="tbody" {...props} />
           ),
-          tr: ({ node, isHeader, ...props }) => <Box component="tr" {...props} />,
+          tr: ({ node, ...props }) => <Box component="tr" {...props} />,
           th: ({ node, ...props }) => <Box component="th" {...props} />,
           td: ({ node, ...props }) => <Box component="td" {...props} />,
         }}

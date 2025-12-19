@@ -22,7 +22,7 @@ import {
   IconButton,
   Alert,
   CircularProgress,
-  useMediaQuery
+  useMediaQuery,
 } from "@mui/material";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -36,6 +36,7 @@ import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "@/app/context/SidebarContext";
+import { GET_CHATS } from "@/graphql/chat/queries";
 
 export default function ProjectSidebar() {
   const { user } = useAuth();
@@ -45,6 +46,9 @@ export default function ProjectSidebar() {
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
+  const MAX_VISIBLE = 5;
+  const [showAll, setShowAll] = useState(false);
 
   const [open, setOpen] = useState(true);
   const [rename, setRename] = useState(null);
@@ -81,6 +85,14 @@ export default function ProjectSidebar() {
     refetch,
   } = useQuery(GET_CHATGROUPS, {
     variables: { user_id: user?.id ?? "" },
+    fetchPolicy: "network-only",
+  });
+
+  const { refetch: chatsRefresh } = useQuery(GET_CHATS, {
+    variables: {
+      user_id: user?.id ?? "",
+      chatgroupMode: "NULL",
+    },
     fetchPolicy: "network-only",
   });
 
@@ -150,6 +162,11 @@ export default function ProjectSidebar() {
       </Box>
     );
 
+  const baseItem = items.find((it) => it.label === "กลุ่มใหม่");
+  const groupItems = items.filter((it) => it.label !== "กลุ่มใหม่");
+
+  const visibleGroups = showAll ? groupItems : groupItems.slice(0, MAX_VISIBLE);
+
   const handleOpenMenu = (e, item) => {
     e.preventDefault();
     e.stopPropagation(); // กันไม่ให้ Link ทำงาน
@@ -164,7 +181,7 @@ export default function ProjectSidebar() {
   // ตัวอย่าง action (เปลี่ยนชื่อ / ลบ)
   const handleRename = () => {
     console.log("rename:", selected?.label);
-    setRename(selected)
+    setRename(selected);
     setNewOpen(true);
     handleCloseMenu();
   };
@@ -199,6 +216,7 @@ export default function ProjectSidebar() {
             });
             console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
+            chatsRefresh();
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
               router.push("/onesqa/chat");
@@ -239,6 +257,7 @@ export default function ProjectSidebar() {
             });
             console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
+            chatsRefresh();
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
               router.push("/onesqa/chat");
@@ -269,14 +288,14 @@ export default function ProjectSidebar() {
 
   const handleCreateProject = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
-    console.log("สร้างโครงการ:", name);
+    console.log("สร้างกลุ่ม:", name);
 
     try {
       // ✅ เรียก mutation ไป backend
       const { data } = await createChatgroup({
         variables: {
           input: {
-            user_id: user.id,
+            user_id: user?.id,
             chatgroup_name: name,
           },
         },
@@ -290,7 +309,7 @@ export default function ProjectSidebar() {
   };
   const handleUpdateproject = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
-    console.log("เเก้ไขชื่อโครงการ:", name);
+    console.log("เเก้ไขชื่อกลุ่ม:", name);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -298,7 +317,7 @@ export default function ProjectSidebar() {
         variables: {
           id: rename?.id,
           input: {
-            user_id: user.id,
+            user_id: user?.id,
             chatgroup_name: name,
           },
         },
@@ -349,46 +368,61 @@ export default function ProjectSidebar() {
 
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List disablePadding>
-            {items.map((it) => {
-              const isNew = it.label === "กลุ่มใหม่";
-              const showMenu = it.label !== "กลุ่มใหม่"; // << เงื่อนไขสำคัญ
-              const isActive =
-                showMenu && menuOpen && selected?.label === it.label;
+            {/* กลุ่มใหม่ (แสดงเสมอ) */}
+            {baseItem && (
+              <Link
+                key={baseItem.label}
+                href={baseItem.href}
+                onClick={isTablet ? toggle : undefined}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <ListItemButton
+                  onClick={openNewProject}
+                  sx={{ pl: 1.5, pr: 1, minHeight: 30 }}
+                  disableRipple
+                >
+                  <ListItemIcon sx={{ minWidth: 36, color: "common.white" }}>
+                    <CreateNewFolderOutlined fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={baseItem.label}
+                    primaryTypographyProps={{ fontSize: 14 }}
+                  />
+                </ListItemButton>
+              </Link>
+            )}
+
+            {/* กลุ่มจริง (จำกัด 5 ตัว) */}
+            {visibleGroups.map((it) => {
+              const isActive = menuOpen && selected?.label === it.label;
               const isPage =
                 id === it.id && pathname === `/onesqa/chat/group/${id}`;
               const isGroup =
-                currentGroupId === it.id &&
-                pathname === `/onesqa/chat/${id}`;
+                currentGroupId === it.id && pathname === `/onesqa/chat/${id}`;
 
               return (
                 <Link
-                  key={it.label}
-                  onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
+                  key={it.id}
                   href={it.href}
+                  onClick={isTablet ? toggle : undefined}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <ListItemButton
-                    onClick={isNew ? openNewProject : undefined}
                     sx={{
                       pl: 1.5,
                       pr: 1,
                       minHeight: 30,
-                      backgroundColor: isPage || isGroup
-                        ? "rgba(255,255,255,0.2)"
-                        : "transparent",
-                      ...(showMenu
-                        ? {
-                            "& .kebab": {
-                              opacity: isActive ? 1 : 0,
-                              transition: "opacity .15s",
-                            },
-                            "&:hover .kebab, &:hover .item-icon": {
-                              opacity: 1,
-                            },
-                          }
-                        : {
-                            "&:hover .item-icon": { opacity: 1 },
-                          }),
+                      backgroundColor:
+                        isPage || isGroup
+                          ? "rgba(255,255,255,0.2)"
+                          : "transparent",
+                      "& .kebab": {
+                        opacity: isActive ? 1 : 0,
+                        transition: "opacity .15s",
+                      },
+                      "&:hover .kebab, &:hover .item-icon": {
+                        opacity: 1,
+                      },
                     }}
                     disableRipple
                   >
@@ -396,29 +430,60 @@ export default function ProjectSidebar() {
                       className="item-icon"
                       sx={{ minWidth: 36, color: "common.white" }}
                     >
-                      {isNew ? <CreateNewFolderOutlined /> : <FolderOutlined />}
+                      <FolderOutlined fontSize="small" />
                     </ListItemIcon>
+
                     <ListItemText
                       primary={it.label}
                       primaryTypographyProps={{ fontSize: 14 }}
                     />
-                    {showMenu && (
-                      <IconButton
-                        className="kebab"
-                        size="small"
-                        edge="end"
-                        aria-label="more options"
-                        onClick={(e) => handleOpenMenu(e, it)}
-                        sx={{ color: "common.white" }}
-                        disableRipple
-                      >
-                        <MoreHorizRounded fontSize="small" />
-                      </IconButton>
-                    )}
+
+                    <IconButton
+                      className="kebab"
+                      size="small"
+                      edge="end"
+                      onClick={(e) => handleOpenMenu(e, it)}
+                      sx={{ color: "common.white" }}
+                      disableRipple
+                    >
+                      <MoreHorizRounded fontSize="small" />
+                    </IconButton>
                   </ListItemButton>
                 </Link>
               );
             })}
+
+            {groupItems.length > MAX_VISIBLE && (
+              <Box sx={{ textAlign: "center", mt: 0.5 }}>
+                <Typography
+                  sx={{
+                    fontSize: "12px",
+                    cursor: "pointer",
+                    opacity: 0.7,
+                    "&:hover": { opacity: 1 },
+                  }}
+                  onClick={() => setShowAll((v) => !v)}
+                >
+                  {showAll ? "แสดงน้อยลง" : "แสดงทั้งหมด"}
+                </Typography>
+              </Box>
+            )}
+
+            {items.length === 1 && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: 50, // ปรับได้ตามความสูง sidebar
+                  width: "100%",
+                }}
+              >
+                <Typography variant="caption" sx={{ opacity: 0.6 }}>
+                  -- ไม่มีกลุ่ม --
+                </Typography>
+              </Box>
+            )}
           </List>
         </Collapse>
       </List>

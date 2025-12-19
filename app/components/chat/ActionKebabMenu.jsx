@@ -16,10 +16,10 @@ export default function ActionKebabMenu({
   onChangeGroup,
   onDeleteGroup,
   onDelete,
-  renameLabel = "เปลี่ยนชื่อโครงการ",
+  renameLabel = "เปลี่ยนชื่อกลุ่ม",
   changeGroupLabel = null,
   deleteGroupLabel = null,
-  deleteLabel = "ลบโครงการ",
+  deleteLabel = "ลบกลุ่ม",
   dense = true,
   paperSx, // ปรับแต่งสไตล์เพิ่มเติมได้
 }) {

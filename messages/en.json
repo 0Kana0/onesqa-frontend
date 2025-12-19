@@ -110,7 +110,8 @@
     "tablecell1": "Username",
     "tablecell2": "Name",
     "tablecell3": "Position",
-    "tablecell4": "Phone Number",
+    "tablecell7": "Email",
+    "tablecell4": "Phone",
     "tablecell5": "Status",
     "tablecell6": "Group Name"
   },
@@ -118,6 +119,11 @@
     "button1": "Set Tokens by Group",
     "aititle1": "AI Chatbot Configuration",
     "aisubtitle1": "Set guidelines for question formulation (Maximum 5 questions)"
+  },
+  "GroupFilterBar": {
+    "title": "ค้นหาและกรองข้อมูล",
+    "searchPlaceholder": "ค้นหากลุ่ม...",
+    "allModels": "โมเดลทั้งหมด"
   },
   "NotificationPage": {
     "notification": "Notification",
@@ -159,7 +165,8 @@
   },
   "ActionBar": {
     "save": "Save",
-    "reset": "Reset"
+    "reset": "Reset",
+    "clear": "Clear filter"
   },
    "UserInfoCard": {
     "usage": "Usage",
@@ -167,7 +174,7 @@
     "name": "Name",
     "position": "Position",
     "email": "Email",
-    "phone": "Phone Number",
+    "phone": "Phone",
     "status": "Status",
     "group": "Group"
   },

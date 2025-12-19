@@ -83,12 +83,12 @@ export default function PlusAttachButton({
           <ListItemText primary="อัปโหลดไฟล์" />
         </MenuItem>
 
-        <MenuItem onClick={handleDriveClick} disabled={!onPickFromDrive}>
+        {/* <MenuItem onClick={handleDriveClick} disabled={!onPickFromDrive}>
           <ListItemIcon>
             <DriveFolderUploadRoundedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="เพิ่มจากไดรฟ์" />
-        </MenuItem>
+        </MenuItem> */}
       </Menu>
     </>
   );

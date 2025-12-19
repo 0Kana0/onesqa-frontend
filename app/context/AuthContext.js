@@ -23,7 +23,6 @@ const initUser = {
   position: "",
   group_name: "",
   role_name: "",
-  username: "",
 };
 
 export function AuthProvider({ children }) {

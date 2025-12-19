@@ -38,8 +38,8 @@ export const GET_CHATS = gql`
 `;
 
 export const GET_CHAT = gql`
-  query chat($id: ID!) {
-    chat(id: $id) {
+  query chat($id: ID!, $user_id: ID) {
+    chat(id: $id, user_id: $user_id) {
       id
       ai_id
       chat_name

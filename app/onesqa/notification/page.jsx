@@ -20,6 +20,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { useTranslations } from "next-intl";
 import NotificationCard from "@/app/components/NotificationCard";
 import NotificationToggleCard from "@/app/components/NotificationToggleCard";
+import { toast } from "react-toastify";
 
 const PAGE_SIZE = 4;
 
@@ -85,14 +86,19 @@ const NotificationPage = () => {
 
   //ถ้า user เปลี่ยน → refetch
   useEffect(() => {
-    if (user?.id) refetch({ user_id: user.id, first: PAGE_SIZE, after: null });
+    if (user?.id) refetch({ user_id: user?.id, first: PAGE_SIZE, after: null });
   }, [user?.id, refetch]);
+
+  useEffect(() => {
+    // ปิด toast ที่กำลังแสดงอยู่ทั้งหมดทันทีเมื่อเข้าหน้านี้
+    toast.dismiss();
+  }, []);
 
   // โหลดหน้าเพิ่ม
   const loadMore = useCallback(async () => {
     if (!hasNextPage || !endCursor) return;
     const res = await fetchMore({
-      variables: { user_id: user.id, first: PAGE_SIZE, after: endCursor },
+      variables: { user_id: user?.id, first: PAGE_SIZE, after: endCursor },
     });
     const conn = res?.data?.myNotifications;
     if (!conn) return;
@@ -280,7 +286,7 @@ const NotificationPage = () => {
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
-      {user?.role_name === "ผู้ดูแลระบบ" && (
+      {(user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin") && (
         <Box
           sx={{
             display: "flex",

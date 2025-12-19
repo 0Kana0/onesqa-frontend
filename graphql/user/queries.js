@@ -13,6 +13,7 @@ export const GET_USERS = gql`
         position
         ai_access
         loginAt
+        login_type
         is_online
         email
         phone

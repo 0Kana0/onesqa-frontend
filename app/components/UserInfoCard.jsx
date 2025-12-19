@@ -31,7 +31,7 @@ export default function UserInfoCard({ user }) {
       }}
     >
       {/* 🔹 ส่วนหัว */}
-      <Box
+      {/* <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
@@ -53,7 +53,7 @@ export default function UserInfoCard({ user }) {
           </Typography>
         </Box>
         <StarIcon sx={{ color: "#3E8EF7" }} />
-      </Box>
+      </Box> */}
 
       {/* 🔹 รายละเอียดผู้ใช้ */}
       <Card

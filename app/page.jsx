@@ -1,129 +1,105 @@
-// app/upload/page.jsx (หรือ components/UploadBox.jsx)
+// app/record/page.jsx
 "use client";
-import { useState, useMemo } from "react";
-import { useMutation, useApolloClient } from "@apollo/client/react";
-import { MULTIPLE_UPLOAD } from "@/graphql/file/mutations";
 
-export default function UploadPage() {
-  const client = useApolloClient();
-  const [files, setFiles] = useState([]); // Array<File>
-  const [mutate, { data, loading, error }] = useMutation(MULTIPLE_UPLOAD, {
-    client,
-  });
+import { useRef, useState } from "react";
 
-  const onChange = (e) => {
-    const incoming = Array.from(e.target.files ?? []);
+export default function RecordPage() {
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioBlob, setAudioBlob] = useState(null);
 
-    setFiles((prev) => {
-      // กันไฟล์ซ้ำด้วย key ที่น่าจะ unique พอสำหรับฝั่งเบราเซอร์
-      const seen = new Set(
-        prev.map((f) => `${f.name}|${f.size}|${f.lastModified}`)
-      );
-      const merged = [...prev];
+  const startRecording = async () => {
+    try {
+      // ขอสิทธิ์ใช้ไมโครโฟน
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      for (const f of incoming) {
-        const key = `${f.name}|${f.size}|${f.lastModified}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          merged.push(f);
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
         }
-      }
-      return merged;
-    });
+      };
 
-    // รีเซ็ตค่า input เพื่อให้เลือกชุดเดิมซ้ำได้ (บางเบราเซอร์ไม่ยิง change ถ้าไฟล์เดิม)
-    e.target.value = "";
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setAudioBlob(blob);
+
+        // ปิดไมค์
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("ไม่สามารถเข้าถึงไมโครโฟนได้:", err);
+      alert("อนุญาตไมโครโฟนในเบราว์เซอร์ก่อนนะ");
+    }
   };
 
-  const totalBytes = useMemo(
-    () => files.reduce((sum, f) => sum + (f?.size ?? 0), 0),
-    [files]
-  );
-
-  const onClear = () => setFiles([]);
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!files.length) return;
-    await mutate({ variables: { files } });
-    onClear()
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
   };
 
-  const removeAt = (idx) =>
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  const handleUpload = async () => {
+    if (!audioBlob) {
+      alert("ยังไม่มีไฟล์เสียง");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", audioBlob, "voice.webm");
+
+    try {
+      const res = await fetch("/api/upload-voice", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      console.log("อัปโหลดสำเร็จ:", data);
+      alert("อัปโหลดสำเร็จ");
+    } catch (err) {
+      console.error("อัปโหลดล้มเหลว:", err);
+      alert("อัปโหลดไม่สำเร็จ");
+    }
+  };
 
   return (
-    <div style={{ maxWidth: 560, margin: "40px auto" }}>
-      <h3>อัปโหลดไฟล์หลายไฟล์ (GraphQL)</h3>
+    <div style={{ padding: 20 }}>
+      <h1>ทดสอบบันทึกเสียง</h1>
 
-      <form onSubmit={onSubmit}>
-        <input type="file" multiple onChange={onChange} />
-        <button
-          type="submit"
-          disabled={!files.length || loading}
-          style={{ marginLeft: 8 }}
-        >
-          {loading ? "กำลังอัปโหลด..." : `อัปโหลด (${files.length} ไฟล์)`}
-        </button>
-        <button
-          type="button"
-          onClick={onClear}
-          disabled={!files.length || loading}
-          style={{ marginLeft: 8 }}
-        >
-          ล้างรายการ
-        </button>
-      </form>
+      <div style={{ marginBottom: 16 }}>
+        {!isRecording ? (
+          <button onClick={startRecording}>เริ่มบันทึกเสียง</button>
+        ) : (
+          <button onClick={stopRecording}>หยุดบันทึก</button>
+        )}
+      </div>
 
-      {files.length > 0 && (
-        <div style={{ marginTop: 12, fontSize: 13 }}>
-          <div>
-            ไฟล์ที่เลือก: {files.length} ไฟล์ • รวม ~
-            {(totalBytes / 1024 / 1024).toFixed(2)} MB
-          </div>
-          <ul style={{ marginTop: 8 }}>
-            {files.map((f, i) => (
-              <li key={`${f.name}-${f.lastModified}-${i}`}>
-                {f.name} ({(f.size / 1024).toFixed(1)} KB) —{" "}
-                {f.type || "unknown"}
-                <button
-                  type="button"
-                  onClick={() => removeAt(i)}
-                  style={{ marginLeft: 8 }}
-                >
-                  ลบ
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {error && <p style={{ color: "crimson" }}>{error.message}</p>}
-
-      {data?.multipleUpload && (
+      {audioUrl && (
         <div style={{ marginTop: 16 }}>
-          <h4>อัปโหลดสำเร็จ</h4>
-          <ul>
-            {data.multipleUpload.map((f, i) => (
-              <li key={i}>
-                <div>ชื่อไฟล์: {f.filename}</div>
-                <div>
-                  ขนาด: {f.size} bytes • ชนิด: {f.mimetype}
-                </div>
-                <div>
-                  URL:{" "}
-                  <a
-                    href={(process.env.NEXT_PUBLIC_FILE_URL || "") + f.url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {f.url}
-                  </a>
-                </div>
-                <hr />
-              </li>
-            ))}
-          </ul>
+          <p>ตัวอย่างเสียงที่บันทึก:</p>
+          <audio src={audioUrl} controls />
+
+          <div style={{ marginTop: 8 }}>
+            <a href={audioUrl} download="voice.webm">
+              ดาวน์โหลดไฟล์เสียง
+            </a>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <button onClick={handleUpload}>อัปโหลดไปเซิร์ฟเวอร์</button>
+          </div>
         </div>
       )}
     </div>

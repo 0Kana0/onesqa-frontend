@@ -130,7 +130,7 @@ export default function LoginPage() {
 
 
         // Step 4: Redirect
-        if (loginResult?.data?.signin?.user?.role_name === "ผู้ดูแลระบบ") {
+        if (loginResult?.data?.signin?.user?.role_name === "ผู้ดูแลระบบ" || loginResult?.data?.signin?.user?.role_name === "superadmin") {
           router.push("/onesqa/dashboard");
         } else {
           router.push("/onesqa/chat");
@@ -254,7 +254,7 @@ export default function LoginPage() {
       userContext(loginResult?.data?.verifySigninWithIdennumber?.user, "th");
 
       // Step 4: Redirect
-      if (loginResult?.data?.signin?.user?.role_name === "ผู้ดูแลระบบ") {
+      if (loginResult?.data?.signin?.user?.role_name === "ผู้ดูแลระบบ" || loginResult?.data?.signin?.user?.role_name === "superadmin") {
         router.push("/onesqa/dashboard");
       } else {
         router.push("/onesqa/chat");

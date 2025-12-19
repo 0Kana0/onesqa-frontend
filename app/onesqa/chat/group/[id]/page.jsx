@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { NetworkStatus } from "@apollo/client";
 import { useQuery, useMutation, useApolloClient } from "@apollo/client/react";
 import {
@@ -57,10 +57,15 @@ import { getAiLogo, AI_LOGOS } from "../../../../../util/aiLogo";
 import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
+import { useLanguage } from "@/app/context/LanguageContext";
+
+const PAGE_SIZE = 10; // ✅ lazy loading
 
 const ChatgroupPage = () => {
   const client = useApolloClient();
-  const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
+  const { locale } = useLanguage();
+  const { initText, setInitText, initAttachments, setInitAttachments } =
+    useInitText();
   const router = useRouter();
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -75,8 +80,6 @@ const ChatgroupPage = () => {
 
   const [active, setActive] = useState(null);
 
-  const [items, setItems] = useState([]);
-
   const [rename, setRename] = useState(null);
   // ---- Modal: โครงการใหม่ (แยกเป็นคอมโพเนนต์) ----
   const [newOpen, setNewOpen] = useState(false);
@@ -85,6 +88,15 @@ const ChatgroupPage = () => {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selected, setSelected] = useState(null);
   const menuOpen = Boolean(menuAnchor);
+
+  // ===============================
+  // ✅ lazy loading states
+  // ===============================
+  const [edges, setEdges] = useState([]);
+  const [endCursor, setEndCursor] = useState(null);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  const loaderRef = useRef(null);
 
   // state เปิด/ปิด modal ค้นหา
   const [openSearch, setOpenSearch] = useState(false);
@@ -98,12 +110,18 @@ const ChatgroupPage = () => {
     data: chatsData,
     loading: chatsLoading,
     error: chatsError,
+    fetchMore,
     refetch,
+    networkStatus,
   } = useQuery(GET_CHATS, {
     variables: {
       user_id: user?.id ?? "",
       chatgroup_id: id,
+      first: PAGE_SIZE,
+      after: null,
     },
+    skip: !user?.id,
+    notifyOnNetworkStatusChange: true,
     fetchPolicy: "network-only",
   });
   console.log(chatsData?.chats?.edges);
@@ -146,6 +164,7 @@ const ChatgroupPage = () => {
     fetchPolicy: "network-only",
     variables: {
       id: id,
+      user_id: user?.id,
     },
   });
   console.log(chatgroupData?.chatgroup);
@@ -157,26 +176,129 @@ const ChatgroupPage = () => {
     client,
   });
 
+  // ===============================
+  // รวม edges (กัน duplicate)
+  // ===============================
   useEffect(() => {
-    // รอจนกว่าจะมีโครง usersData ก่อน ค่อยประมวลผล
-    if (!chatsData?.chats) return;
+    const conn = chatsData?.chats;
+    if (!conn) return;
 
-    const base = [];
+    const incoming = conn.edges ?? [];
+    const seen = new Set();
+    const merged = [];
 
-    const mapped = (chatsData?.chats?.edges || [])
-      .map((e) => e?.node)
-      .filter(Boolean)
-      .map((n) => ({
-        id: n.id,
-        model_type: n.ai.model_type,
-        label: n.chat_name,
-        href: `/onesqa/chat/${n.id}`, // เปลี่ยนเป็น `/chats/${n.id}` ได้ถ้าต้องการลิงก์จริง
-      }));
+    for (const e of incoming) {
+      if (!seen.has(e.cursor)) {
+        seen.add(e.cursor);
+        merged.push(e);
+      }
+    }
 
-    setItems([...base, ...mapped]);
-  }, [chatsData]);
+    setEdges(merged);
+    setEndCursor(conn.pageInfo?.endCursor ?? null);
+    setHasNextPage(Boolean(conn.pageInfo?.hasNextPage));
+  }, [chatsData?.chats]);
 
-  if (userLoading || chatsLoading || chatgroupLoading || promptsLoading)
+  // ===============================
+  // โหลดเพิ่ม
+  // ===============================
+  const loadMore = useCallback(async () => {
+    if (!hasNextPage || !endCursor) return;
+
+    const res = await fetchMore({
+      variables: {
+        user_id: user?.id,
+        chatgroupMode: "NULL",
+        first: PAGE_SIZE,
+        after: endCursor,
+      },
+    });
+
+    const conn = res?.data?.chats;
+    if (!conn) return;
+
+    setEdges((prev) => {
+      const seen = new Set(prev.map((e) => e.cursor));
+      const merged = [...prev];
+      for (const e of conn.edges ?? []) {
+        if (!seen.has(e.cursor)) {
+          seen.add(e.cursor);
+          merged.push(e);
+        }
+      }
+      return merged;
+    });
+
+    setEndCursor(conn.pageInfo?.endCursor ?? null);
+    setHasNextPage(Boolean(conn.pageInfo?.hasNextPage));
+  }, [fetchMore, endCursor, hasNextPage, user?.id]);
+
+  // ===============================
+  // IntersectionObserver
+  // ===============================
+  useEffect(() => {
+    const el = loaderRef.current;
+    if (!el || !hasNextPage) return;
+
+    let locked = false;
+    const io = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting && !locked) {
+          locked = true;
+          try {
+            await loadMore();
+          } finally {
+            setTimeout(() => (locked = false), 150);
+          }
+        }
+      },
+      { threshold: 0 }
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasNextPage, loadMore]);
+
+  // ===============================
+  // แปลงเป็น items (เหมือนเดิม)
+  // ===============================
+  const items = useMemo(
+    () =>
+      edges
+        .map((e) => e.node)
+        .filter(Boolean)
+        .map((n) => ({
+          id: n.id,
+          model_type: n.ai.model_type,
+          label: n.chat_name,
+          href: `/onesqa/chat/${n.id}`,
+        })),
+    [edges]
+  );
+
+  useEffect(() => {
+    // รอให้โหลดเสร็จก่อน
+    if (chatgroupLoading) return;
+
+    // ถ้า query ตอบกลับมาแล้วว่า chat เป็น null -> กลับหน้า list
+    if (chatgroupData && chatgroupData.chatgroup === null) {
+      router.replace("/onesqa/chat");
+    }
+  }, [chatgroupLoading, chatgroupData, router]);
+
+  const clearedRef = useRef(false);
+  useEffect(() => {
+    if (clearedRef.current) return;
+    clearedRef.current = true;
+
+    setInitText("");
+    setInitAttachments([]);
+  }, [setInitText, setInitAttachments]);
+
+  if (
+    (userLoading || chatsLoading || chatgroupLoading || promptsLoading) &&
+    networkStatus === NetworkStatus.loading
+  )
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -229,7 +351,7 @@ const ChatgroupPage = () => {
         variables: {
           id: rename?.id,
           input: {
-            user_id: user.id,
+            user_id: user?.id,
             chat_name: name,
           },
         },
@@ -361,8 +483,10 @@ const ChatgroupPage = () => {
         },
       });
       console.log("✅ Update success:", data.updateChat);
-      refetch();
-      chatsRefresh();
+
+      await client.refetchQueries({
+        include: [GET_CHATS],
+      });
       setNewOpen(false);
       setRename(null);
     } catch (error) {
@@ -382,9 +506,9 @@ const ChatgroupPage = () => {
         },
       });
       console.log(data);
-      setInitAttachments(data?.multipleUpload)
+      setInitAttachments(data?.multipleUpload);
       //onClear();
-      handleCreateChat()
+      handleCreateChat();
     } catch (error) {
       showErrorAlert(error, theme, {
         title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
@@ -394,12 +518,22 @@ const ChatgroupPage = () => {
 
   const handleCreateChat = async () => {
     try {
+      // สมมติว่ามีตัวแปรภาษาชื่อ locale = 'th' | 'en'
+      const trimmedText = initText?.trim() ?? "";
+
+      const chatName =
+        trimmedText && trimmedText.length <= 40
+          ? trimmedText
+          : locale === "th"
+          ? "แชตใหม่จากเสียง"
+          : "new chat from mic";
+
       const { data } = await createChat({
         variables: {
           input: {
             ai_id: model,
             user_id: user?.id,
-            chat_name: initText,
+            chat_name: chatName,
             chatgroup_id: id,
           },
         },
@@ -430,6 +564,43 @@ const ChatgroupPage = () => {
             setModel(e.target.value);
           }}
           size="small"
+          displayEmpty
+          renderValue={(selected) => {
+            if (selected === "0") {
+              return (
+                <Typography sx={{ opacity: 0.7 }}>
+                  กรุณาเลือกโมเดลคำตอบ
+                </Typography>
+              );
+            }
+
+            const ua = (userData?.user?.user_ai ?? []).find(
+              (x) => String(x.ai_id ?? x.id) === String(selected)
+            );
+
+            return (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  minWidth: 0,
+                }}
+              >
+                <Avatar
+                  src={getAiLogo(ua?.ai)}
+                  alt={ua?.ai?.model_type ?? "AI"}
+                  sx={{ width: 20, height: 20 }}
+                  imgProps={{
+                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
+                  }}
+                />
+                <Typography noWrap sx={{ minWidth: 0 }}>
+                  {ua?.ai?.model_use_name ?? "AI"}
+                </Typography>
+              </Box>
+            );
+          }}
           sx={{
             border: "1px solid",
             borderColor: "primary.main",
@@ -440,15 +611,17 @@ const ChatgroupPage = () => {
           <MenuItem value="0">กรุณาเลือกโมเดลคำตอบ</MenuItem>
           {(userData?.user?.user_ai ?? []).map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
-              <Avatar
-                src={getAiLogo(ua.ai)}
-                alt={ua.ai?.model_type ?? "AI"}
-                sx={{ width: 20, height: 20, mr: 0.5 }}
-                imgProps={{
-                  onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
-                }}
-              />
-              {ua.ai?.model_use_name}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Avatar
+                  src={getAiLogo(ua.ai)}
+                  alt={ua.ai?.model_type ?? "AI"}
+                  sx={{ width: 20, height: 20 }}
+                  imgProps={{
+                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
+                  }}
+                />
+                <Typography noWrap>{ua.ai?.model_use_name}</Typography>
+              </Box>
             </MenuItem>
           ))}
         </Select>
@@ -522,12 +695,12 @@ const ChatgroupPage = () => {
                 onClick: () => console.log("deep"),
                 icon: <ScienceOutlinedIcon />,
               },
-              {
-                key: "canvas",
-                label: "Canvas",
-                onClick: () => console.log("canvas"),
-                icon: <BrushOutlinedIcon />,
-              },
+              // {
+              //   key: "canvas",
+              //   label: "Canvas",
+              //   onClick: () => console.log("canvas"),
+              //   icon: <BrushOutlinedIcon />,
+              // },
             ]}
             onMicClick={() => console.log("mic")}
             onAttachClick={() => console.log("attach menu")}
@@ -552,13 +725,13 @@ const ChatgroupPage = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            mb: 1,
           }}
         >
           <PromptList
-            steps={promptsData.prompts}
+            steps={promptsData?.prompts}
             activeIndex={active}
             onChange={setActive}
+            onTextChange={setInitText}
           />
         </Box>
 
@@ -568,77 +741,107 @@ const ChatgroupPage = () => {
             height: "90%",
           }}
         >
-          <Collapse in={open} timeout="auto" unmountOnExit>
-            <List disablePadding>
-              {items.map((it) => {
-                const showMenu = it.label !== "กลุ่มใหม่"; // << เงื่อนไขสำคัญ
-                const isActive =
-                  showMenu && menuOpen && selected?.label === it.label;
+          <List disablePadding>
+            {items.map((it) => {
+              const isActive = menuOpen && selected?.id === it.id;
 
-                return (
-                  <Link
-                    key={it.id}
-                    href={it.href}
-                    style={{
-                      textDecoration: "none",
-                      color: "inherit",
+              return (
+                <Link
+                  key={it.id}
+                  href={it.href}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <ListItemButton
+                    disableRipple
+                    sx={{
+                      pl: 1.5,
+                      pr: 1,
+                      minHeight: 40,
+                      py: 0.75,
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
+
+                      "& .kebab": {
+                        opacity: isActive ? 1 : 0,
+                        transition: "opacity .15s ease",
+                      },
+                      "&:hover .kebab": {
+                        opacity: 1,
+                      },
                     }}
                   >
-                    <ListItemButton
-                      sx={{
-                        pl: 1.5,
-                        pr: 1,
-                        minHeight: 30,
-                        borderBottom: "1px solid currentColor",
-                        paddingBottom: 2, // กันตัวอักษรชนเส้น
-                        ...(showMenu
-                          ? {
-                              "& .kebab": {
-                                opacity: isActive ? 1 : 0,
-                                transition: "opacity .15s",
-                              },
-                              "&:hover .kebab, &:hover .item-icon": {
-                                opacity: 1,
-                              },
-                            }
-                          : {
-                              "&:hover .item-icon": { opacity: 1 },
-                            }),
+                    {/* 🔹 Avatar ใหญ่ขึ้น */}
+                    <Avatar
+                      src={getAiLogo(it)}
+                      sx={{ width: 24, height: 24, mr: 1 }}
+                      imgProps={{
+                        onError: (e) =>
+                          (e.currentTarget.src = AI_LOGOS.default),
                       }}
+                    />
+
+                    {/* 🔹 Text ใหญ่ขึ้นนิดเดียว */}
+                    <ListItemText
+                      primary={it.label}
+                      primaryTypographyProps={{
+                        fontSize: 15,
+                        lineHeight: 1.2,
+                      }}
+                    />
+
+                    {/* 🔹 IconButton ใหญ่ขึ้นแบบไม่เทอะทะ */}
+                    <IconButton
+                      className="kebab"
+                      size="small"
                       disableRipple
+                      sx={{
+                        ml: 0.5,
+                        p: 0.5, // เพิ่มพื้นที่คลิกเล็กน้อย
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelected(it);
+                        setMenuAnchor(e.currentTarget);
+                      }}
                     >
-                      <Avatar
-                        src={getAiLogo(it)}
-                        alt={it.model_type ?? "AI"}
-                        sx={{ width: 20, height: 20, mr: 0.5 }}
-                        imgProps={{
-                          onError: (e) =>
-                            (e.currentTarget.src = AI_LOGOS.default),
-                        }}
-                      />
-                      <ListItemText
-                        primary={it.label}
-                        primaryTypographyProps={{ fontSize: 14 }}
-                      />
-                      {showMenu && (
-                        <IconButton
-                          className="kebab"
-                          size="small"
-                          edge="end"
-                          aria-label="more options"
-                          onClick={(e) => handleOpenMenu(e, it)}
-                          sx={{ color: "background.text" }}
-                          disableRipple
-                        >
-                          <MoreHorizRounded fontSize="small" />
-                        </IconButton>
-                      )}
-                    </ListItemButton>
-                  </Link>
-                );
-              })}
-            </List>
-          </Collapse>
+                      <MoreHorizRounded fontSize="medium" />
+                    </IconButton>
+                  </ListItemButton>
+                </Link>
+              );
+            })}
+
+            {items.length === 0 && (
+              <Typography
+                sx={{
+                  textAlign: "center",
+                  opacity: 0.6,
+                  py: 2,
+                }}
+              >
+                -- ไม่มีแชต --
+              </Typography>
+            )}
+
+            {/* ✅ Sentinel */}
+            <Box
+              ref={loaderRef}
+              sx={{ display: "flex", justifyContent: "center", py: 1 }}
+            >
+              {networkStatus === NetworkStatus.fetchMore && (
+                <Typography variant="caption" sx={{ opacity: 0.6 }}>
+                  Loading...
+                </Typography>
+              )}
+              {!hasNextPage && items.length > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{ opacity: 0.6 }}
+                ></Typography>
+              )}
+            </Box>
+          </List>
         </Box>
       </Container>
 
@@ -654,7 +857,7 @@ const ChatgroupPage = () => {
         onDeleteGroup={handleDeleteGroup}
         // ปรับข้อความได้ตามบริบท เช่น "กลุ่ม"
         renameLabel="เปลี่ยนชื่อเเชต"
-        changeGroupLabel="ย้ายไปยังโครงการ"
+        changeGroupLabel="ย้ายไปยังกลุ่ม"
         deleteGroupLabel={`ลบออกจาก ${
           chatgroupData?.chatgroup?.chatgroup_name ?? "—"
         }`}
@@ -685,6 +888,7 @@ const ChatgroupPage = () => {
             // router.push(`/chat/${item.id}`);
             setOpenSearch(false);
           }}
+          group_id={id}
         />
       )}
     </>

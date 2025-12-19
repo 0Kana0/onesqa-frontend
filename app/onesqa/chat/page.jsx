@@ -41,9 +41,11 @@ import { getAiLogo, AI_LOGOS } from "../../../util/aiLogo";
 import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const ChatPage = () => {
   const client = useApolloClient();
+  const { locale } = useLanguage();
   const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
   const router = useRouter();
   const { user } = useAuth();
@@ -101,6 +103,15 @@ const ChatPage = () => {
     client,
   });
 
+  const clearedRef = useRef(false);
+  useEffect(() => {
+    if (clearedRef.current) return;
+    clearedRef.current = true;
+
+    setInitText("");
+    setInitAttachments([]);
+  }, [setInitText, setInitAttachments]);
+
   if (userLoading || promptsLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
@@ -142,12 +153,22 @@ const ChatPage = () => {
 
   const handleCreateChat = async () => {
     try {
+      // สมมติว่ามีตัวแปรภาษาชื่อ locale = 'th' | 'en'
+      const trimmedText = initText?.trim() ?? "";
+
+      const chatName =
+        trimmedText && trimmedText.length <= 40
+          ? trimmedText
+          : locale === "th"
+          ? "แชตใหม่จากเสียง"
+          : "new chat from mic";
+
       const { data } = await createChat({
         variables: {
           input: {
             ai_id: model,
             user_id: user?.id,
-            chat_name: initText,
+            chat_name: chatName,
           },
         },
       });
@@ -173,10 +194,34 @@ const ChatPage = () => {
       >
         <Select
           value={model}
-          onChange={(e) => {
-            setModel(e.target.value);
-          }}
+          onChange={(e) => setModel(e.target.value)}
           size="small"
+          displayEmpty
+          renderValue={(selected) => {
+            if (selected === "0") {
+              return <Typography sx={{ opacity: 0.7 }}>กรุณาเลือกโมเดลคำตอบ</Typography>;
+            }
+
+            const ua = (userData?.user?.user_ai ?? []).find(
+              (x) => String(x.ai_id ?? x.id) === String(selected)
+            );
+
+            return (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+                <Avatar
+                  src={getAiLogo(ua?.ai)}
+                  alt={ua?.ai?.model_type ?? "AI"}
+                  sx={{ width: 20, height: 20 }}
+                  imgProps={{
+                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
+                  }}
+                />
+                <Typography noWrap sx={{ minWidth: 0 }}>
+                  {ua?.ai?.model_use_name ?? "AI"}
+                </Typography>
+              </Box>
+            );
+          }}
           sx={{
             border: "1px solid",
             borderColor: "primary.main",
@@ -185,17 +230,20 @@ const ChatPage = () => {
           }}
         >
           <MenuItem value="0">กรุณาเลือกโมเดลคำตอบ</MenuItem>
+
           {(userData?.user?.user_ai ?? []).map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
-              <Avatar
-                src={getAiLogo(ua.ai)}
-                alt={ua.ai?.model_type ?? "AI"}
-                sx={{ width: 20, height: 20, mr: 0.5 }}
-                imgProps={{
-                  onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
-                }}
-              />
-              {ua.ai?.model_use_name}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Avatar
+                  src={getAiLogo(ua.ai)}
+                  alt={ua.ai?.model_type ?? "AI"}
+                  sx={{ width: 20, height: 20 }}
+                  imgProps={{
+                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
+                  }}
+                />
+                <Typography noWrap>{ua.ai?.model_use_name}</Typography>
+              </Box>
             </MenuItem>
           ))}
         </Select>
@@ -259,12 +307,12 @@ const ChatPage = () => {
                 onClick: () => console.log("deep"),
                 icon: <ScienceOutlinedIcon />,
               },
-              {
-                key: "canvas",
-                label: "Canvas",
-                onClick: () => console.log("canvas"),
-                icon: <BrushOutlinedIcon />,
-              },
+              // {
+              //   key: "canvas",
+              //   label: "Canvas",
+              //   onClick: () => console.log("canvas"),
+              //   icon: <BrushOutlinedIcon />,
+              // },
             ]}
             onMicClick={() => console.log("mic")}
             onAttachClick={() => console.log("attach menu")}
@@ -296,6 +344,7 @@ const ChatPage = () => {
             steps={promptsData.prompts}
             activeIndex={active}
             onChange={setActive}
+            onTextChange={setInitText}
           />
         </Box>
       </Container>

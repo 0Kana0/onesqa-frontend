@@ -33,6 +33,7 @@ import { useSidebar } from "../../../context/SidebarContext"; // ✅ ใช้ c
 import { formatTokens } from "@/util/formatTokens";
 import { useRequireRole } from "@/hook/useRequireRole";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
+import { closeLoading, showLoading, showSuccessAlert } from "@/util/loadingModal";
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -133,7 +134,7 @@ export default function UserDetailPage() {
   // ];
 
   const { allowed, loading, user } = useRequireRole({
-    roles: ["ผู้ดูแลระบบ"],
+    roles: ["ผู้ดูแลระบบ", "superadmin"],
     redirectTo: "/onesqa/chat",
   });
     
@@ -196,10 +197,12 @@ export default function UserDetailPage() {
 
   const handleSubmit = async () => {
     try {
+      showLoading("กำลังบันทึก Token...");
+
       // ✅ แปลง aiModels ใน userCardTable ให้ตรงกับ input schema
       const formattedAiInput =
-        userCardTable[0]?.aiModels?.map((ai) => ({
-          ai_id: ai.ai_id, // 👈 แปลง model name → ai_id ที่ backend ใช้
+        userCardTable?.[0]?.aiModels?.map((ai) => ({
+          ai_id: ai.ai_id,
           token_count: ai.token,
           token_all: ai.token,
         })) || [];
@@ -207,15 +210,22 @@ export default function UserDetailPage() {
       // ✅ เรียก mutation ไป backend
       const { data } = await updateUser({
         variables: {
-          id, // ต้องตรงกับ schema
+          id,
           input: {
-            user_ai: formattedAiInput, // เปลี่ยนเฉพาะ field นี้
+            user_ai: formattedAiInput,
           },
         },
       });
 
-      console.log("✅ Update success:", data.updateUser);
+      console.log("✅ Update success:", data?.updateUser);
+
+      closeLoading();
+      await showSuccessAlert({
+        title: "สำเร็จ",
+        text: "ดำเนินการเรียบร้อย",
+      });
     } catch (error) {
+      closeLoading();
       showErrorAlert(error, theme, {
         title: "ตั้งค่าจำนวน Token ของ User ไม่สำเร็จ",
       });
@@ -358,6 +368,9 @@ export default function UserDetailPage() {
                       <b>{t("tablecell3")}</b>
                     </TableCell>
                     <TableCell>
+                      <b>{t("tablecell7")}</b>
+                    </TableCell>
+                    <TableCell>
                       <b>{t("tablecell4")}</b>
                     </TableCell>
                     <TableCell>
@@ -400,11 +413,12 @@ export default function UserDetailPage() {
                       <TableCell>{user.username}</TableCell>
                       <TableCell>
                         <Typography>{user.name}</Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        {/* <Typography variant="body2" color="text.secondary">
                           {user.email}
-                        </Typography>
+                        </Typography> */}
                       </TableCell>
                       <TableCell>{user.position}</TableCell>
+                      <TableCell>{user.email}</TableCell>
                       <TableCell>{user.phone}</TableCell>
 
                       <TableCell>

@@ -2,12 +2,14 @@ import { gql } from "@apollo/client";
 
 export const GET_CHATGROUPS = gql`
   query chatgroups(
+    $id: ID, 
     $user_id: ID!, 
     $first: Int, 
     $after: String,
     $search: String
   ) {
     chatgroups(
+      id: $id, 
       user_id: $user_id, 
       first: $first, 
       after: $after,
@@ -34,8 +36,8 @@ export const GET_CHATGROUPS = gql`
 `;
 
 export const GET_CHATGROUP = gql`
-  query chatgroup($id: ID!) {
-    chatgroup(id: $id) {
+  query chatgroup($id: ID!, $user_id: ID) {
+    chatgroup(id: $id, user_id: $user_id) {
       id
       chatgroup_name
       createdAt

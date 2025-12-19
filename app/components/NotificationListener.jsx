@@ -89,7 +89,12 @@ export default function NotificationListener({
                 onClick: () => {
                   setHasNotification(false)
                   localStorage.removeItem("alert");
-                  router.push(`/onesqa/notification`); // 👈 หน้าเป้าหมาย
+                  if (isOnNotificationPage) {
+                    // ปิด toast ที่กำลังแสดงอยู่ทั้งหมดทันทีเมื่อเข้าหน้านี้
+                    toast.dismiss();
+                  } else {
+                    router.push(`/onesqa/notification`); // 👈 หน้าเป้าหมาย
+                  }
                 },
               }
             );

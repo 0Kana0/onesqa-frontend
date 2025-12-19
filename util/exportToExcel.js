@@ -67,7 +67,7 @@ export function exportUsersToExcel(users, ln = "th") {
     // map model → token
     const modelTokens = {};
     u.aiModels?.forEach((m) => {
-      modelTokens[m.model_user] = m.token;
+      modelTokens[m.model_use] = m.token;
     });
 
     return [

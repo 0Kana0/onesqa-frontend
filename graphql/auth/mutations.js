@@ -18,7 +18,6 @@ export const SIGNIN = gql`
         position
         group_name
         role_name
-        username
       }
       token
     }
@@ -53,7 +52,6 @@ export const VERIFY_SIGNIN_WITH_ID = gql`
         position
         group_name
         role_name
-        username
       }
     }
   }
@@ -77,7 +75,6 @@ export const REFRESH_TOKEN = gql`
         position
         group_name
         role_name
-        username
       }
       token
     }

@@ -41,3 +41,13 @@ export const DELETE_USER = gql`
     deleteUser(id: $id)
   }
 `;
+
+export const SYNC_USERS = gql`
+  mutation syncUsersFromApi {
+    syncUsersFromApi {
+      assessorApiCount
+      staffApiCount
+      totalUsersFromApis
+    }
+  }
+`;

@@ -29,7 +29,7 @@ import { useInitText } from "@/app/context/InitTextContext";
 import { useAuth } from "@/app/context/AuthContext";
 import { useTheme } from "next-themes";
 import { GET_CHATGROUPS } from "@/graphql/chatgroup/queries";
-import { GET_CHAT } from "@/graphql/chat/queries";
+import { GET_CHAT, GET_CHATS } from "@/graphql/chat/queries";
 import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
@@ -74,7 +74,10 @@ const MessagePage = () => {
     refetch,
   } = useQuery(GET_MESSAGES, {
     fetchPolicy: "network-only",
-    variables: { chat_id: id },
+    variables: { 
+      chat_id: id,
+      user_id: user?.id
+    },
   });
 
   const {
@@ -84,6 +87,18 @@ const MessagePage = () => {
   } = useQuery(GET_CHAT, {
     variables: {
       id: id ?? "",
+      user_id: user?.id
+    },
+    fetchPolicy: "network-only",
+  });
+  console.log("chatData", chatData);
+
+  const {
+    refetch: chatsRefresh,
+  } = useQuery(GET_CHATS, {
+    variables: {
+      user_id: user?.id ?? "",
+      chatgroupMode: "NULL",
     },
     fetchPolicy: "network-only",
   });
@@ -129,6 +144,16 @@ const MessagePage = () => {
   //   if (messagesData?.messages?.length === 0) router.push("/onesqa/chat");
   // }, [messagesData?.messages]);
 
+  useEffect(() => {
+    // รอให้โหลดเสร็จก่อน
+    if (chatLoading) return;
+
+    // ถ้า query ตอบกลับมาแล้วว่า chat เป็น null -> กลับหน้า list
+    if (chatData && chatData.chat === null) {
+      router.replace("/onesqa/chat");
+    }
+  }, [chatLoading, chatData, router]);
+
   // โหลดเสร็จครั้งแรก → เลื่อนไปล่างสุดทันที
   useEffect(() => {
     if (!messagesLoading) scrollToBottom(false);
@@ -172,7 +197,7 @@ const MessagePage = () => {
       });
 
       console.log("✅ Create success:", data.createMessage);
-
+      chatsRefresh();
       refetch();
       chatgroupsRefresh();
     } catch (error) {
@@ -301,6 +326,8 @@ const MessagePage = () => {
       });
 
       console.log("✅ Create success:", data.createMessage);
+      chatgroupsRefresh();
+      chatsRefresh();
       refetch();
     } catch (error) {
       // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
@@ -360,6 +387,8 @@ const MessagePage = () => {
       });
 
       console.log("✅ Create success:", data.createMessage);
+      chatgroupsRefresh();
+      chatsRefresh();
       refetch();
     } catch (error) {
       // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
@@ -429,6 +458,8 @@ const MessagePage = () => {
       });
 
       console.log("✅ Update success:", data.updateMessage);
+      chatgroupsRefresh();
+      chatsRefresh();
       refetch();
     } catch (error) {
       // 🔹 ถ้ามี error จากหลังบ้าน → rollback messages กลับของเดิม
@@ -508,12 +539,12 @@ const MessagePage = () => {
                 onClick: () => console.log("deep"),
                 icon: <ScienceOutlinedIcon />,
               },
-              {
-                key: "canvas",
-                label: "Canvas",
-                onClick: () => console.log("canvas"),
-                icon: <BrushOutlinedIcon />,
-              },
+              // {
+              //   key: "canvas",
+              //   label: "Canvas",
+              //   onClick: () => console.log("canvas"),
+              //   icon: <BrushOutlinedIcon />,
+              // },
             ]}
             onMicClick={() => console.log("mic")}
             onAttachClick={() => console.log("attach menu")}
@@ -549,6 +580,7 @@ const MessagePage = () => {
             steps={promptsData.prompts}
             activeIndex={active}
             onChange={setActive}
+            onTextChange={setText}
           />
         </Box>
     </Container>

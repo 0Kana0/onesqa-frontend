@@ -83,12 +83,12 @@ export default function Header() {
   if (!mounted) return null;
 
   const pageNameCheck = () => {
-    if (pathname.startsWith("/onesqa/dashboard") && user?.role_name === "ผู้ดูแลระบบ") return th("dashboard");
+    if (pathname.startsWith("/onesqa/dashboard") && (user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin")) return th("dashboard");
     else if (pathname.startsWith("/onesqa/chat")) return th("chat");
-    else if (pathname.startsWith("/onesqa/users") && user?.role_name === "ผู้ดูแลระบบ") return th("users");
-    else if (pathname.startsWith("/onesqa/reports") && user?.role_name === "ผู้ดูแลระบบ") return th("reports");
-    else if (pathname.startsWith("/onesqa/settings") && user?.role_name === "ผู้ดูแลระบบ") return th("settings");
-    else if (pathname.startsWith("/onesqa/logs") && user?.role_name === "ผู้ดูแลระบบ") return th("logs");
+    else if (pathname.startsWith("/onesqa/users") && (user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin")) return th("users");
+    else if (pathname.startsWith("/onesqa/reports") && (user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin")) return th("reports");
+    else if (pathname.startsWith("/onesqa/settings") && (user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin")) return th("settings");
+    else if (pathname.startsWith("/onesqa/logs") && (user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin")) return th("logs");
     else if (pathname.startsWith("/onesqa/detail")) return th("detail");
     else if (pathname.startsWith("/onesqa/notification") ) return th("notification");
   };
@@ -323,7 +323,7 @@ export default function Header() {
                 />
                 <Box sx={{ textAlign: "left", lineHeight: 1 }}>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {user?.username}
+                    {user?.firstname} {user?.lastname}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {user?.role_name}

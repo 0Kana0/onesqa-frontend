@@ -17,7 +17,6 @@ export const GET_ME = gql`
       position
       group_name
       role_name
-      username
     }
   }
 `;

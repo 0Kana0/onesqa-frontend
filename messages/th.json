@@ -110,7 +110,8 @@
     "tablecell1": "ชื่อผู้ใช้",
     "tablecell2": "ชื่อ - นามสกุล",
     "tablecell3": "ตำแหน่ง",
-    "tablecell4": "โทรศัพท์มือถือ",
+    "tablecell7": "อีเมล",
+    "tablecell4": "โทรศัพท์",
     "tablecell5": "สถานะ",
     "tablecell6": "กลุ่มงาน"
   },
@@ -118,6 +119,11 @@
     "button1": "กำหนด Tokens รายกลุ่ม",
     "aititle1": "การตั้งค่า AI Chatbot",
     "aisubtitle1": "กำหนดแนวทางการตั้งคำถาม (สูงสุด 5 คำถาม)"
+  },
+  "GroupFilterBar": {
+    "title": "ค้นหาและกรองข้อมูล",
+    "searchPlaceholder": "ค้นหากลุ่ม...",
+    "allModels": "โมเดลทั้งหมด"
   },
   "NotificationPage": {
     "notification": "การแจ้งเตือน",
@@ -159,7 +165,8 @@
   },
   "ActionBar": {
     "save": "บันทึก",
-    "reset": "คืนค่า"
+    "reset": "คืนค่า",
+    "clear": "ล้างตัวกรอง"
   },
   "UserInfoCard": {
     "usage": "การใช้งาน",

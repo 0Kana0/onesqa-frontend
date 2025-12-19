@@ -4,7 +4,14 @@
 import React from "react";
 import { Box, Stack, ButtonBase, Typography } from "@mui/material";
 
-const PromptList = ({ steps = [], activeIndex = 0, onChange }) => {
+const PromptList = ({ 
+  steps = [], 
+  activeIndex = 0, 
+  onChange,
+  onTextChange 
+}) => {
+  console.log(steps);
+  
   return (
     <Stack 
       direction="row"
@@ -21,7 +28,10 @@ const PromptList = ({ steps = [], activeIndex = 0, onChange }) => {
         return (
           <ButtonBase
             key={step.id || index}
-            onClick={() => onChange && onChange(index)}
+            onClick={() => {
+              onChange && onChange(index);                    // หรือ onChange?.(index)
+              onTextChange && onTextChange(step.prompt_detail); // หรือ onTextChange?.(...)
+            }}
             sx={{
               borderRadius: 2,
               border: "1px solid",

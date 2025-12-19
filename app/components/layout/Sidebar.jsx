@@ -42,8 +42,9 @@ export default function Sidebar() {
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
-  const chatPageCheckOne = user?.role_name === "ผู้ดูแลระบบ" && !pathname.startsWith("/onesqa/chat")
-  const chatPageCheckTwo = (user?.role_name === "ผู้ดูแลระบบ" && pathname.startsWith("/onesqa/chat")) || user?.role_name !== "ผู้ดูแลระบบ"
+  const isAdmin = ["ผู้ดูแลระบบ", "superadmin"].includes(user?.role_name);
+  const chatPageCheckOne = isAdmin && !pathname.startsWith("/onesqa/chat");
+  const chatPageCheckTwo = (isAdmin && pathname.startsWith("/onesqa/chat")) || !isAdmin;
 
   const menuItems = [
     { text: t('dashboard'), icon: <Home />, path: "/onesqa/dashboard" },
@@ -58,7 +59,7 @@ export default function Sidebar() {
   if (isTablet && !open) return null;
   
   const handleInitPage = () => {
-    if (user?.role_name === "ผู้ดูแลระบบ") {
+    if (user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin") {
       if (isTablet) toggle()
       router.push("/onesqa/dashboard");
     } else {

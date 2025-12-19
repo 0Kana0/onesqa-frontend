@@ -41,6 +41,7 @@ export default function ProjectSearchModal({
   onClose,
   onSelect, // (item) => void
   placeholder = "ค้นหากลุ่ม...",
+  group_id
 }) {
   const { user } = useAuth();
   const { toggle } = useSidebar(); // ✅ ดึงจาก Context
@@ -53,6 +54,7 @@ export default function ProjectSearchModal({
 
   const vars = {
     user_id: user?.id ?? "",
+    id: group_id ?? null,
     search: normalizeText(q),
     ...(q?.trim() ? {} : { first }), // ถ้า q มีค่า → ไม่ใส่ first
   };

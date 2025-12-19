@@ -14,7 +14,7 @@ import { useAuth } from "../app/context/AuthContext"; // ของคุณเ�
  * @returns {{ allowed:boolean, loading:boolean, user:any }}
  */
 export function useRequireRole({
-  roles = ["ผู้ดูแลระบบ"],
+  roles = ["ผู้ดูแลระบบ", "superadmin"],
   redirectTo = "/onesqa/chat",
   allowIf,
 } = {}) {

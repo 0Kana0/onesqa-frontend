@@ -17,7 +17,6 @@ import {
   TableRow,
   Select,
   MenuItem,
-  Pagination,
   TextField,
   Button,
   Switch,
@@ -32,6 +31,7 @@ import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
 import { exportLogsToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
+import SmartPagination from "@/app/components/SmartPagination";
 
 const mapLogFilterToType = (label) => {
   switch (label) {
@@ -39,7 +39,8 @@ const mapLogFilterToType = (label) => {
     case "ตั้งค่าการแจ้งเตือน": return "ALERT";
     case "ตั้งค่า Model": return "MODEL";
     case "ตั้งค่า Model ของผู้ใช้งาน": return "PERSONAL";
-    case "ตั้งค่า Model ของกลุ่มงาน": return "GROUP";
+    case "ตั้งค่ากลุ่มผู้ใช้งาน": return "GROUP";
+    case "ตั้งค่าบทบาทของผู้ใช้งาน": return "ROLE";
     default: return null; // "หัวข้อการ Logs แก้ไข" = ทั้งหมด
   }
 };
@@ -50,7 +51,8 @@ const mapTypeToLogFilter = (label) => {
     case "ALERT": return "ตั้งค่าการแจ้งเตือน";
     case "MODEL": return "ตั้งค่า Model";
     case "PERSONAL": return "ตั้งค่า Model ของผู้ใช้งาน";
-    case "GROUP": return "ตั้งค่า Model ของกลุ่มงาน";
+    case "GROUP": return "ตั้งค่ากลุ่มผู้ใช้งาน";
+    case "ROLE": return "ตั้งค่าบทบาทของผู้ใช้งาน";
     default: return null; // "หัวข้อการ Logs แก้ไข" = ทั้งหมด
   }
 };
@@ -194,7 +196,7 @@ const LogPage = () => {
   }, [logsData]);
 
   const { allowed, loading, user } = useRequireRole({
-    roles: ["ผู้ดูแลระบบ"],
+    roles: ["ผู้ดูแลระบบ", "superadmin"],
     redirectTo: "/onesqa/chat",
   });
   
@@ -214,6 +216,8 @@ const LogPage = () => {
       </Box>
     );
 
+  console.log(logsError);
+  
   if (logsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
@@ -457,8 +461,11 @@ const LogPage = () => {
               <MenuItem value="ตั้งค่า Model ของผู้ใช้งาน">
                 ตั้งค่า Model ของผู้ใช้งาน
               </MenuItem>
-              <MenuItem value="ตั้งค่า Model ของกลุ่มงาน">
-                ตั้งค่า Model ของกลุ่มงาน
+              <MenuItem value="ตั้งค่ากลุ่มผู้ใช้งาน">
+                ตั้งค่ากลุ่มผู้ใช้งาน
+              </MenuItem>
+              <MenuItem value="ตั้งค่าบทบาทของผู้ใช้งาน">
+                ตั้งค่าบทบาทของผู้ใช้งาน
               </MenuItem>
             </Select>
 
@@ -580,7 +587,7 @@ const LogPage = () => {
                   {logRows.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                        ไม่พบข้อมูล
+                        ไม่พบข้อมูลหัวข้อ Logs
                       </TableCell>
                     </TableRow>
                   )}
@@ -589,6 +596,7 @@ const LogPage = () => {
             </TableContainer>
 
             {/* Footer */}
+            {/* ✅ Pagination */}
             <Box
               sx={{
                 display: "flex",
@@ -597,11 +605,11 @@ const LogPage = () => {
                 mt: 2,
               }}
             >
-              <Pagination
-                count={Math.ceil(totalCount / rowsPerPage)}
+              <SmartPagination
                 page={page}
-                onChange={handleChangePage}
-                color="primary"
+                totalPages={Math.ceil(totalCount / rowsPerPage)}
+                disabled={logsLoading}
+                onChange={(newPage) => setPage(newPage)}
               />
             </Box>
           </Box>

@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GET_MESSAGES = gql`
-  query messages($chat_id: ID!) {
-    messages(chat_id: $chat_id) {
+  query messages($chat_id: ID!, $user_id: ID) {
+    messages(chat_id: $chat_id, user_id: $user_id) {
       id
       role
       text

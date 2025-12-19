@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const GET_AIS = gql`
-  query ai {
+  query ais {
     ais {
       id
       activity

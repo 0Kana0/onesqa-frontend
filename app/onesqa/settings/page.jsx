@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { Box, Button, Typography, CircularProgress, useMediaQuery } from "@mui/material";
+import { Box, Button, Typography, CircularProgress, useMediaQuery, Stack } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy"; // 🤖 AI
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive"; // 🌐 Model
 import HubIcon from "@mui/icons-material/Hub";
@@ -26,6 +26,17 @@ import {
   UPDATE_PROMPT,
 } from "@/graphql/prompt/mutations";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
+import { GET_GROUPS } from "@/graphql/group/queries";
+import { UPDATE_GROUP } from "@/graphql/group/mutations";
+import GroupFilterBar from "@/app/components/GroupFilterBar";
+import SmartPagination from "@/app/components/SmartPagination";
+import { closeLoading, showLoading, showSuccessAlert } from "@/util/loadingModal";
+
+const normalize = (v) => (v === 'โมเดลทั้งหมด' || v === '' || v == null ? null : v);
+const normalizeText = (v) => {
+  const s = (v ?? '').trim();
+  return s === '' ? null : s;
+}
 
 const SettingPage = () => {
   const { theme } = useTheme();
@@ -40,6 +51,12 @@ const SettingPage = () => {
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
+
+  // 🔹 state
+  const [search, setSearch] = useState("");
+  const [aiFilter, setAiFilter] = useState("โมเดลทั้งหมด");
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 5; // ✅ แสดง 5 แถวต่อหน้า
 
   // ✅ เก็บสถานะเปิด/ปิดของแต่ละการ์ด
   const [cards, setCards] = useState([
@@ -102,7 +119,7 @@ const SettingPage = () => {
   const [persistedEdits, setPersistedEdits] = useState([]);
   const [newPrompts, setNewPrompts] = useState([]);
 
-  const modelOptions = ["Gemini 2.5 Pro", "ChatGPT 5"];
+  const [groups, setGroups] = useState([]);
 
   const {
     data: aisData,
@@ -122,11 +139,33 @@ const SettingPage = () => {
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
 
+  const {
+    data: groupsData,
+    loading: groupsLoading,
+    error: groupsError,
+    //refetch: groupsRefetch,
+  } = useQuery(GET_GROUPS, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
+    variables: {
+      page: page, 
+      pageSize: rowsPerPage,
+      where: {
+        model_use_name: normalize(aiFilter),
+        search: normalizeText(search)
+      }
+    },
+  });
+
+  console.log(groupsData?.groups);
+
   const [updateAi] = useMutation(UPDATE_AI);
 
   const [createPrompt] = useMutation(CREATE_PROMPT);
   const [updatePrompt] = useMutation(UPDATE_PROMPT);
   const [deletePrompt] = useMutation(DELETE_PROMPT);
+
+  const [updateGroup] = useMutation(UPDATE_GROUP);
 
   useEffect(() => {
     if (!aisData?.ais.length) return;
@@ -155,10 +194,104 @@ const SettingPage = () => {
     setPersistedEdits(rows.map((p) => ({ ...p })));
   }, [promptsData?.prompts, resetTrigger]); // ✅ ผูกกับฟิลด์ที่ใช้จริง
 
-  console.log(cards);
+  useEffect(() => {
+    if (!groupsData?.groups?.items) return;
+
+    const mapped = groupsData.groups.items.map((g) => {
+      const defaultModel = g.ai?.model_use_name || "";
+
+      // key = model_use_name -> { today, average, token_count, token_all, ai_id }
+      const statsByModel = new Map(
+        (g.models || []).map((m) => {
+          const modelUseName = m.ai?.model_use_name || "";
+          return [
+            modelUseName,
+            {
+              ai_id: m.ai_id ?? null,
+              today: m.today ?? 0,
+              average: m.average ?? 0,
+              token_count: m.token_count ?? 0,
+              token_all: m.token_all ?? 0,
+            },
+          ];
+        })
+      );
+
+      // groupAis: เอา init_token + stats ของโมเดลนั้นๆ
+      const groupAis =
+        g.group_ai?.map((ga) => {
+          const modelName = ga.ai?.model_use_name || "";
+          const stat = statsByModel.get(modelName) || {
+            ai_id: null,
+            today: 0,
+            average: 0,
+            token_count: 0,
+            token_all: 0,
+          };
+
+          return {
+            model_use_name: modelName,
+            ai_id: stat.ai_id, // ✅ เผื่อใช้ฝั่ง UI/อัปเดต
+            init_token: ga.init_token || 0,
+            plus_token: 0,
+            minus_token: 0,
+
+            // ✅ usage รวมทั้งกลุ่ม
+            today: stat.today,
+            average: stat.average,
+
+            // ✅ รวม quota ทั้งกลุ่มจาก User_ai
+            token_count: stat.token_count,
+            token_all: stat.token_all,
+          };
+        }) || [];
+
+      // (optional) ถ้าอยากให้ default model โผล่แม้ไม่มีใน group_ai
+      // จะ push เพิ่มโดยใช้ init_token = 0
+      if (defaultModel && !groupAis.some((x) => x.model_use_name === defaultModel)) {
+        const stat = statsByModel.get(defaultModel) || {
+          ai_id: null,
+          today: 0,
+          average: 0,
+          token_count: 0,
+          token_all: 0,
+        };
+
+        groupAis.unshift({
+          model_use_name: defaultModel,
+          ai_id: stat.ai_id,
+          init_token: 0,
+          plus_token: 0,
+          minus_token: 0,
+          today: stat.today,
+          average: stat.average,
+          token_count: stat.token_count,
+          token_all: stat.token_all,
+        });
+      }
+
+      return {
+        id: g.id,
+        name: g.name,
+        status: g.status,
+        model_use_name: defaultModel,
+        groupAis,
+      };
+    });
+
+    setGroups(mapped);
+  }, [groupsData, resetTrigger]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [aiFilter, search]);
+  // ✅ scroll ทุกครั้งที่หน้าเปลี่ยน (ชัวร์)
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [page]);
 
   const { allowed, loading, user } = useRequireRole({
-    roles: ["ผู้ดูแลระบบ"],
+    roles: ["ผู้ดูแลระบบ", "superadmin"],
     redirectTo: "/onesqa/chat",
   });
 
@@ -173,12 +306,29 @@ const SettingPage = () => {
       </Box>
     );
 
-  if (aisError || promptsError)
+  console.log(groupsError);
+
+  if (aisError || promptsError || groupsError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
       </Typography>
     );
+
+  const modelOptions = aisData?.ais?.map(ai => ai.model_use_name);
+  const totalItems =
+    groupsData?.groups?.total ||
+    groupsData?.groups?.totalItems ||
+    groupsData?.groups?.totalCount ||
+    groupsData?.groups?.count ||
+    0;
+
+  const totalPages =
+    groupsData?.groups?.totalPages ||
+    groupsData?.groups?.pageInfo?.totalPages ||
+    Math.max(1, Math.ceil(totalItems / rowsPerPage));
+
+  console.log("groups", groups);
 
   // ด้านบนใน component
   const LIMIT = 5;
@@ -309,6 +459,22 @@ const SettingPage = () => {
     );
   };
 
+  const handleGroupChange = (groupId, field, value) => {
+    setGroups((prev) =>
+      prev.map((g) => (g.id === groupId ? { ...g, [field]: value } : g))
+    );
+  };
+  const handleGroupAiChange = (groupId, index, field, value) => {
+    setGroups((prev) =>
+      prev.map((g) => {
+        if (g.id !== groupId) return g;
+        const next = [...(g.groupAis || [])];
+        next[index] = { ...next[index], [field]: value };
+        return { ...g, groupAis: next };
+      })
+    );
+  };
+
   const handleSettingChange = (id, field, value) => {
     setRows((prev) =>
       prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
@@ -341,6 +507,13 @@ const SettingPage = () => {
   const handleReset = () => {
     setNewPrompts([])
     setResetTrigger((prev) => prev + 1); // ✅ trigger ให้ useEffect ทำงานใหม่
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setAiFilter("โมเดลทั้งหมด");
+    setPage(1)
+    console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
   const handleSubmit = async () => {
@@ -414,9 +587,16 @@ const SettingPage = () => {
 
       setNewPrompts([]);
       await promptsRefetch();
+
+      await showSuccessAlert({
+        title: "สำเร็จ",
+        text: "ดำเนินการเรียบร้อย",
+      });
       
     } else if (selected === "Model") {
       try {
+        showLoading("กำลังอัปเดต AI...");
+
         // ✅ ใช้ Promise.all เพื่ออัปเดตพร้อมกันทั้งหมด
         const results = await Promise.all(
           cards.map(async (card) => {
@@ -435,13 +615,79 @@ const SettingPage = () => {
         );
 
         console.log("✅ Update success:", results);
+
+        closeLoading();
+        await showSuccessAlert({
+          title: "สำเร็จ",
+          text: "ดำเนินการเรียบร้อย",
+        });
       } catch (error) {
+        closeLoading();
         showErrorAlert(error, theme, {
           title: "ตั้งค่า AI ไม่สำเร็จ",
         });
       }
     } else if (selected === "Tokens") {
+      try {
+        showLoading("กำลังอัปเดต Group...");
 
+        // สร้าง lookup map ไว้ก่อน (เร็วกว่า find ซ้ำ ๆ)
+        const aiIdByUseName = new Map(
+          (aisData?.ais || []).map((ai) => [ai.model_use_name, ai.id])
+        );
+
+        // ✅ อัปเดตทุก group พร้อมกัน
+        const results = await Promise.all(
+          groups.map(async (group) => {
+            // ✅ ai_id ของ default model (ระดับ group)
+            const defaultAiId = aiIdByUseName.get(group.model_use_name);
+
+            // ✅ group_ai (ตารางลูก)
+            const group_ai = (group.groupAis || [])
+              .map((ga) => {
+                const ai_id = aiIdByUseName.get(ga.model_use_name);
+                if (!ai_id) return null;
+
+                return {
+                  ai_id,
+                  init_token: ga.init_token ?? 0,
+                  plus_token: ga.plus_token ?? 0,
+                  minus_token: ga.minus_token ?? 0,
+                };
+              })
+              .filter(Boolean);
+
+            const input = {
+              model_use_name: group.model_use_name,
+              status: !!group.status,
+              group_ai,
+              ...(defaultAiId ? { ai_id: defaultAiId } : {}), // ✅ ส่งเฉพาะตอนมีค่า
+            };
+
+            const { data } = await updateGroup({
+              variables: {
+                id: group.id,
+                input,
+              },
+            });
+
+            return data?.updateGroup;
+          })
+        );
+
+        console.log("✅ Update success:", results);
+
+        closeLoading();
+        await showSuccessAlert({
+          title: "สำเร็จ",
+          text: "ดำเนินการเรียบร้อย",
+        });
+      } catch (error) {
+        closeLoading();
+        showErrorAlert(error, theme, {
+          title: "ตั้งค่า Group ไม่สำเร็จ",
+        });
+      }
     }
   };
 
@@ -450,6 +696,17 @@ const SettingPage = () => {
     { label: "Model", icon: <AllInclusiveIcon />, value: "Model" },
     { label: t('button1'), icon: <HubIcon />, value: "Tokens" },
   ];
+
+  const getVisiblePages = (page, totalPages) => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (page <= 1) return [1, 2, 3];
+    if (page >= totalPages) return [totalPages - 2, totalPages - 1, totalPages];
+
+    return [page - 1, page, page + 1];
+  };
 
   // ✅ เนื้อหาที่จะเปลี่ยนตามปุ่ม
   const renderContent = () => {
@@ -494,7 +751,7 @@ const SettingPage = () => {
             {(persistedEdits.length === 0 && newPrompts.length === 0) && (
               <Box sx={{ textAlign: "center", my: 5 }}>
                 <Typography variant="body1" color="text.secondary">
-                  ไม่มีรายการ prompt
+                  ไม่พบข้อมูลรายการ prompt
                 </Typography>
               </Box>
             )}
@@ -558,10 +815,27 @@ const SettingPage = () => {
                 onLimitChange={(newValue) => handleLimitChange(card.id, newValue)} // ✅ เพิ่มตรงนี้
               />
             ))}
+
+            {/* {cards.length === 0 && (
+              <Box sx={{ textAlign: "center", my: 2 }}>
+                <Typography variant="body1" color="text.secondary">
+                  ไม่พบข้อมูล Model ในระบบ
+                </Typography>
+              </Box>
+            )} */}
           </Box>
         );
       case "Tokens":
         return (
+          <>
+          <GroupFilterBar
+            search={search}
+            setSearch={setSearch}
+            aiFilter={aiFilter}
+            setAiFilter={setAiFilter}
+            setPage={setPage}
+            modelOptions={modelOptions}
+          />
           <Box
             sx={{
               border: "1px solid #E5E7EB",
@@ -580,80 +854,125 @@ const SettingPage = () => {
                   sx={{
                     display: "flex",
                     flexWrap: "wrap",
-                    gap: 2,
+                    width: "100%",
+                    gap: 5,
                   }}
                 >
-                  <Box sx={{ flex: 1 }}>
-                    <UserGroupSettingCard
-                      roleName="Admin"
-                      defaultLimit={1000000}
-                      modelOptions={["Gemini 2.5 Pro", "ChatGPT 5"]}
-                      defaultModel="Gemini 2.5 Pro"
-                      onChange={(field, value) =>
-                        handleSettingChange("Admin", field, value)
-                      }
-                    />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <TokenUsageCard
-                      title="Gemini 2.5 Pro"
-                      remain={1500000}
-                      total={2000000}
-                      today={2500}
-                      average={1800}
-                      always={true}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <TokenUsageCard
-                      title="Gemini 2.5 Pro"
-                      remain={1500000}
-                      total={2000000}
-                      today={2500}
-                      average={1800}
-                      always={true}
-                    />
-                  </Box>
+                  {groups.map((group) => {
+                    // รวม default model + groupAis แล้วกันชื่อซ้ำด้วย model_use_name
+                    const mergedByModel = new Map();
+
+                    // helper หา stat ของ default model จาก groupAis (ถ้ามี)
+                    const defaultStat =
+                      (group.groupAis || []).find((x) => x.model_use_name === group.model_use_name) || null;
+
+                    // default model (ของ Group)
+                    if (group.model_use_name) {
+                      mergedByModel.set(group.model_use_name, {
+                        model_use_name: group.model_use_name,
+
+                        // quota แบบเดิม (init/plus/minus) ของ default ไม่มีใน group_ai
+                        init_token: defaultStat?.init_token ?? 0,
+                        plus_token: defaultStat?.plus_token ?? 0,
+                        minus_token: defaultStat?.minus_token ?? 0,
+
+                        // ✅ usage
+                        today: defaultStat?.today ?? 0,
+                        average: defaultStat?.average ?? 0,
+
+                        // ✅ เพิ่มจาก User_ai (รวมทั้งกลุ่ม)
+                        token_count: defaultStat?.token_count ?? 0,
+                        token_all: defaultStat?.token_all ?? 0,
+                      });
+                    }
+
+                    // models ที่มาจาก group_ai (และมี stat ครบแล้วใน group.groupAis)
+                    (group.groupAis || []).forEach((ga) => {
+                      const key = ga.model_use_name || "";
+                      if (!key) return;
+
+                      mergedByModel.set(key, {
+                        model_use_name: key,
+                        init_token: ga.init_token ?? 0,
+                        plus_token: ga.plus_token ?? 0,
+                        minus_token: ga.minus_token ?? 0,
+
+                        today: ga.today ?? 0,
+                        average: ga.average ?? 0,
+
+                        // ✅ เพิ่มจาก User_ai
+                        token_count: ga.token_count ?? 0,
+                        token_all: ga.token_all ?? 0,
+                      });
+                    });
+
+                    const tokenCards = Array.from(mergedByModel.values());
+
+                    return (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", width: "100%", gap: 1 }} key={group.id}>
+                        <Box sx={{ flex: 1 }}>
+                          <UserGroupSettingCard
+                            roleName={group.name}
+                            status={group.status}
+                            model={group.model_use_name}         // group default model
+                            groupAis={group.groupAis || []}      // list ใหม่ (มี today/avg/token_count/token_all แล้ว)
+                            modelOptions={modelOptions}
+                            onGroupChange={(field, value) => handleGroupChange(group.id, field, value)}
+                            onGroupAiChange={(index, field, value) =>
+                              handleGroupAiChange(group.id, index, field, value)
+                            }
+                          />
+                        </Box>
+
+                        <Box sx={{ display: "flex", width: "100%", flexWrap: "wrap", gap: 2 }}>
+                          {tokenCards.map((m) => {
+                            // ✅ total quota “ตามใหม่” = token_all (รวมทั้งกลุ่มจาก User_ai)
+                            // ถ้าอยาก fallback ไปใช้สูตรเดิม ให้คงไว้ด้วย
+                            const totalFallback = Math.max(
+                              0,
+                              (m.init_token ?? 0) + (m.plus_token ?? 0) - (m.minus_token ?? 0)
+                            );
+                            const total = m.token_all ?? totalFallback;
+
+                            // ✅ remain = total - token_count (ใช้ไปแล้ว)
+                            const remain = m.token_count ?? 0;
+
+                            return (
+                              <Box sx={{ flex: 1 }} key={`${group.id}-${m.model_use_name}`}>
+                                <TokenUsageCard
+                                  title={m.model_use_name}
+                                  remain={remain}
+                                  total={total}
+                                  today={m.today}
+                                  average={m.average}
+                                />
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      </Box>
+                    );
+                  })}
                 </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 2,
-                  }}
-                >
-                  <Box sx={{ flex: 1 }}>
-                    <UserGroupSettingCard
-                      roleName="Admin"
-                      defaultLimit={1000000}
-                      modelOptions={["Gemini 2.5 Pro", "ChatGPT 5"]}
-                      defaultModel="Gemini 2.5 Pro"
-                      onChange={(field, value) =>
-                        handleSettingChange("Admin", field, value)
-                      }
-                    />
+
+                {/* ถ้าไม่มีข้อมูล */}
+                {groups.length === 0 && (
+                  <Box sx={{ textAlign: "center", my: 2 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      ไม่พบข้อมูลกลุ่มผู้ใช้งาน
+                    </Typography>
                   </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <TokenUsageCard
-                      title="Gemini 2.5 Pro"
-                      remain={1500000}
-                      total={2000000}
-                      today={2500}
-                      average={1800}
-                      always={true}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <TokenUsageCard
-                      title="Gemini 2.5 Pro"
-                      remain={1500000}
-                      total={2000000}
-                      today={2500}
-                      average={1800}
-                      always={true}
-                    />
-                  </Box>
-                </Box>
+                )}
+
+                {/* ✅ Pagination */}
+                <Stack alignItems="center" sx={{ mt: 3 }}>
+                  <SmartPagination
+                    page={page}
+                    totalPages={totalPages}
+                    disabled={groupsLoading}
+                    onChange={(newPage) => setPage(newPage)}
+                  />
+                </Stack>
               </>
             ) : (
               <>
@@ -665,6 +984,7 @@ const SettingPage = () => {
               </>
             )}
           </Box>
+          </>
         );
       default:
         return null;
@@ -677,6 +997,7 @@ const SettingPage = () => {
         <ActionBar
           onSubmit={() => handleSubmit()}
           onClearData={() => handleReset()}
+          onClearFilters={() => handleClearFilters()}
           viewMode={viewMode}
           onViewChange={handleViewChange}
           settingMode={selected}

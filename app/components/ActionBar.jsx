@@ -4,16 +4,21 @@ import { Box, Button, ButtonGroup, useMediaQuery } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import ReplayIcon from "@mui/icons-material/Replay";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import GridViewIcon from "@mui/icons-material/GridView";
 import { useTranslations } from 'next-intl';
+import { useRouter, usePathname, useParams } from "next/navigation";
 
 export default function ActionBar({
   onSubmit,
   onClearData,
+  onClearFilters,
   viewMode,
   onViewChange,
   settingMode="Tokens",
 }) {
+  const pathname = usePathname(); // ✅ ได้ path ปัจจุบัน เช่น "/login", "/dashboard"
+
   const t = useTranslations('ActionBar');
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   
@@ -66,6 +71,22 @@ export default function ActionBar({
         >
           {t('reset')}
         </Button>
+
+        {/* 🔵 ปุ่มล้างตัวกรอง */}
+        {pathname.startsWith("/onesqa/settings") && settingMode === "Tokens" && (
+          <Button
+            variant="contained"
+            startIcon={<CleaningServicesIcon />}
+            onClick={onClearFilters}
+            sx={{
+              bgcolor: "#E3F2FD",
+              color: "#1565C0",
+              "&:hover": { bgcolor: "#BBDEFB" },
+            }}
+          >
+            {t('clear')}
+          </Button>
+        )}
       </Box>
 
       {/* ปุ่มกลุ่มขวา */}
