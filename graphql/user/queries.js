@@ -29,7 +29,8 @@ export const GET_USERS = gql`
         }
         user_role {
           role {
-            role_name
+            role_name_th
+            role_name_en
           }
         }
       }
@@ -69,7 +70,8 @@ export const GET_USER = gql`
       }
       user_role {
         role {
-          role_name
+          role_name_th
+          role_name_en
         }
       }
     }

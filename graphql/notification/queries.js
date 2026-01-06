@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const MY_NOTIFICATIONS = gql`
-  query myNotifications($user_id: ID!, $first: Int, $after: String) {
-    myNotifications(user_id: $user_id, first: $first, after: $after) {
+  query myNotifications($locale: localeMode, $user_id: ID!, $first: Int, $after: String) {
+    myNotifications(locale: $locale, user_id: $user_id, first: $first, after: $after) {
       edges {
         cursor
         node {

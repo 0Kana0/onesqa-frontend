@@ -42,6 +42,7 @@ import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 import { useLanguage } from "@/app/context/LanguageContext";
+import { GET_GROUP_BY_NAME } from "@/graphql/group/queries";
 
 const ChatPage = () => {
   const client = useApolloClient();
@@ -65,6 +66,8 @@ const ChatPage = () => {
   // ];
 
   const tInit = useTranslations("Init");
+  const tChatSidebar = useTranslations("ChatSidebar");
+  const tchaterror = useTranslations('ChatError');
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -89,11 +92,25 @@ const ChatPage = () => {
   });
 
   const {
+    data: groupData,
+    loading: groupLoading,
+    error: groupError,
+  } = useQuery(GET_GROUP_BY_NAME, {
+    fetchPolicy: "network-only",
+    variables: {
+      name: user?.group_name,
+    },
+  });
+
+  const {
     data: promptsData,
     loading: promptsLoading,
     error: promptsError,
     refetch: promptsRefetch,
   } = useQuery(GET_PROMPTS, {
+    variables: {
+      locale: locale,
+    },
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
@@ -112,7 +129,23 @@ const ChatPage = () => {
     setInitAttachments([]);
   }, [setInitText, setInitAttachments]);
 
-  if (userLoading || promptsLoading)
+  // เพิ่ม useEffect เพื่อ set ค่า model อัตโนมัติ
+  useEffect(() => {
+    if (!groupData?.groupByName?.ai) return;
+    if (!userData?.user?.user_ai) return;
+
+    const groupAiName = groupData.groupByName.ai.model_use_name;
+
+    const matchedAI = userData.user.user_ai.find(
+      (ua) => ua.ai?.model_use_name === groupAiName
+    );
+
+    if (matchedAI) {
+      setModel(String(matchedAI.ai_id ?? matchedAI.id));
+    }
+  }, [groupData, userData]);
+
+  if (userLoading || promptsLoading || groupLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -120,7 +153,7 @@ const ChatPage = () => {
       </Box>
     );
 
-  if (userError || promptsError)
+  if (userError || promptsError || groupError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -128,6 +161,7 @@ const ChatPage = () => {
     );
 
   console.log(initAttachments);
+  console.log("groupData", groupData.groupByName);
 
   const onClear = () => setInitAttachments([]);
   const handleSubmitFile = async () => {
@@ -146,7 +180,7 @@ const ChatPage = () => {
       handleCreateChat()
     } catch (error) {
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     }
   };
@@ -157,11 +191,12 @@ const ChatPage = () => {
       const trimmedText = initText?.trim() ?? "";
 
       const chatName =
-        trimmedText && trimmedText.length <= 40
-          ? trimmedText
-          : locale === "th"
-          ? "แชตใหม่จากเสียง"
-          : "new chat from mic";
+        trimmedText
+          ? (trimmedText.length > 40
+              ? (locale === "th" ? "แชตใหม่" : "new chat")
+              : trimmedText
+            )
+          : (locale === "th" ? "แชตใหม่จากเสียง" : "new chat from mic");
 
       const { data } = await createChat({
         variables: {
@@ -174,12 +209,15 @@ const ChatPage = () => {
       });
 
       console.log("✅ Create success:", data.createChat);
-      refetch();
+      //refetch();
+      // await client.refetchQueries({
+      //   include: [GET_CHATS],
+      // });
       // ✅ ส่งพารามิเตอร์ new=true ไปด้วย
       router.push(`/onesqa/chat/${data.createChat.id}?new=true`);
     } catch (error) {
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     }
   };
@@ -199,7 +237,7 @@ const ChatPage = () => {
           displayEmpty
           renderValue={(selected) => {
             if (selected === "0") {
-              return <Typography sx={{ opacity: 0.7 }}>กรุณาเลือกโมเดลคำตอบ</Typography>;
+              return <Typography sx={{ opacity: 0.7 }}>{tChatSidebar("menuitem")}</Typography>;
             }
 
             const ua = (userData?.user?.user_ai ?? []).find(
@@ -229,7 +267,7 @@ const ChatPage = () => {
             width: "250px",
           }}
         >
-          <MenuItem value="0">กรุณาเลือกโมเดลคำตอบ</MenuItem>
+          <MenuItem value="0">{tChatSidebar("menuitem")}</MenuItem>
 
           {(userData?.user?.user_ai ?? []).map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
@@ -280,6 +318,7 @@ const ChatPage = () => {
           }}
         >
           <ChatInputBar
+            theme = {theme}
             value={initText}
             model={model}
             onChange={setInitText}
@@ -299,11 +338,11 @@ const ChatPage = () => {
                 console.error(err);
               }
             }}
-            placeholder="ป้อนข้อความ.."
+            placeholder={tChatSidebar("inputph")}
             actions={[
               {
                 key: "deep",
-                label: "Deep Research",
+                label: tChatSidebar("deepresearch"),
                 onClick: () => console.log("deep"),
                 icon: <ScienceOutlinedIcon />,
               },

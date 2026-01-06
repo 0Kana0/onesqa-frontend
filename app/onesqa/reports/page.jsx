@@ -34,12 +34,15 @@ import { exportReportsToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
 import { GET_REPORTS, TOPFIVE_REPORTS } from "@/graphql/report/queries";
 import SmartPagination from "@/app/components/SmartPagination";
+import LocalizedDatePicker from "@/app/components/LocalizedDatePicker";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const ReportPage = () => {
   dayjs.extend(utc);
   dayjs.extend(timezone);
   dayjs.tz.setDefault("Asia/Bangkok"); // เอาออกได้ถ้าไม่อยาก fix timezone
 
+  const { locale } = useLanguage();
   const client = useApolloClient();
   const t = useTranslations("ReportPage");
   const tInit = useTranslations("Init");
@@ -286,7 +289,7 @@ const ReportPage = () => {
 
     const reportExcel = data?.reports?.items ?? [];
 
-    exportReportsToExcel(reportExcel);
+    exportReportsToExcel(reportExcel, locale);
   };
 
   return (
@@ -345,38 +348,38 @@ const ReportPage = () => {
             size="small"
             sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
           >
-            <MenuItem value="เลือกช่วงเวลา">เลือกช่วงเวลา</MenuItem>
-            <MenuItem value="วันนี้">วันนี้</MenuItem>
-            <MenuItem value="7วันย้อนหลัง">7วันย้อนหลัง</MenuItem>
-            <MenuItem value="1เดือนย้อนหลัง">1เดือนย้อนหลัง</MenuItem>
+            <MenuItem value="เลือกช่วงเวลา">{t("select0")}</MenuItem>
+            <MenuItem value="วันนี้">{t("select1")}</MenuItem>
+            <MenuItem value="7วันย้อนหลัง">{t("select2")}</MenuItem>
+            <MenuItem value="1เดือนย้อนหลัง">{t("select3")}</MenuItem>
           </Select>
 
           {/* วันที่เริ่มต้น */}
-          <TextField
+          <LocalizedDatePicker
             label={t("startDate")}
-            type="date"
             value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value);
-              setPage(1);
+            onChange={(v) => {
+              setStartDate(v)
+              setPage(1)
             }}
-            size="small"
-            sx={{ width: isTablet ? "100%" : 200 }}
-            InputLabelProps={{ shrink: true }}
-          />
+            textFieldProps={{
+              size: "small",
+              sx: { width: isTablet ? "100%" : 200 },
+            }}
+            />
 
           {/* วันที่สิ้นสุด */}
-          <TextField
+          <LocalizedDatePicker
             label={t("endDate")}
-            type="date"
             value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value);
-              setPage(1);
+            onChange={(v) => {
+              setEndDate(v)
+              setPage(1)
             }}
-            size="small"
-            sx={{ width: isTablet ? "100%" : 200 }}
-            InputLabelProps={{ shrink: true }}
+            textFieldProps={{
+              size: "small",
+              sx: { width: isTablet ? "100%" : 200 },
+            }}
           />
         </Box>
       </Box>
@@ -461,7 +464,7 @@ const ReportPage = () => {
                 {reportsData?.reports?.items?.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                      ไม่พบข้อมูลรายงาน
+                      {t("notfound")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -566,7 +569,7 @@ const ReportPage = () => {
             {topfiveData?.topFiveReports?.length === 0 && (
               <Box sx={{ textAlign: "center", my: 5 }}>
                 <Typography variant="body1" color="text.secondary">
-                  ไม่พบข้อมูลอันดับของผู้ใช้งาน
+                  {t("notfound1")}
                 </Typography>
               </Box>
             )}

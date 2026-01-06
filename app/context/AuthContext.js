@@ -22,7 +22,8 @@ const initUser = {
   phone: "",
   position: "",
   group_name: "",
-  role_name: "",
+  role_name_th: "",
+  role_name_en: "",
 };
 
 export function AuthProvider({ children }) {
@@ -39,6 +40,8 @@ export function AuthProvider({ children }) {
       // const userData = getCookie("user");
       const userData = localStorage.getItem("user");
       const parseUserData = JSON.parse(userData);
+      console.log("parseUserData", parseUserData);
+      
 
       if (userData) {
         try {
@@ -86,8 +89,8 @@ export function AuthProvider({ children }) {
     });
   };
 
-  const userContext = async (userData, locale) => {
-    console.log("userData", userData, locale);
+  const userContext = async (userData) => {
+    console.log("userData", userData);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -106,7 +109,7 @@ export function AuthProvider({ children }) {
 
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("locale", locale);
+    //localStorage.setItem("locale", userData?.locale);
   };
 
   const logoutContext = async () => {

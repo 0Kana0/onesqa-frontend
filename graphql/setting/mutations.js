@@ -10,8 +10,10 @@ export const UPDATE_SETTING = gql`
       input: $input
     ) {
       id
-      setting_name
-      setting_detail
+      setting_name_th
+      setting_name_en
+      setting_detail_th
+      setting_detail_en
       activity
     }
   }

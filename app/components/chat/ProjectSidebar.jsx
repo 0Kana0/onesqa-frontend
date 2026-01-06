@@ -37,12 +37,16 @@ import { useTranslations } from "next-intl";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "@/app/context/SidebarContext";
 import { GET_CHATS } from "@/graphql/chat/queries";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function ProjectSidebar() {
+  const client = useApolloClient();
+  const { locale } = useLanguage();
   const { user } = useAuth();
   const { theme } = useTheme();
   const { toggle } = useSidebar(); // ✅ ดึงจาก Context
 
+  const tChatSidebar = useTranslations("ChatSidebar");
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -107,7 +111,7 @@ export default function ProjectSidebar() {
     // รอจนกว่าจะมีโครง usersData ก่อน ค่อยประมวลผล
     if (!chatgroupsData?.chatgroups) return;
 
-    const base = [{ id: 0, label: "กลุ่มใหม่", href: "#" }];
+    const base = [{ id: 0, label: tChatSidebar("newgroup"), href: "#" }];
 
     const mapped = (chatgroupsData?.chatgroups?.edges || [])
       .map((e) => e?.node)
@@ -119,7 +123,7 @@ export default function ProjectSidebar() {
       }));
 
     setItems([...base, ...mapped]);
-  }, [chatgroupsData]);
+  }, [chatgroupsData, locale]);
 
   useEffect(() => {
     if (!chatgroupsData?.chatgroups || !id) return;
@@ -162,8 +166,8 @@ export default function ProjectSidebar() {
       </Box>
     );
 
-  const baseItem = items.find((it) => it.label === "กลุ่มใหม่");
-  const groupItems = items.filter((it) => it.label !== "กลุ่มใหม่");
+  const baseItem = items.find((it) => it.label === tChatSidebar("newgroup"),);
+  const groupItems = items.filter((it) => it.label !== tChatSidebar("newgroup"),);
 
   const visibleGroups = showAll ? groupItems : groupItems.slice(0, MAX_VISIBLE);
 
@@ -194,7 +198,7 @@ export default function ProjectSidebar() {
     if (theme === "dark") {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textgroup1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -216,7 +220,10 @@ export default function ProjectSidebar() {
             });
             console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
-            chatsRefresh();
+            //chatsRefresh();
+            await client.refetchQueries({
+              include: [GET_CHATS],
+            });
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
               router.push("/onesqa/chat");
@@ -226,7 +233,7 @@ export default function ProjectSidebar() {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textgroup2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
             background: "#2F2F30", // สีพื้นหลังดำ
@@ -239,7 +246,7 @@ export default function ProjectSidebar() {
     } else {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textgroup1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -257,7 +264,10 @@ export default function ProjectSidebar() {
             });
             console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
-            chatsRefresh();
+            //chatsRefresh();
+            await client.refetchQueries({
+              include: [GET_CHATS],
+            });
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
               router.push("/onesqa/chat");
@@ -267,7 +277,7 @@ export default function ProjectSidebar() {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textgroup2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
           });
@@ -346,7 +356,7 @@ export default function ProjectSidebar() {
           <ListItemText
             primary={
               <Typography sx={{ fontSize: 13.5, color: "common.white" }}>
-                กลุ่ม
+                {tChatSidebar("collapse1")}
               </Typography>
             }
           />
@@ -480,7 +490,7 @@ export default function ProjectSidebar() {
                 }}
               >
                 <Typography variant="caption" sx={{ opacity: 0.6 }}>
-                  -- ไม่มีกลุ่ม --
+                  -- {tChatSidebar("notfound")} --
                 </Typography>
               </Box>
             )}
@@ -497,8 +507,8 @@ export default function ProjectSidebar() {
         onRename={handleRename}
         onDelete={handleDelete}
         // ปรับข้อความได้ตามบริบท เช่น "กลุ่ม"
-        renameLabel="เปลี่ยนชื่อกลุ่ม"
-        deleteLabel="ลบกลุ่ม"
+        renameLabel={tChatSidebar("groupdropdownrename")}
+        deleteLabel={tChatSidebar("groupdropdowndelete")}
         // paperSx={{ minWidth: 200 }} // ถ้าต้องการปรับแต่งเพิ่ม
       />
 
@@ -508,9 +518,9 @@ export default function ProjectSidebar() {
         onClose={closeNewProject}
         onCreate={rename !== null ? handleUpdateproject : handleCreateProject}
         initialName={rename !== null ? rename.label : ""} // ถ้าต้องการค่าเริ่มต้น
-        title={rename !== null ? "เเก้ไขชื่อกลุ่ม" : "สร้างกลุ่มใหม่"}
-        label="ชื่อกลุ่ม"
-        confirmLabel={rename !== null ? "เเก้ไข" : "สร้างกลุ่ม"}
+        title={rename !== null ? tChatSidebar("grouptitleedit") : tChatSidebar("grouptitlenew")}
+        label={tChatSidebar("grouplabel")}
+        confirmLabel={rename !== null ? tChatSidebar("groupcomfirmedit") : tChatSidebar("groupcomfirmnew")}
       />
     </Box>
   );

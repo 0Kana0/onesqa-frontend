@@ -30,6 +30,7 @@ import CloseRounded from "@mui/icons-material/CloseRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import { useSidebar } from "@/app/context/SidebarContext";
+import { useTranslations } from "next-intl";
 
 const normalizeText = (v) => {
   const s = (v ?? "").trim();
@@ -40,12 +41,14 @@ export default function ProjectSearchModal({
   open,
   onClose,
   onSelect, // (item) => void
-  placeholder = "ค้นหากลุ่ม...",
+  placeholder,
   group_id
 }) {
   const { user } = useAuth();
   const { toggle } = useSidebar(); // ✅ ดึงจาก Context
   
+  const tChatSidebar = useTranslations("ChatSidebar");
+
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
@@ -147,7 +150,7 @@ export default function ProjectSearchModal({
           <SearchRounded fontSize="small" />
           <InputBase
             autoFocus
-            placeholder={placeholder}
+            placeholder={tChatSidebar("groupsearchph")}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
@@ -219,7 +222,7 @@ export default function ProjectSearchModal({
                 textAlign: "center",
               }}
             >
-              ไม่พบข้อมูล
+              {tChatSidebar("groupnotfound")}
             </Box>
           )}
         </List>

@@ -20,9 +20,9 @@ function IntlWrapper({ children }) {
   const { locale } = useLanguage();
   const messages = locale === "th" ? thMessages : enMessages;
   return (
-    <NextIntlClientProvider 
-      locale={locale} 
-      timeZone="Asia/Bangkok"   // 👈 ใส่ตรงนี้
+    <NextIntlClientProvider
+      locale={locale}
+      timeZone="Asia/Bangkok" // 👈 ใส่ตรงนี้
       messages={messages}
     >
       {children}
@@ -32,29 +32,29 @@ function IntlWrapper({ children }) {
 
 export default function Providers({ children }) {
   return (
-    <ApolloProvider client={client}>
-      <AuthProvider>
-        <LanguageProvider>
-          <SidebarProvider>
-            <InitTextProvider>
-              <NextThemesProvider
-                attribute="class"
-                defaultTheme="light"
-                value={{ light: "light", dark: "dark" }}
-                enableSystem={false}
-              >
-                <MuiThemeProvider>
-                  <IntlWrapper>
+    <LanguageProvider>
+      <NextThemesProvider
+        attribute="class"
+        defaultTheme="light"
+        value={{ light: "light", dark: "dark" }}
+        enableSystem={false}
+      >
+        <MuiThemeProvider>
+          <IntlWrapper>
+            <ApolloProvider client={client}>
+              <AuthProvider>
+                <SidebarProvider>
+                  <InitTextProvider>
                     {children}
                     {/* ✅ ToastContainer อยู่ข้างนอกทั้งหมด */}
                     <ToastContainer newestOnTop />
-                  </IntlWrapper>
-                </MuiThemeProvider>
-              </NextThemesProvider>
-            </InitTextProvider>
-          </SidebarProvider>
-        </LanguageProvider>
-      </AuthProvider>
-    </ApolloProvider>
+                  </InitTextProvider>
+                </SidebarProvider>
+              </AuthProvider>
+            </ApolloProvider>
+          </IntlWrapper>
+        </MuiThemeProvider>
+      </NextThemesProvider>
+    </LanguageProvider>
   );
 }

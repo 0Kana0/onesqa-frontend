@@ -10,6 +10,8 @@ import {
   alpha,
 } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import { useTranslations } from "next-intl";
+
 // ลบ EditRoundedIcon ทิ้งได้เพราะไม่ได้ใช้
 // import EditRoundedIcon from "@mui/icons-material/EditRounded";
 
@@ -56,6 +58,8 @@ export default function ActionTextField({
   disabled = false,
   sx,
 }) {
+  const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
+
   const toText = (v) => (typeof v === "string" ? v : ""); // กัน object/undefined/null
 
   // title value + handler (normalized)
@@ -98,7 +102,7 @@ export default function ActionTextField({
         />
         <Stack direction="row" spacing={0.5} alignItems="center">
           {onDelete && (
-            <Tooltip title="ลบ">
+            <Tooltip title={tDelete("tooltip")}>
               <IconButton size="small" onClick={onDelete} color="error">
                 <DeleteOutlineRoundedIcon fontSize="small" />
               </IconButton>

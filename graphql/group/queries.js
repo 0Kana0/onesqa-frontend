@@ -56,3 +56,22 @@ export const GET_GROUP = gql`
     }
   }
 `;
+
+export const GET_GROUP_BY_NAME = gql`
+  query groupByName($name: String!) {
+    groupByName(name: $name) {
+      id
+      name
+      status
+      ai {
+        model_use_name
+      }
+      group_ai {
+        init_token
+        ai {
+          model_use_name
+        }
+      }
+    }
+  }
+`;

@@ -2,7 +2,25 @@
 
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { Box, Button, Typography, CircularProgress, useMediaQuery, Stack } from "@mui/material";
+import { 
+  Box, 
+  Button, 
+  Typography, 
+  CircularProgress, 
+  useMediaQuery, 
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  MenuItem,
+  LinearProgress,
+  Paper,
+  Switch,
+ } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy"; // 🤖 AI
 import AllInclusiveIcon from "@mui/icons-material/AllInclusive"; // 🌐 Model
 import HubIcon from "@mui/icons-material/Hub";
@@ -10,7 +28,6 @@ import ActionBar from "@/app/components/ActionBar";
 import TokenUsageCardSetting from "@/app/components/TokenUsageCardSetting";
 import UserGroupSettingCard from "@/app/components/UserGroupSettingCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
-import GroupTokenTable from "@/app/components/GroupTokenTable";
 import Swal from "sweetalert2";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
@@ -31,6 +48,7 @@ import { UPDATE_GROUP } from "@/graphql/group/mutations";
 import GroupFilterBar from "@/app/components/GroupFilterBar";
 import SmartPagination from "@/app/components/SmartPagination";
 import { closeLoading, showLoading, showSuccessAlert } from "@/util/loadingModal";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const normalize = (v) => (v === 'โมเดลทั้งหมด' || v === '' || v == null ? null : v);
 const normalizeText = (v) => {
@@ -40,14 +58,16 @@ const normalizeText = (v) => {
 
 const SettingPage = () => {
   const { theme } = useTheme();
-
+  const { locale } = useLanguage();
   const [selected, setSelected] = useState("AI");
   const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
   const [resetTrigger, setResetTrigger] = useState(0); // ✅ ตัวแปร trigger
 
   const t = useTranslations("SettingPage");
+  const ttable = useTranslations("GroupTokenTable");
   const tInit = useTranslations("Init");
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
+  const tsettingerror = useTranslations('SettingError');
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -135,6 +155,9 @@ const SettingPage = () => {
     error: promptsError,
     refetch: promptsRefetch,
   } = useQuery(GET_PROMPTS, {
+    variables: {
+      locale: locale,
+    },
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
@@ -143,7 +166,7 @@ const SettingPage = () => {
     data: groupsData,
     loading: groupsLoading,
     error: groupsError,
-    //refetch: groupsRefetch,
+    refetch: groupsRefetch,
   } = useQuery(GET_GROUPS, {
     fetchPolicy: "cache-and-network",
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
@@ -368,7 +391,7 @@ const SettingPage = () => {
     if (theme === "dark") {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textprompt1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -396,7 +419,7 @@ const SettingPage = () => {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textprompt2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
             background: "#2F2F30", // สีพื้นหลังดำ
@@ -409,7 +432,7 @@ const SettingPage = () => {
     } else {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textprompt1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -433,7 +456,7 @@ const SettingPage = () => {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textprompt2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
           });
@@ -456,6 +479,45 @@ const SettingPage = () => {
             }
           : r
       )
+    );
+  };
+
+  // ✅ แปลงเป็นเลขแบบกัน NaN/ค่าว่าง
+  const toNumberSafe = (v) => {
+    const s = String(v ?? "").trim();
+    if (s === "") return 0;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  // ✅ table จะอ้างอิงด้วย model_use_name -> upsert เข้า groupAis
+  const upsertGroupAiField = (groupId, modelUseName, field, value) => {
+    setGroups((prev) =>
+      prev.map((g) => {
+        if (g.id !== groupId) return g;
+
+        const next = [...(g.groupAis || [])];
+        let idx = next.findIndex((x) => x.model_use_name === modelUseName);
+
+        // ถ้าไม่มี row ของโมเดลนี้ ให้สร้างใหม่ (เพื่อแก้ไขได้เหมือน card)
+        if (idx === -1) {
+          next.push({
+            model_use_name: modelUseName,
+            ai_id: null,
+            init_token: 0,
+            plus_token: 0,
+            minus_token: 0,
+            today: 0,
+            average: 0,
+            token_count: 0,
+            token_all: 0,
+          });
+          idx = next.length - 1;
+        }
+
+        next[idx] = { ...next[idx], [field]: value };
+        return { ...g, groupAis: next };
+      })
     );
   };
 
@@ -540,7 +602,7 @@ const SettingPage = () => {
                   prompt_title: persisted.prompt_title,
                   prompt_detail: persisted.prompt_detail,
                   // locale: persisted.locale,
-                  locale: "th",
+                  locale: locale,
                 },
               },
             });
@@ -551,7 +613,7 @@ const SettingPage = () => {
         console.log("✅ Update success:", results);
       } catch (error) {
         showErrorAlert(error, theme, {
-          title: "ตั้งค่า Prompt ไม่สำเร็จ",
+          title: tsettingerror('error1'),
         });
       }
 
@@ -570,7 +632,7 @@ const SettingPage = () => {
                   prompt_title: persisted.prompt_title,
                   prompt_detail: persisted.prompt_detail,
                   // locale: persisted.locale,
-                  locale: "th",
+                  locale: locale,
                 },
               },
             });
@@ -581,7 +643,7 @@ const SettingPage = () => {
         console.log("✅ Create success:", results);
       } catch (error) {
         showErrorAlert(error, theme, {
-          title: "ตั้งค่า Prompt ไม่สำเร็จ",
+          title: tsettingerror('error1'),
         });
       }
 
@@ -589,13 +651,14 @@ const SettingPage = () => {
       await promptsRefetch();
 
       await showSuccessAlert({
-        title: "สำเร็จ",
-        text: "ดำเนินการเรียบร้อย",
+        title: t("syncuser2"),
+        text: t("syncuser3"),
+        theme,
       });
       
     } else if (selected === "Model") {
       try {
-        showLoading("กำลังอัปเดต AI...");
+        showLoading(t("syncusermodel1"), theme);
 
         // ✅ ใช้ Promise.all เพื่ออัปเดตพร้อมกันทั้งหมด
         const results = await Promise.all(
@@ -618,18 +681,19 @@ const SettingPage = () => {
 
         closeLoading();
         await showSuccessAlert({
-          title: "สำเร็จ",
-          text: "ดำเนินการเรียบร้อย",
+          title: t("syncuser2"),
+          text: t("syncuser3"),
+          theme,
         });
       } catch (error) {
         closeLoading();
         showErrorAlert(error, theme, {
-          title: "ตั้งค่า AI ไม่สำเร็จ",
+          title: tsettingerror('error2'),
         });
       }
     } else if (selected === "Tokens") {
       try {
-        showLoading("กำลังอัปเดต Group...");
+        showLoading(t("syncusertokens1"), theme);
 
         // สร้าง lookup map ไว้ก่อน (เร็วกว่า find ซ้ำ ๆ)
         const aiIdByUseName = new Map(
@@ -679,14 +743,41 @@ const SettingPage = () => {
 
         closeLoading();
         await showSuccessAlert({
-          title: "สำเร็จ",
-          text: "ดำเนินการเรียบร้อย",
+          title: t("syncuser2"),
+          text: t("syncuser3"),
+          theme,
         });
+
+        setGroups((prev) =>
+          prev.map((g) => ({
+            ...g,
+            groupAis: (g.groupAis || []).map((ga) => ({
+              ...ga,
+              plus_token: 0,
+              minus_token: 0,
+            })),
+          }))
+        );
+
+        await groupsRefetch()
       } catch (error) {
         closeLoading();
         showErrorAlert(error, theme, {
-          title: "ตั้งค่า Group ไม่สำเร็จ",
+          title: tsettingerror('error3'),
         });
+
+        setGroups((prev) =>
+          prev.map((g) => ({
+            ...g,
+            groupAis: (g.groupAis || []).map((ga) => ({
+              ...ga,
+              plus_token: 0,
+              minus_token: 0,
+            })),
+          }))
+        );
+
+        await groupsRefetch()
       }
     }
   };
@@ -706,6 +797,34 @@ const SettingPage = () => {
     if (page >= totalPages) return [totalPages - 2, totalPages - 1, totalPages];
 
     return [page - 1, page, page + 1];
+  };
+
+  // 🔹 ฟังก์ชันเรนเดอร์แถบความคืบหน้า
+  const renderProgress = ({ used = 0, total = 0 }) => {
+    const percent = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+
+    let progressColor = "#3E8EF7";
+    if (percent >= 15 && percent <= 30) progressColor = "#FFA726";
+    else if (percent < 15) progressColor = "#E53935";
+
+    return (
+      <Box>
+        <Typography variant="body2" fontWeight={600}>
+          {used / 1_000_000}M / {total / 1_000_000}M Tokens
+        </Typography>
+        <LinearProgress
+          variant="determinate"
+          value={percent}
+          sx={{
+            mt: 0.5,
+            height: 8,
+            borderRadius: 5,
+            bgcolor: "#e3f2fd",
+            "& .MuiLinearProgress-bar": { bgcolor: progressColor },
+          }}
+        />
+      </Box>
+    );
   };
 
   // ✅ เนื้อหาที่จะเปลี่ยนตามปุ่ม
@@ -736,9 +855,9 @@ const SettingPage = () => {
                 }}
                 key={prompt.id}
                 titleValue={prompt.prompt_title}
-                titlePlaceholder="หัวข้อ"
+                titlePlaceholder={t('title')}
                 detailValue={prompt.prompt_detail}
-                detailPlaceholder="รายละเอียด"
+                detailPlaceholder={t('detail')}
                 onTitleChange={(v) =>
                   updatePersisted(prompt.id, "prompt_title", v)
                 }
@@ -751,7 +870,7 @@ const SettingPage = () => {
             {(persistedEdits.length === 0 && newPrompts.length === 0) && (
               <Box sx={{ textAlign: "center", my: 5 }}>
                 <Typography variant="body1" color="text.secondary">
-                  ไม่พบข้อมูลรายการ prompt
+                  {t('notfound1')}
                 </Typography>
               </Box>
             )}
@@ -763,9 +882,9 @@ const SettingPage = () => {
                 }}
                 key={p.tempId}
                 titleValue={p.prompt_title}
-                titlePlaceholder="หัวข้อ"
+                titlePlaceholder={t('title')}
                 detailValue={p.prompt_detail}
-                detailPlaceholder="รายละเอียด"
+                detailPlaceholder={t('detail')}
                 onTitleChange={(v) => updateNew(p.tempId, "prompt_title", v)}
                 onDetailChange={(v) => updateNew(p.tempId, "prompt_detail", v)}
                 onDelete={() => handleDeleteNew(p.tempId)}
@@ -785,7 +904,7 @@ const SettingPage = () => {
                   "&:hover": { bgcolor: "#1565c0" },
                 }}
               >
-                เพิ่ม Prompt ใหม่
+                {t('newprompt')}
               </Button>
             </Box>
           </Box>
@@ -959,7 +1078,7 @@ const SettingPage = () => {
                 {groups.length === 0 && (
                   <Box sx={{ textAlign: "center", my: 2 }}>
                     <Typography variant="body1" color="text.secondary">
-                      ไม่พบข้อมูลกลุ่มผู้ใช้งาน
+                      {t('notfound3')}
                     </Typography>
                   </Box>
                 )}
@@ -975,13 +1094,265 @@ const SettingPage = () => {
                 </Stack>
               </>
             ) : (
-              <>
-                <GroupTokenTable
-                  rows={rows}
-                  modelOptions={modelOptions}
-                  onChange={handleSettingChange}
-                />
-              </>
+              <Box
+                sx={{
+                  bgcolor: "background.paper",
+                }}
+              >
+                {/* ✅ กล่องสำหรับเลื่อนแนวนอน (กันตารางเกินจอ) */}
+                <Box
+                  sx={{
+                    width: "100%",
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    // ❗ อย่าซ่อน Y ตรงนี้ เพราะเราจะให้ TableContainer จัดการ scroll แถวแทน
+                    maxWidth: isMobile ? "80vw" : isTablet ? "85vw" : !open ? "85vw" : "70vw", // ✅ จำกัดไม่ให้เกินหน้าจอ
+                  }}
+                >
+                  {/* ✅ กล่องสำหรับเลื่อนแนวตั้ง + stickyHeader */}
+                  <TableContainer
+                    component={Paper}
+                    elevation={0}
+                    sx={{
+                      display: "inline-block", // ✅ ป้องกันตารางยืดเกิน container
+                      mt: 1,
+                      borderRadius: 2,
+                      // ✅ ทำให้เลื่อนดู "แถว" ได้
+                      maxHeight: isMobile ? "55vh" : "65vh",
+                      overflowY: "auto",
+                      // ✅ เพื่อให้ตารางกว้างเท่าที่จำเป็น แล้วค่อยเลื่อน X ที่ Box ชั้นนอก
+                      width: "max-content",
+                      minWidth: "100%",
+                    }}
+                  >
+                    <Table stickyHeader size="small" sx={{ tableLayout: "auto" }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+                            {ttable("tablecell1")}
+                          </TableCell>
+
+                          <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 120 }}>
+                            {ttable("tablecell11")}
+                          </TableCell>
+
+                          <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 220 }}>
+                            {ttable("tablecell2")}
+                            <Typography variant="body2" color="text.secondary">
+                              {ttable("tablecell2sub")}
+                            </Typography>
+                          </TableCell>
+
+                          {/* token ตั้งต้น */}
+                          {modelOptions.map((model) => (
+                            <TableCell
+                              key={`init-${model}`}
+                              sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 220 }}
+                            >
+                              {model}
+                              <Typography variant="body2" color="text.secondary">
+                                {ttable("tablecell3sub")}
+                              </Typography>
+                            </TableCell>
+                          ))}
+
+                          {/* เพิ่ม token */}
+                          {modelOptions.map((model) => (
+                            <TableCell
+                              key={`plus-${model}`}
+                              sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 220 }}
+                            >
+                              {model}
+                              <Typography variant="body2" color="text.secondary">
+                                {ttable("tablecell4sub")}
+                              </Typography>
+                            </TableCell>
+                          ))}
+
+                          {/* ลด token */}
+                          {modelOptions.map((model) => (
+                            <TableCell
+                              key={`minus-${model}`}
+                              sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 220 }}
+                            >
+                              {model}
+                              <Typography variant="body2" color="text.secondary">
+                                {ttable("tablecell5sub")}
+                              </Typography>
+                            </TableCell>
+                          ))}
+
+                          {/* ข้อมูล token */}
+                          {modelOptions.map((model) => (
+                            <TableCell
+                              key={`info-${model}`}
+                              sx={{ fontWeight: 700, whiteSpace: "nowrap", width: 260 }}
+                            >
+                              {model}
+                              <Typography variant="body2" color="text.secondary">
+                                {ttable("tablecell6sub")}
+                              </Typography>
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+
+                      <TableBody>
+                        {groups.map((group) => (
+                          <TableRow key={group.id} hover>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              <Typography fontWeight={600}>{group.name}</Typography>
+                            </TableCell>
+
+                            <TableCell>
+                              <Switch
+                                checked={group.status === true || group.status === 1}
+                                onChange={(e) =>
+                                  handleGroupChange(group.id, "status", e.target.checked)
+                                }
+                              />
+                            </TableCell>
+
+                            <TableCell sx={{ minWidth: 220 }}>
+                              <TextField
+                                select
+                                size="small"
+                                value={group.model_use_name || ""}
+                                onChange={(e) =>
+                                  handleGroupChange(group.id, "model_use_name", e.target.value)
+                                }
+                                fullWidth
+                              >
+                                {modelOptions.map((option, i) => (
+                                  <MenuItem key={i} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                            </TableCell>
+
+                            {/* init_token */}
+                            {modelOptions.map((model) => {
+                              const aiRow =
+                                (group.groupAis || []).find((x) => x.model_use_name === model) || null;
+                              return (
+                                <TableCell key={`init-${group.id}-${model}`} sx={{ minWidth: 220 }}>
+                                  <TextField
+                                    type="number"
+                                    size="small"
+                                    fullWidth
+                                    value={aiRow?.init_token ?? 0}
+                                    onChange={(e) =>
+                                      upsertGroupAiField(
+                                        group.id,
+                                        model,
+                                        "init_token",
+                                        toNumberSafe(e.target.value)
+                                      )
+                                    }
+                                    sx={{ "& .MuiInputBase-input": { textAlign: "right" } }}
+                                  />
+                                </TableCell>
+                              );
+                            })}
+
+                            {/* plus_token */}
+                            {modelOptions.map((model) => {
+                              const aiRow =
+                                (group.groupAis || []).find((x) => x.model_use_name === model) || null;
+                              return (
+                                <TableCell key={`plus-${group.id}-${model}`} sx={{ minWidth: 220 }}>
+                                  <TextField
+                                    type="number"
+                                    size="small"
+                                    fullWidth
+                                    value={aiRow?.plus_token ?? 0}
+                                    onChange={(e) =>
+                                      upsertGroupAiField(
+                                        group.id,
+                                        model,
+                                        "plus_token",
+                                        toNumberSafe(e.target.value)
+                                      )
+                                    }
+                                    sx={{ "& .MuiInputBase-input": { textAlign: "right" } }}
+                                  />
+                                </TableCell>
+                              );
+                            })}
+
+                            {/* minus_token */}
+                            {modelOptions.map((model) => {
+                              const aiRow =
+                                (group.groupAis || []).find((x) => x.model_use_name === model) || null;
+                              return (
+                                <TableCell key={`minus-${group.id}-${model}`} sx={{ minWidth: 220 }}>
+                                  <TextField
+                                    type="number"
+                                    size="small"
+                                    fullWidth
+                                    value={aiRow?.minus_token ?? 0}
+                                    onChange={(e) =>
+                                      upsertGroupAiField(
+                                        group.id,
+                                        model,
+                                        "minus_token",
+                                        toNumberSafe(e.target.value)
+                                      )
+                                    }
+                                    sx={{ "& .MuiInputBase-input": { textAlign: "right" } }}
+                                  />
+                                </TableCell>
+                              );
+                            })}
+
+                            {/* info progress */}
+                            {modelOptions.map((model) => {
+                              const aiRow =
+                                (group.groupAis || []).find((x) => x.model_use_name === model) || null;
+
+                              const totalFallback = Math.max(
+                                0,
+                                (aiRow?.init_token ?? 0) +
+                                  (aiRow?.plus_token ?? 0) -
+                                  (aiRow?.minus_token ?? 0)
+                              );
+
+                              const total = aiRow?.token_all ?? totalFallback;
+                              const used = aiRow?.token_count ?? 0;
+
+                              return (
+                                <TableCell key={`info-${group.id}-${model}`} sx={{ minWidth: 260 }}>
+                                  {renderProgress({ used, total })}
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {/* ถ้าไม่มีข้อมูล */}
+                  {groups.length === 0 && (
+                    <Box sx={{ textAlign: "center", my: 2 }}>
+                      <Typography variant="body1" color="text.secondary">
+                        {t('notfound3')}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* ✅ Pagination อยู่นอก TableContainer เพื่อไม่ให้โดน scroll แนวตั้ง */}
+                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+                  <SmartPagination
+                    page={page}
+                    totalPages={totalPages}
+                    disabled={groupsLoading}
+                    onChange={(newPage) => setPage(newPage)}
+                  />
+                </Box>
+              </Box>
             )}
           </Box>
           </>

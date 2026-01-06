@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { setCookie, deleteCookie } from "cookies-next";
+import { useTheme } from "next-themes";
+import { useLanguage } from "@/app/context/LanguageContext";
 import { Box, CssBaseline, Container, useMediaQuery } from "@mui/material";
 import { GET_ME } from "@/graphql/auth/queries";
 import { REFRESH_TOKEN } from "@/graphql/auth/mutations";
@@ -13,8 +15,17 @@ import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import Footer from "../components/layout/Footer";
 
+const mapTheme = (value) => {
+  const v = String(value ?? "").toUpperCase();
+  if (v === "DARK") return "dark";
+  if (v === "LIGHT") return "light";
+  return value; // หรือ return null / "light" ตามที่ต้องการ
+};
+
 export default function PrivateLayout({ children }) {
   const { ready, isAuthed } = useRequireAuth();
+  const { theme, setTheme } = useTheme();
+  const { handleLanguageChange, locale } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -43,8 +54,15 @@ export default function PrivateLayout({ children }) {
         .then((res) => {
           const payload = res?.data?.refreshToken;
           if (payload?.user) {
-            localStorage.setItem("user", JSON.stringify(payload.user));
-            setCookie("accessToken", payload.token, {
+            localStorage.setItem("user", JSON.stringify(payload?.user));
+            handleLanguageChange(payload?.user?.locale || "th");
+            setTheme(mapTheme(payload?.user?.color_mode) || "light");
+            if (payload?.user?.alert === true) {
+              localStorage.setItem("alert", payload?.user?.alert);
+            } else {
+              localStorage.removeItem("alert");
+            }
+            setCookie("accessToken", payload?.token, {
               path: "/",
               maxAge: 60 * 15,
               sameSite: "lax",
@@ -64,7 +82,14 @@ export default function PrivateLayout({ children }) {
   // ✅ เก็บ user ทุกครั้งที่ data เปลี่ยน
   useEffect(() => {
     if (data?.me) {
-      localStorage.setItem("user", JSON.stringify(data.me));
+      localStorage.setItem("user", JSON.stringify(data?.me));
+      handleLanguageChange(data?.me?.locale || "th");
+      setTheme(mapTheme(data?.me?.color_mode) || "light");
+      if (data?.me?.alert === true) {
+        localStorage.setItem("alert", data?.me?.alert);
+      } else {
+        localStorage.removeItem("alert");
+      } 
     }
   }, [data]);
 

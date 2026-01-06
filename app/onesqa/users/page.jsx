@@ -42,6 +42,7 @@ import {
   showSuccessAlert,
 } from "@/util/loadingModal";
 import { showErrorAlert } from "@/util/errorAlert";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const normalize = (v) => (v === "ทั้งหมด" || v === "" || v == null ? null : v);
 const normalizeText = (v) => {
@@ -51,10 +52,13 @@ const normalizeText = (v) => {
 
 export default function UserPage() {
   const client = useApolloClient();
+  const { locale } = useLanguage();
   const { theme } = useTheme();
   const router = useRouter();
   const t = useTranslations("UserPage");
   const tInit = useTranslations("Init");
+  const tusererror = useTranslations('UserError');
+
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
@@ -64,6 +68,8 @@ export default function UserPage() {
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
   const [page, setPage] = useState(1);
   const rowsPerPage = 5; // ✅ แสดง 5 แถวต่อหน้า
+
+  const [roles, setRoles] = useState([]);
 
   const [users, setUsers] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -222,15 +228,25 @@ export default function UserPage() {
     },
     [users, pendingIds, updateUser]
   );
-
-  const roles = rolesData?.roles ?? [];
-  const getRoleIdByName = useCallback(
+  const getRoleByName = useCallback(
     (name) => {
-      const found = roles.find((r) => r.role_name === name);
-      return found?.id ?? null;
+      if (!name) return null;
+
+      return (
+        roles.find(
+          (r) =>
+            r.role_name === name ||
+            r.role_name_th === name ||
+            r.role_name_en === name
+        ) ?? null
+      );
     },
     [roles]
   );
+  const getBaseRoleNameByLoginType = (lt) => {
+    if (lt === "INSPEC") return "ผู้ประเมินภายนอก";
+    return "เจ้าหน้าที่";
+  };
   const handleToggleAccessAdmin = useCallback(
     async (id, nextChecked, login_type) => {
       // กันกดซ้ำถ้ายิงอยู่
@@ -244,67 +260,54 @@ export default function UserPage() {
 
       const currentLoginType = login_type || current.login_type;
 
-      // role พื้นฐานตาม login_type
-      const getBaseRoleNameByLoginType = (lt) => {
-        if (lt === "INSPEC") return "ผู้ประเมินภายนอก";
-        // DEFAULT = NORMAL หรืออื่น ๆ
-        return "เจ้าหน้าที่";
-      };
-
-      // nextChecked = true  -> ผู้ดูแลระบบ
-      // nextChecked = false -> map ตาม login_type
       const nextRoleName = nextChecked
         ? "ผู้ดูแลระบบ"
         : getBaseRoleNameByLoginType(currentLoginType);
 
-      const nextRoleId = getRoleIdByName(nextRoleName);
+      // 🔥 ใช้ helper ใหม่
+      const nextRole = getRoleByName(nextRoleName);
 
-      if (!nextRoleId) {
-        console.error("ไม่พบ role_id ของ:", nextRoleName);
+      if (!nextRole?.id) {
+        console.error("ไม่พบ role:", nextRoleName);
         return;
       }
 
-      // 1) ล็อกปุ่มแถวนั้น
-      setPendingIds((prev) => {
-        const s = new Set(prev);
-        s.add(id);
-        return s;
-      });
+      setPendingIds((prev) => new Set(prev).add(id));
 
-      // 2) optimistic update
+      // optimistic update (ใช้ชื่อไทยแสดง)
       setUsers((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, role: nextRoleName } : u))
+        prev.map((u) =>
+          u.id === id ? { ...u, role: nextRole.role_name_th } : u
+        )
       );
 
       try {
-        // 3) ยิงจริงไป backend ด้วย role_id
         const formattedRoleInput = [
           {
-            role_id: nextRoleId,
-            role_name: nextRoleName,
+            role_id: nextRole.id,
+            role_name_th: nextRole.role_name_th,
+            role_name_en: nextRole.role_name_en,
           },
         ];
 
-        const { data } = await updateUser({
+        await updateUser({
           variables: {
             id,
             input: {
-              user_role: formattedRoleInput, // ✅ ส่งเป็น id แล้ว
+              user_role: formattedRoleInput, // ✅ ส่งครบ
             },
           },
         });
-
-        setUsers((prev) =>
-          prev.map((u) => (u.id === id ? { ...u, role: nextRoleName } : u))
-        );
       } catch (err) {
         console.error("Update role failed:", err);
-        // 5) rollback
+
+        // rollback
         setUsers((prev) =>
-          prev.map((u) => (u.id === id ? { ...u, role: prevRoleName } : u))
+          prev.map((u) =>
+            u.id === id ? { ...u, role: prevRoleName } : u
+          )
         );
       } finally {
-        // 6) ปลดล็อก
         setPendingIds((prev) => {
           const s = new Set(prev);
           s.delete(id);
@@ -312,10 +315,14 @@ export default function UserPage() {
         });
       }
     },
-    [users, pendingIds, updateUser, getRoleIdByName, roles]
+    [users, pendingIds, updateUser, getRoleByName]
   );
 
   //console.log(usersData?.users?.items);
+
+  useEffect(() => {
+    setRoles(rolesData?.roles ?? []);
+  }, [locale, rolesData]);
 
   // ✅ useEffect
   useEffect(() => {
@@ -341,9 +348,15 @@ export default function UserPage() {
         id: item?.id,
         name: `${item?.firstname || ""} ${item?.lastname || ""}`.trim(),
         email: item?.email || "-",
-        role: item?.user_role?.[0]?.role?.role_name || "ไม่ระบุ",
+        role:
+          locale === "th"
+            ? item?.user_role?.[0]?.role?.role_name_th || "ไม่ระบุ"
+            : item?.user_role?.[0]?.role?.role_name_en || "Not specified",
         position: item?.position || "-",
-        status: item?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+        status:
+          locale === "th"
+            ? (item?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน")
+            : (item?.is_online ? "online" : "offline"),
         phone: item?.phone || "-",
         group: item?.group_name || "-",
         aiAccess: !!item?.ai_access,
@@ -362,7 +375,7 @@ export default function UserPage() {
 
     setUsers(formattedData);
     setTotalCount(usersData.users.totalCount ?? formattedData.length);
-  }, [usersData]);
+  }, [usersData, locale]);
 
   console.log(users);
 
@@ -398,7 +411,7 @@ export default function UserPage() {
 
   const handleSyncUsers = async () => {
     try {
-      showLoading("กำลัง Sync ข้อมูลผู้ใช้...");
+      showLoading(t("syncuser1"), theme);
 
       const { data } = await syncUsersFromApi();
 
@@ -407,12 +420,15 @@ export default function UserPage() {
 
       closeLoading();
       await showSuccessAlert({
-        title: "สำเร็จ",
-        text: "ดำเนินการเรียบร้อย",
+        title: t("syncuser2"),
+        text: t("syncuser3"),
+        theme,
       });
     } catch (error) {
       closeLoading();
-      showErrorAlert(error, theme, { title: "Sync ข้อมูล User ไม่สำเร็จ" });
+      showErrorAlert(error, theme, { 
+        title: tusererror('error1'), 
+      });
     }
   };
 
@@ -451,10 +467,16 @@ export default function UserPage() {
           `${item?.firstname || ""} ${item?.lastname || ""}`.trim() || "-",
         email: item?.email || "-",
         phone: item?.phone || "-",
-        role: item?.user_role?.[0]?.role?.role_name || "ไม่ระบุ",
+        role:
+          locale === "th"
+            ? item?.user_role?.[0]?.role?.role_name_th || "ไม่ระบุ"
+            : item?.user_role?.[0]?.role?.role_name_en || "Not specified",
         position: item?.position || "-",
         group: item?.group_name || "-",
-        status: item?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน", // ถ้าหมายถึง AI access ให้เปลี่ยนเป็น item?.ai_access
+        status:
+          locale === "th"
+            ? (item?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน")
+            : (item?.is_online ? "online" : "offline"),
         aiAccess: !!item?.ai_access,
         lastLogin,
         aiModels:
@@ -468,7 +490,7 @@ export default function UserPage() {
       };
     });
 
-    exportUsersToExcel(transformed);
+    exportUsersToExcel(transformed, locale);
   };
 
   // 🔹 ฟังก์ชันกรองข้อมูล
@@ -532,7 +554,7 @@ export default function UserPage() {
         >
           <TextField
             variant="outlined"
-            placeholder="ค้นหาผู้ใช้งาน..."
+            placeholder={t("placeholder1")}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -559,14 +581,14 @@ export default function UserPage() {
             sx={{ width: isTablet ? "100%" : "auto" }}
           >
             {/* ตัวเลือกทั้งหมด */}
-            <MenuItem value="ทั้งหมด">บทบาททั้งหมด</MenuItem>
+            <MenuItem value="ทั้งหมด">{t("selectrole0")}</MenuItem>
 
             {/* ดึงจาก roles และตัด superadmin ออก */}
             {roles
-              ?.filter((role) => role.role_name !== "superadmin")
+              ?.filter((role) => role.role_name_th !== "superadmin")
               .map((role) => (
-                <MenuItem key={role.id} value={role.role_name}>
-                  {role.role_name}
+                <MenuItem key={role.id} value={role.role_name_th}>
+                  {locale === "th" ? role.role_name_th : role.role_name_en}
                 </MenuItem>
               ))}
           </Select>
@@ -580,9 +602,9 @@ export default function UserPage() {
             size="small"
             sx={{ width: isTablet ? "100%" : "none" }}
           >
-            <MenuItem value="ทั้งหมด">สถานะ</MenuItem>
-            <MenuItem value="ใช้งานอยู่">ใช้งานอยู่</MenuItem>
-            <MenuItem value="ไม่ใช้งาน">ไม่ใช้งาน</MenuItem>
+            <MenuItem value="ทั้งหมด">{t("selectstatus0")}</MenuItem>
+            <MenuItem value="ใช้งานอยู่">{t("selectstatus1")}</MenuItem>
+            <MenuItem value="ไม่ใช้งาน">{t("selectstatus2")}</MenuItem>
           </Select>
         </Box>
       </Box>
@@ -627,7 +649,7 @@ export default function UserPage() {
                   <TableCell>{t("tablecell3")}</TableCell>
                   <TableCell>{t("tablecell4")}</TableCell>
                   <TableCell>{t("tablecell5")}</TableCell>
-                  {user?.role_name === "superadmin" && (
+                  {user?.role_name_th === "superadmin" && (
                     <TableCell>Admin</TableCell>
                   )}
                   <TableCell>{t("tablecell6")}</TableCell>
@@ -649,15 +671,15 @@ export default function UserPage() {
                         label={item.role}
                         sx={{
                           bgcolor:
-                            item.role === "ผู้ดูแลระบบ"
+                            item.role === "ผู้ดูแลระบบ" || item.role === "administrator"
                               ? "#FCE4EC" // ชมพู
-                              : item.role === "ผู้ประเมินภายนอก"
+                              : item.role === "ผู้ประเมินภายนอก" || item.role === "external assessor"
                               ? "#E3F2FD" // ฟ้าอ่อน
                               : "#FFF3E0", // ส้มอ่อน
                           color:
-                            item.role === "ผู้ดูแลระบบ"
+                            item.role === "ผู้ดูแลระบบ" || item.role === "administrator"
                               ? "#D81B60"
-                              : item.role === "ผู้ประเมินภายนอก"
+                              : item.role === "ผู้ประเมินภายนอก" || item.role === "external assessor"
                               ? "#1976D2"
                               : "#F57C00",
                           fontWeight: 500,
@@ -672,11 +694,11 @@ export default function UserPage() {
                         label={item.status}
                         sx={{
                           bgcolor:
-                            item.status === "ใช้งานอยู่"
+                            item.status === "ใช้งานอยู่" || item.status === "online"
                               ? "#E6F7E6"
                               : "#E0E0E0",
                           color:
-                            item.status === "ใช้งานอยู่" ? "green" : "gray",
+                            item.status === "ใช้งานอยู่" || item.status === "online" ? "green" : "gray",
                           fontWeight: 500,
                         }}
                       />
@@ -693,10 +715,10 @@ export default function UserPage() {
                       />
                     </TableCell>
 
-                    {user?.role_name === "superadmin" && (
+                    {user?.role_name_th === "superadmin" && (
                       <TableCell>
                         <Switch
-                          checked={item.role === "ผู้ดูแลระบบ"} // ✅ ถ้าเป็นผู้ดูแลระบบ = true
+                          checked={item.role === "ผู้ดูแลระบบ" || item.role === "administrator"} // ✅ ถ้าเป็นผู้ดูแลระบบ = true
                           color="primary"
                           onChange={(e) =>
                             handleToggleAccessAdmin(
@@ -731,7 +753,7 @@ export default function UserPage() {
                 {users.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                      ไม่พบข้อมูลผู้ใช้งาน
+                      {t("notfound")}
                     </TableCell>
                   </TableRow>
                 )}

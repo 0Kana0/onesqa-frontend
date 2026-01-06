@@ -11,12 +11,15 @@ import {
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import DriveFolderUploadRoundedIcon from "@mui/icons-material/DriveFolderUploadRounded";
+import { useTranslations } from "next-intl";
 
 export default function PlusAttachButton({
   triggerFile, // () => void  เปิด input[type=file] ที่คุณมีอยู่แล้ว
   onPickFromDrive, // () => void  เปิดตัวเลือกจากไดรฟ์ (ถ้ายังไม่ทำให้ไม่ต้องส่งมาก็ได้)
   disabled = false,
 }) {
+  const tChatSidebar = useTranslations("ChatSidebar");
+
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -38,7 +41,7 @@ export default function PlusAttachButton({
 
   return (
     <>
-      <Tooltip title="เพิ่ม/แนบไฟล์">
+      <Tooltip title={tChatSidebar("uploadtooltip")} >
         <span>
           <IconButton
             size="small"
@@ -80,7 +83,7 @@ export default function PlusAttachButton({
           <ListItemIcon>
             <AttachFileRoundedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="อัปโหลดไฟล์" />
+          <ListItemText primary={tChatSidebar("uploadfile")} />
         </MenuItem>
 
         {/* <MenuItem onClick={handleDriveClick} disabled={!onPickFromDrive}>

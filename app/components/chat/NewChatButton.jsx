@@ -14,6 +14,7 @@ import {
 import CreateOutlinedIcon from "@mui/icons-material/CreateOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ChatSearchModal from "./ChatSearchModal";
+import { useTranslations } from "next-intl";
 import { useSidebar } from "@/app/context/SidebarContext";
 
 export default function ChatQuickActions({
@@ -26,6 +27,8 @@ export default function ChatQuickActions({
   const pathname = usePathname();
   const { toggle } = useSidebar();
 
+  const tChatSidebar = useTranslations("ChatSidebar");
+
   // < md = ปิด sidebar หลังคลิก
   const isTablet = useMediaQuery("(max-width:1200px)");
 
@@ -34,7 +37,7 @@ export default function ChatQuickActions({
   const items = [
     {
       key: "new",
-      label: "แชตใหม่",
+      label: tChatSidebar("button1"),
       icon: <CreateOutlinedIcon fontSize="small" />,
       href: "/onesqa/chat",
       onClick: () => {
@@ -47,7 +50,7 @@ export default function ChatQuickActions({
     },
     {
       key: "search",
-      label: "ค้นหาแชต",
+      label: tChatSidebar("button2"),
       icon: <SearchOutlinedIcon fontSize="small" />,
       onClick: () => {
         onSearch?.();

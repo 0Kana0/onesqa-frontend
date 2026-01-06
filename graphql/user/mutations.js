@@ -29,9 +29,21 @@ export const UPDATE_USER = gql`
       }
       user_role {
         role {
-          role_name
+          role_name_th
+          role_name_en
         }
       }
+    }
+  }
+`;
+
+export const UPDATE_THEME_AND_LOCALE = gql`
+  mutation updateThemeAndLocale($id: ID!, $input: ThemeAndLocaleInput!) {
+    updateThemeAndLocale(id: $id, input: $input) {
+      id
+      color_mode
+      locale
+      alert
     }
   }
 `;

@@ -1,37 +1,53 @@
 // components/PromptList.jsx
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Stack, ButtonBase, Typography } from "@mui/material";
+import { useLanguage } from "@/app/context/LanguageContext";
 
-const PromptList = ({ 
-  steps = [], 
-  activeIndex = 0, 
+const PromptList = ({
+  steps = [],
+  activeIndex = null,
   onChange,
-  onTextChange 
+  onTextChange,
 }) => {
-  console.log(steps);
-  
+  const { locale } = useLanguage();
+
+  // ✅ reset เมื่อเปลี่ยนภาษา
+  useEffect(() => {
+    onChange?.(null);
+    onTextChange?.("");
+  }, [locale]);
+
   return (
-    <Stack 
+    <Stack
       direction="row"
       spacing={2}
       sx={{
-        flexWrap: "wrap",      // 👈 ให้ห่อขึ้นบรรทัดใหม่
-        width: "100%",         // 👈 จำกัดให้กว้างไม่เกินกล่อง
-        justifyContent: "center", // หรือ "flex-start" ตามที่อยากให้เรียง
+        flexWrap: "wrap",
+        width: "100%",
+        justifyContent: "center",
       }}
     >
       {steps.map((step, index) => {
         const selected = index === activeIndex;
 
+        const handleClick = () => {
+          if (selected) {
+            // กดซ้ำ → reset
+            onChange?.(null);
+            onTextChange?.("");
+          } else {
+            // เลือกใหม่
+            onChange?.(index);
+            onTextChange?.(step.prompt_detail);
+          }
+        };
+
         return (
           <ButtonBase
             key={step.id || index}
-            onClick={() => {
-              onChange && onChange(index);                    // หรือ onChange?.(index)
-              onTextChange && onTextChange(step.prompt_detail); // หรือ onTextChange?.(...)
-            }}
+            onClick={handleClick}
             sx={{
               borderRadius: 2,
               border: "1px solid",
@@ -41,7 +57,7 @@ const PromptList = ({
               py: 0.5,
               display: "flex",
               alignItems: "center",
-              mb: 1, // เผื่อระยะห่างระหว่างบรรทัด
+              mb: 1,
             }}
           >
             {/* วงกลมตัวเลข */}

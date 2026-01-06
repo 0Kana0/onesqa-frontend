@@ -120,7 +120,7 @@ export default function UserGroupSettingCard({
 
               {/* plus_token */}
               <Typography variant="caption" color="text.secondary">
-                Token ที่ต้องการเพิ่ม
+                {t("plustoken")}
               </Typography>
               <TextField
                 type="number"
@@ -139,7 +139,7 @@ export default function UserGroupSettingCard({
 
               {/* minus_token */}
               <Typography variant="caption" color="text.secondary">
-                Token ที่ต้องการลด
+                {t("minustoken")}
               </Typography>
               <TextField
                 type="number"

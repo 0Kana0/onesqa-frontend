@@ -32,6 +32,7 @@ import SearchRounded from "@mui/icons-material/SearchRounded";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 import { AI_LOGOS, getAiLogo } from "@/util/aiLogo";
 import { useSidebar } from "@/app/context/SidebarContext";
+import { useTranslations } from "next-intl";
 
 const normalizeText = (v) => {
   const s = (v ?? "").trim();
@@ -42,10 +43,12 @@ export default function ChatSearchModal({
   open,
   onClose,
   onSelect, // (item) => void
-  placeholder = "ค้นหาแชต...",
+  placeholder,
 }) {
   const { user } = useAuth();
   const { toggle } = useSidebar(); // ✅ ดึงจาก Context
+
+  const tChatSidebar = useTranslations("ChatSidebar");
 
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -170,7 +173,7 @@ export default function ChatSearchModal({
           <SearchRounded fontSize="small" />
           <InputBase
             autoFocus
-            placeholder={placeholder}
+            placeholder={tChatSidebar("chatsearchph")}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
@@ -249,7 +252,7 @@ export default function ChatSearchModal({
                 textAlign: "center",
               }}
             >
-              ไม่พบข้อมูล
+              {tChatSidebar("chatnotfound")}
             </Box>
           )}
         </List>

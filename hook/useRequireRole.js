@@ -27,7 +27,7 @@ export function useRequireRole({
 
   const allowed = useMemo(() => {
     if (!user) return false;
-    const roleName = user.role_name || user.role || user.roleName;
+    const roleName = user.role_name_th || user.role || user.roleName;
     const inList = roles.length ? roles.includes(roleName) : true;
     const custom = typeof allowIf === "function" ? allowIf(user) : true;
     return inList && custom;

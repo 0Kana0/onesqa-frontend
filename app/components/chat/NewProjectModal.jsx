@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import { useSidebar } from "@/app/context/SidebarContext";
+import { useTranslations } from "next-intl";
 
 export default function NewProjectModal({
   open,
@@ -24,10 +25,12 @@ export default function NewProjectModal({
   initialName = "",
   title = "สร้างกลุ่มใหม่",
   label = "ชื่อกลุ่ม",
-  placeholder = "เช่น ระบบบริหารจัดการ X",
+  placeholder,
   confirmLabel = "สร้างกลุ่ม",
 }) {
   const { toggle } = useSidebar();
+
+  const tChatSidebar = useTranslations("ChatSidebar");
 
   // < md = ปิด sidebar หลังคลิก
   const isTablet = useMediaQuery("(max-width:1200px)");
@@ -74,7 +77,7 @@ export default function NewProjectModal({
             fullWidth
             size="small"
             label={label}
-            placeholder={placeholder}
+            placeholder={tChatSidebar("inputph")}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />

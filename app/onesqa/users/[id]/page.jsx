@@ -34,13 +34,17 @@ import { formatTokens } from "@/util/formatTokens";
 import { useRequireRole } from "@/hook/useRequireRole";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 import { closeLoading, showLoading, showSuccessAlert } from "@/util/loadingModal";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function UserDetailPage() {
   const params = useParams();
   const { id } = params;
+  const { locale } = useLanguage();
   const { theme } = useTheme();
   const t = useTranslations("UserDetailPage");
   const tInit = useTranslations("Init");
+  const tusererror = useTranslations('UserError');
+  
   const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
@@ -93,7 +97,10 @@ export default function UserDetailPage() {
         phone: user.phone || "-",
         position: user.position || "-",
         group: user.group_name || "-",
-        status: user.ai_access ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+        status:
+          locale === "th"
+            ? (user?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน")
+            : (user?.is_online ? "online" : "Offline"),
         colorMode: user.color_mode || "LIGHT",
         aiModels:
           user.user_ai?.map((ai) => ({
@@ -111,7 +118,7 @@ export default function UserDetailPage() {
 
       setUserCardTable(formattedData); // ✅ เก็บเป็น array เสมอ
     }
-  }, [userData, resetTrigger]);
+  }, [userData, resetTrigger, locale]);
 
   console.log(userCardTable);
 
@@ -197,7 +204,7 @@ export default function UserDetailPage() {
 
   const handleSubmit = async () => {
     try {
-      showLoading("กำลังบันทึก Token...");
+      showLoading(t("syncuser1"), theme);
 
       // ✅ แปลง aiModels ใน userCardTable ให้ตรงกับ input schema
       const formattedAiInput =
@@ -221,13 +228,14 @@ export default function UserDetailPage() {
 
       closeLoading();
       await showSuccessAlert({
-        title: "สำเร็จ",
-        text: "ดำเนินการเรียบร้อย",
+        title: t("syncuser2"),
+        text: t("syncuser3"),
+        theme,
       });
     } catch (error) {
       closeLoading();
       showErrorAlert(error, theme, {
-        title: "ตั้งค่าจำนวน Token ของ User ไม่สำเร็จ",
+        title: tusererror('error2')
       });
     }
   };
@@ -426,11 +434,11 @@ export default function UserDetailPage() {
                           label={user.status}
                           sx={{
                             bgcolor:
-                              user.status === "ใช้งานอยู่"
+                              user.status === "ใช้งานอยู่" || user.status === "online"
                                 ? "#E6F7E6"
                                 : "#E0E0E0",
                             color:
-                              user.status === "ใช้งานอยู่" ? "green" : "gray",
+                              user.status === "ใช้งานอยู่" || user.status === "online" ? "green" : "gray",
                             fontWeight: 500,
                           }}
                         />

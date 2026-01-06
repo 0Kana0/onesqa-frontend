@@ -41,8 +41,10 @@ export function exportLogsToExcel(logs, ln = "th") {
     type: "application/octet-stream",
   });
 
+  const fileName = ln === "th" ? "รายการ logs.xlsx" : "Log List.xlsx";
+
   // ✅ ดาวน์โหลดไฟล์
-  saveAs(blob, `รายการ logs.xlsx`);
+  saveAs(blob, fileName);
 }
 
 export function exportUsersToExcel(users, ln = "th") {
@@ -52,12 +54,12 @@ export function exportUsersToExcel(users, ln = "th") {
   );
 
   // ✅ แปลงเป็นหัวตาราง "จำนวน <model>"
-  const allTranModels = allModels.map((name) => `จำนวน ${name}`);
+  const allTranModels = allModels.map((name) => `Token ${name}`);
 
   // ✅ กำหนด header ตามภาษา
   const baseHeaders =
     ln === "en"
-      ? ["Name", "Role", "Email", "Phone", "Position", "Group", "Status", "AI Access", "Last Login"]
+      ? ["Name", "Email", "Phone", "Role", "Position", "Group", "Status", "AI Access", "Last Login"]
       : ["ชื่อ - นามสกุล", "อีเมล", "เบอร์โทรศัพท์", "บทบาท", "ตำแหน่ง", "กลุ่ม", "สถานะ", "AI Access", "ลงชื่อเข้าใช้ล่าสุด"];
 
   const headers = [...baseHeaders, ...allTranModels];
@@ -77,12 +79,8 @@ export function exportUsersToExcel(users, ln = "th") {
       u.role || "-",
       u.position || "-",
       u.group || "-",
-      ln === "en"
-        ? u.status === "ใช้งานอยู่"
-          ? "Active"
-          : "Inactive"
-        : u.status,
-      u.aiAccess ? (ln === "en" ? "ON" : "เปิด") : (ln === "en" ? "OFF" : "ปิด"),
+      u.status,
+      u.aiAccess ? (ln === "en" ? "Active" : "อนุญาติ") : (ln === "en" ? "Inactive" : "ไม่อนุญาติ"),
       u.lastLogin || "-",
       // ✅ เติม token ตาม model
       ...allModels.map((model) => modelTokens[model] ?? 0),
@@ -121,7 +119,7 @@ export function exportUsersToExcel(users, ln = "th") {
     type: "application/octet-stream",
   });
 
-  const fileName =`รายชื่อผู้ใช้งาน.xlsx`;
+  const fileName = ln === "th" ? "รายชื่อผู้ใช้งาน.xlsx" : "User List.xlsx";
 
   saveAs(blob, fileName);
 }
@@ -163,7 +161,7 @@ export function exportReportsToExcel(reports, ln = "th") {
   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
   const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-  const fileName = `สรุปรายงาน.xlsx`;
+  const fileName = ln === "th" ? "สรุปรายงาน.xlsx" : "Report Summary.xlsx";
 
   saveAs(blob, fileName);
 }

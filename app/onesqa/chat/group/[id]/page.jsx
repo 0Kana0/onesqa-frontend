@@ -58,6 +58,7 @@ import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 import { useLanguage } from "@/app/context/LanguageContext";
+import { GET_GROUP_BY_NAME } from "@/graphql/group/queries";
 
 const PAGE_SIZE = 10; // ✅ lazy loading
 
@@ -70,6 +71,7 @@ const ChatgroupPage = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
+  const tchaterror = useTranslations('ChatError');
 
   const params = useParams();
   const { id } = params;
@@ -102,6 +104,7 @@ const ChatgroupPage = () => {
   const [openSearch, setOpenSearch] = useState(false);
 
   const tInit = useTranslations("Init");
+  const tChatSidebar = useTranslations("ChatSidebar");
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -132,6 +135,9 @@ const ChatgroupPage = () => {
     error: promptsError,
     refetch: promptsRefetch,
   } = useQuery(GET_PROMPTS, {
+    variables: {
+      locale: locale,
+    },
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
@@ -155,6 +161,17 @@ const ChatgroupPage = () => {
     },
   });
   console.log(userData?.user?.user_ai);
+
+  const {
+    data: groupData,
+    loading: groupLoading,
+    error: groupError,
+  } = useQuery(GET_GROUP_BY_NAME, {
+    fetchPolicy: "network-only",
+    variables: {
+      name: user?.group_name,
+    },
+  });
 
   const {
     data: chatgroupData,
@@ -198,6 +215,22 @@ const ChatgroupPage = () => {
     setEndCursor(conn.pageInfo?.endCursor ?? null);
     setHasNextPage(Boolean(conn.pageInfo?.hasNextPage));
   }, [chatsData?.chats]);
+
+  // เพิ่ม useEffect เพื่อ set ค่า model อัตโนมัติ
+  useEffect(() => {
+    if (!groupData?.groupByName?.ai) return;
+    if (!userData?.user?.user_ai) return;
+  
+    const groupAiName = groupData.groupByName.ai.model_use_name;
+  
+    const matchedAI = userData.user.user_ai.find(
+      (ua) => ua.ai?.model_use_name === groupAiName
+    );
+  
+    if (matchedAI) {
+      setModel(String(matchedAI.ai_id ?? matchedAI.id));
+    }
+  }, [groupData, userData]);
 
   // ===============================
   // โหลดเพิ่ม
@@ -296,7 +329,7 @@ const ChatgroupPage = () => {
   }, [setInitText, setInitAttachments]);
 
   if (
-    (userLoading || chatsLoading || chatgroupLoading || promptsLoading) &&
+    (userLoading || chatsLoading || chatgroupLoading || promptsLoading || groupLoading) &&
     networkStatus === NetworkStatus.loading
   )
     return (
@@ -306,7 +339,7 @@ const ChatgroupPage = () => {
       </Box>
     );
 
-  if (userError || chatsError || chatgroupError || promptsError)
+  if (userError || chatsError || chatgroupError || promptsError || groupError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -370,7 +403,7 @@ const ChatgroupPage = () => {
     if (theme === "dark") {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textchat1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -399,7 +432,7 @@ const ChatgroupPage = () => {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textchat2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
             background: "#2F2F30", // สีพื้นหลังดำ
@@ -412,7 +445,7 @@ const ChatgroupPage = () => {
     } else {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textchat1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -437,7 +470,7 @@ const ChatgroupPage = () => {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textchat2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
           });
@@ -511,7 +544,7 @@ const ChatgroupPage = () => {
       handleCreateChat();
     } catch (error) {
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     }
   };
@@ -522,11 +555,12 @@ const ChatgroupPage = () => {
       const trimmedText = initText?.trim() ?? "";
 
       const chatName =
-        trimmedText && trimmedText.length <= 40
-          ? trimmedText
-          : locale === "th"
-          ? "แชตใหม่จากเสียง"
-          : "new chat from mic";
+        trimmedText
+          ? (trimmedText.length > 40
+              ? (locale === "th" ? "แชตใหม่" : "new chat")
+              : trimmedText
+            )
+          : (locale === "th" ? "แชตใหม่จากเสียง" : "new chat from mic");
 
       const { data } = await createChat({
         variables: {
@@ -545,7 +579,7 @@ const ChatgroupPage = () => {
       //refetch();
     } catch (error) {
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     }
   };
@@ -569,7 +603,7 @@ const ChatgroupPage = () => {
             if (selected === "0") {
               return (
                 <Typography sx={{ opacity: 0.7 }}>
-                  กรุณาเลือกโมเดลคำตอบ
+                  {tChatSidebar("menuitem")}
                 </Typography>
               );
             }
@@ -608,7 +642,7 @@ const ChatgroupPage = () => {
             width: "250px",
           }}
         >
-          <MenuItem value="0">กรุณาเลือกโมเดลคำตอบ</MenuItem>
+          <MenuItem value="0">{tChatSidebar("menuitem")}</MenuItem>
           {(userData?.user?.user_ai ?? []).map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -668,6 +702,7 @@ const ChatgroupPage = () => {
           }}
         >
           <ChatInputBar
+            theme = {theme}
             value={initText}
             model={model}
             onChange={setInitText}
@@ -687,11 +722,11 @@ const ChatgroupPage = () => {
                 console.error(err);
               }
             }}
-            placeholder="ป้อนข้อความ.."
+            placeholder={tChatSidebar("inputph")}
             actions={[
               {
                 key: "deep",
-                label: "Deep Research",
+                label: tChatSidebar("deepresearch"),
                 onClick: () => console.log("deep"),
                 icon: <ScienceOutlinedIcon />,
               },
@@ -820,7 +855,7 @@ const ChatgroupPage = () => {
                   py: 2,
                 }}
               >
-                -- ไม่มีแชต --
+                -- {tChatSidebar("notfound1")} --
               </Typography>
             )}
 
@@ -856,12 +891,12 @@ const ChatgroupPage = () => {
         onDelete={handleDelete}
         onDeleteGroup={handleDeleteGroup}
         // ปรับข้อความได้ตามบริบท เช่น "กลุ่ม"
-        renameLabel="เปลี่ยนชื่อเเชต"
-        changeGroupLabel="ย้ายไปยังกลุ่ม"
-        deleteGroupLabel={`ลบออกจาก ${
+        renameLabel={tChatSidebar("chatdropdownrename")}
+        changeGroupLabel={tChatSidebar("chatdropdowngroup")}
+        deleteGroupLabel={`${tChatSidebar("chatdropdowndeletegroup")} ${
           chatgroupData?.chatgroup?.chatgroup_name ?? "—"
         }`}
-        deleteLabel="ลบเเชต"
+        deleteLabel={tChatSidebar("chatdropdowndelete")}
         // paperSx={{ minWidth: 200 }} // ถ้าต้องการปรับแต่งเพิ่ม
       />
 
@@ -871,9 +906,9 @@ const ChatgroupPage = () => {
         onClose={closeNewProject}
         onCreate={handleUpdateChat}
         initialName={rename?.label} // ถ้าต้องการค่าเริ่มต้น
-        title={"เเก้ไขชื่อเเชต"}
-        label="ชื่อเเชต"
-        confirmLabel={"เเก้ไข"}
+        title={tChatSidebar("chattitleedit")}
+        label={tChatSidebar("chatlabel")}
+        confirmLabel={tChatSidebar("chatcomfirmedit")}
       />
 
       {openSearch && (

@@ -8,6 +8,7 @@ import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function NotificationListener({
   user_id,
@@ -15,6 +16,7 @@ export default function NotificationListener({
   hasNotification,
   setHasNotification,
 }) {
+  const { locale } = useLanguage();
   const t = useTranslations("Toast");
   const WS_ENDPOINT = process.env.NEXT_PUBLIC_WS_ENDPOINT;
 
@@ -25,6 +27,7 @@ export default function NotificationListener({
     refetch,
   } = useQuery(MY_NOTIFICATIONS, {
     variables: {
+      locale: locale,
       user_id: user_id,
       first: 4,
       after: null,
@@ -49,6 +52,7 @@ export default function NotificationListener({
               message
               title
               type
+              locale
               user_id
               createdAt
             }

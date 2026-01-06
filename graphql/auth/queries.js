@@ -16,7 +16,8 @@ export const GET_ME = gql`
       phone
       position
       group_name
-      role_name
+      role_name_th
+      role_name_en
     }
   }
 `;

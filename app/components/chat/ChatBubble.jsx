@@ -20,6 +20,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FileCard from "./FileCard";
 import { getAiLogo, AI_LOGOS } from "@/util/aiLogo";
+import { useTranslations } from "next-intl";
 
 // ⭐ NEW: สำหรับ render markdown (รองรับ table / list / bold / code / ฯลฯ)
 import ReactMarkdown from "react-markdown";
@@ -28,7 +29,9 @@ import remarkGfm from "remark-gfm";
 function formatTime(dt) {
   try {
     const d = dt ? new Date(dt) : null;
-    return d.toLocaleString("th-TH", {
+    if (!d || Number.isNaN(d.getTime())) return "";
+
+    return d.toLocaleString("th-TH-u-ca-gregory", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -52,7 +55,8 @@ function toPlainString(val) {
 }
 
 function CodeBlock({ children, ...props }) {
-  const [copied, setCopied] = React.useState(false);
+  const tChatSidebar = useTranslations("ChatSidebar");
+  const [copied, setCopied] = useState(false);
 
   const textToCopy = Array.isArray(children)
     ? children.join("")
@@ -86,7 +90,7 @@ function CodeBlock({ children, ...props }) {
         </Box>
       </Box>
 
-      <Tooltip title={copied ? "คัดลอกแล้ว" : "คัดลอกโค้ด"}>
+      <Tooltip title={copied ? tChatSidebar("tooltipcopycodealready") : tChatSidebar("tooltipcopycode")}>
         <IconButton
           size="small"
           onClick={handleCopy}
@@ -381,6 +385,8 @@ export default function ChatBubble({
 }) {
   const isUser = role === "user";
 
+  const tChatSidebar = useTranslations("ChatSidebar");
+
   // ====== Edit state ======
   const initialPlain = toPlainString(text);
   const [isEditing, setIsEditing] = useState(false);
@@ -497,7 +503,7 @@ export default function ChatBubble({
                   cancelEdit();
                 }
               }}
-              placeholder="แก้ไขข้อความ..."
+              placeholder={tChatSidebar("inputph")}
               sx={{
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
@@ -532,12 +538,12 @@ export default function ChatBubble({
 
           {isEditing && !sending ? (
             <>
-              <Tooltip title="ยกเลิก">
+              <Tooltip title={tChatSidebar("tooltipcancel")}>
                 <IconButton size="small" onClick={cancelEdit} sx={{ ml: -0.5 }}>
                   <CloseRoundedIcon fontSize="inherit" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="บันทึก">
+              <Tooltip title={tChatSidebar("tooltipsubmit")}>
                 <IconButton size="small" onClick={saveEdit} sx={{ ml: -0.5 }}>
                   <CheckRoundedIcon fontSize="inherit" />
                 </IconButton>
@@ -546,7 +552,7 @@ export default function ChatBubble({
           ) : (
             <>
               {enableCopy && (
-                <Tooltip title="คัดลอก">
+                <Tooltip title={tChatSidebar("tooltipcopy")}>
                   <IconButton
                     size="small"
                     onClick={handleCopy}
@@ -557,7 +563,7 @@ export default function ChatBubble({
                 </Tooltip>
               )}
               {isUser && editable && edit_status && (
-                <Tooltip title="แก้ไขข้อความ">
+                <Tooltip title={tChatSidebar("tooltipedit")}>
                   <IconButton
                     size="small"
                     onClick={startEdit}

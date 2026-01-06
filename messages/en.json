@@ -14,7 +14,8 @@
     "profile": "Profile",
     "theme": "Theme",
     "notification": "Notification",
-    "logout": "Logout"
+    "logout": "Logout",
+    "loading": "Logging out"
   },
   "Sidebar": {
     "dashboard": "Dashboard",
@@ -34,20 +35,23 @@
     "role1": "ONESQA Officer",
     "role2": "External Assessor",
     "label1": "Username",
-    "placeholder1": "Username",
+    "placeholder1": "Enter your username",
     "label2": "Password",
-    "placeholder2": "Password",
-    "button1": "Login",
+    "placeholder2": "Enter your password",
+    "button1": "Sign In",
     "label3": "National Identification Number",
-    "title3": "Choose how to receive your OTP",
+    "title3": "Select a Method to Receive the Password",
     "button2": "Confirm",
-    "title4p1phone": "A message has been sent to phone number",
-    "title4p1email": "A message has been sent to email",
-    "title4p2": "Please enter the 6-digit OTP you received",
-    "otp1": "Enter 6-digit OTP",
-    "otp2": "Enter 6-digit OTP",
-    "recheck1": "You haven't registered as a user yet ",
-    "recheck2": "Click here"
+    "title4p1phone": "The system has sent a message to the phone number",
+    "title4p1email": "The system has sent a message to the email address",
+    "title4p2": "Please enter the 6-digit One-Time Password (OTP) you have received",
+    "otp1": "Enter OTP",
+    "otp2": "Enter the 6-digit OTP",
+    "recheck1": "Have you not received the OTP? ",
+    "recheck2": "Resend",
+    "recheck3": "Success",
+    "recheck4": "The OTP has been resent successfully",
+    "loading": "Logging in"
   },
   "DashboardPage": {
     "title1": "Token Usage Alert",
@@ -61,13 +65,16 @@
     "title3": "System Status",
     "subtitle1": "System Usage Monitoring",
     "title4": "Token Usage",
-    "subtitle3": "Token usage tracking with real-time updates"
+    "subtitle3": "Token usage tracking with real-time updates",
+    "select1": "Last 7 days",
+    "select2": "Last 30 days",
+    "select3": "Last 60 days"
   },
   "LogPage": {
     "filter1": "Search and Filter Logs",
     "filter2": "Search and filter log data based on various conditions.",
-    "startDate": "Start Date Range",
-    "endDate": "End Date Range",
+    "startDate": "Start",
+    "endDate": "End",
     "table1": "Edit logs",
     "table2": "System Activity and Event Log",
     "button1": "Clear revision history",
@@ -75,7 +82,17 @@
     "tablecell2": "Name",
     "tablecell3": "Title",
     "tablecell4": "Old Data",
-    "tablecell5": "Changed Data"
+    "tablecell5": "Changed Data",
+    "select0": "Log topics",
+    "select1": "Define question guidelines",
+    "select2": "Notifications settings",
+    "select3": "System model settings",
+    "select4": "User model settings",
+    "select5": "User group settings",
+    "select6": "User role settings",
+    "notfound": "No Log Topics Found",
+    "active": "active",
+    "inactive": "inactive"
   },
   "ReportPage": {
     "filter1": "Search and filter Data",
@@ -91,7 +108,13 @@
     "title2": "Top Users",
     "subtitle2": "Users with highest usage this month",
     "conversations": "Conversations",
-    "title3": "Token usage"
+    "title3": "Token usage",
+    "select0": "Select time range",
+    "select1": "Today",
+    "select2": "Last 7 days",
+    "select3": "Last 1 month",
+    "notfound": "No Report Found",
+    "notfound1": "No User Ranking Data Found"
   },  
   "UserPage": {
     "filter1": "Search and Filter Data",
@@ -103,7 +126,16 @@
     "tablecell4": "Status",
     "tablecell5": "AI Access",
     "tablecell6": "Last Login",
-    "tablecell7": "Details"
+    "tablecell7": "Details",
+    "selectrole0": "All Role",
+    "selectstatus0": "Status",
+    "selectstatus1": "Online",
+    "selectstatus2": "Offline",
+    "placeholder1": "Search user by name/group...",
+    "syncuser1": "Syncing user data...",
+    "syncuser2": "Success",
+    "syncuser3": "Completed",
+    "notfound": "No Users Found"
   },
   "UserDetailPage": {
     "label1": "Assign tokens to users",
@@ -113,17 +145,29 @@
     "tablecell7": "Email",
     "tablecell4": "Phone",
     "tablecell5": "Status",
-    "tablecell6": "Group Name"
+    "tablecell6": "Group Name",
+    "syncuser1": "Saving tokens...",
+    "syncuser2": "Success",
+    "syncuser3": "Completed"
   },
   "SettingPage": {
     "button1": "Set Tokens by Group",
     "aititle1": "AI Chatbot Configuration",
-    "aisubtitle1": "Set guidelines for question formulation (Maximum 5 questions)"
+    "aisubtitle1": "Set guidelines for question formulation (Maximum 5 questions)",
+    "title": "Title",
+    "detail": "Detail",
+    "newprompt": "New Prompt",
+    "notfound1": "No Prompts Found",
+    "notfound3": "No User Groups Found",
+    "syncusermodel1": "Updating AI...",
+    "syncusertokens1": "Updating Group...",
+    "syncuser2": "Success",
+    "syncuser3": "Completed"
   },
   "GroupFilterBar": {
-    "title": "ค้นหาและกรองข้อมูล",
-    "searchPlaceholder": "ค้นหากลุ่ม...",
-    "allModels": "โมเดลทั้งหมด"
+    "title": "Search and Filter Data",
+    "searchPlaceholder": "Search Group...",
+    "allModels": "Model List"
   },
   "NotificationPage": {
     "notification": "Notification",
@@ -186,15 +230,20 @@
     "average": "Average per day"
   },
   "UserGroupSettingCard": {
-    "settoken": "Set Tokens For User",
-    "default": "Set Default Model"
+    "settoken": "Set Default Token Quota For Users",
+    "default": "Set Default AI Model For Users",
+    "plustoken": "Add Tokens To All Users In This Group",
+    "minustoken": "Deduct Tokens From All Users In This Group"
   },
   "GroupTokenTable": {
-    "tablecell1": "Group",
-    "tablecell2": "Tokens",
-    "tablecell2sub": "Set Tokens For User",
-    "tablecell3": "Default Model",
-    "tablecell3sub": "Set Default Model For user"
+    "tablecell1": "Group Name",
+    "tablecell11": "AI Access",
+    "tablecell2": "Default Token",
+    "tablecell2sub": "Set Default Token Quota For Users",
+    "tablecell3sub": "Set Default AI Model For Users",
+    "tablecell4sub": "Add Tokens To All Users In This Group",
+    "tablecell5sub": "Deduct Tokens From All Users In This Group",
+    "tablecell6sub": "Total User Token Data"
   },
   "LogoutAlert": {
     "title": "Want to log out",
@@ -203,14 +252,96 @@
     "cancel": "Cancel"
   },
   "DeleteAlert": {
+    "tooltip": "delete",
     "title1": "Confirm delete?",
     "text1": "Do you want to delete all editing history?",
+    "textprompt1": "Do you want to delete this prompt?",
+    "textgroup1": "Do you want to delete this group?",
+    "textchat1": "Do you want to delete this chat?",
     "confirm": "Delete",
     "cancel": "Cancel",
     "title2": "Completely deleted!",
-    "text2": "All edit history has been deleted"
+    "text2": "All edit history has been deleted",
+    "textprompt2": "This prompt has been deleted",
+    "textgroup2": "This group has been deleted",
+    "textchat2": "This chat has been deleted"
   },
   "Toast": {
     "title1": "New Notification"
+  },
+  "ChatSidebar": {
+    "button1": "New Chat",
+    "button2": "Search Chat",
+    "newgroup": "New Group",
+    "collapse1": "group",
+    "collapse2": "chat",
+    "grouplabel": "Group name",
+    "grouptitlenew": "Create new group",
+    "grouptitleedit": "Edit group name",
+    "groupcomfirmnew": "Create group",
+    "groupcomfirmedit": "Edit",
+    "groupdropdownrename": "Rename group",
+    "groupdropdowndelete": "Delete group",
+    "chatlabel": "Chat name",
+    "chattitleedit": "Edit chat name",
+    "chatcomfirmedit": "Edit",
+    "chatdropdownrename": "Rename chat",
+    "chatdropdowngroup": "Move to group",
+    "chatdropdowndelete": "Delete chat",
+    "chatdropdowndeletegroup": "Delete From",
+    "groupsearchph": "Search group...",
+    "groupnotfound": "No group found.",
+    "chatsearchph": "Search chat...",
+    "chatnotfound": "No chat found.",
+    "inputph": "Enter a message",
+    "menuitem": "Please select a model",
+    "tooltipcopy": "Copy",
+    "tooltipcopycode": "Copy code",
+    "tooltipcopycodealready": "Copied",
+    "tooltipedit": "Edit message",
+    "tooltipsubmit": "Save",
+    "tooltipcancel": "Cancel",
+    "inputsoundstart": "Voice input",
+    "inputsoundstop": "Stop recording",
+    "inputsoundbreak": "Please delete the audio file before recording again",
+    "inputsend1": "Send",
+    "inputsend2": "Please select an AI model",
+    "inputsend3": "Audio file attached",
+    "inputsend4": "Please type a message first",
+    "uploadfile": "Upload File",
+    "uploadtooltip": "Add attachment",
+    "deepresearch": "Deep Research",
+    "notfound": "no group",
+    "notfound1": "no chat"
+  },
+  "LoginError": {
+    "error1": "Unable to sign in",
+    "error2": "Unable to receive the OTP"
+  },
+  "ChatError": {
+    "error1": "Failed to submit the request to the model"
+  },
+  "SettingError": {
+    "error1": "Unable to configure the prompt",
+    "error2": "Unable to configure the AI settings",
+    "error3": "Unable to configure the group settings"
+  },
+  "UserError": {
+    "error1": "Unable to synchronize user data",
+    "error2": "Unable to configure the user's token allocation"
+  },
+  "ChatInputError": {
+    "title1": "File upload limit exceeded",
+    "text11": "A maximum of",
+    "text12": "files is allowed",
+    "title2": "Total file size limit exceeded",
+    "text2": "The total size of all files must not exceed",
+    "title3": "Invalid file",
+    "title4": "Voice recording is not supported",
+    "text4": "Your browser does not support microphone access",
+    "title5": "An error occurred while recording audio",
+    "title6": "Unable to create the audio file",
+    "title7": "Unable to access the microphone",
+    "text7": "Please check your browser's microphone permissions"
   }
 }

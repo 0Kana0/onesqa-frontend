@@ -18,8 +18,10 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import PlusAttachButton from "./PlusAttachButton";
 import FileCard from "./FileCard";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { useTranslations } from "next-intl";
 
 export default function ChatInputBar({
+  theme = "light",
   value,
   sending = false,
   model,
@@ -47,6 +49,9 @@ export default function ChatInputBar({
 }) {
   const fileRef = useRef(null);
   const { locale } = useLanguage();
+
+  const tChatSidebar = useTranslations("ChatSidebar");
+  const tChatInputError = useTranslations("ChatInputError");
   
   // ---------- state สำหรับอัดเสียง ----------
   const [isRecording, setIsRecording] = useState(false);
@@ -90,12 +95,12 @@ export default function ChatInputBar({
 
 
   const sendTooltip = canSend
-    ? "ส่ง"
+    ? tChatSidebar("inputsend1")
     : model === "0"
-    ? "กรุณาเลือกโมเดลของ Ai"
+    ? tChatSidebar("inputsend2")
     : hasMicFile
-    ? "แนบไฟล์เสียงแล้ว"
-    : "พิมพ์ข้อความก่อน";
+    ? tChatSidebar("inputsend3")
+    : tChatSidebar("inputsend4");
 
   const safeSend = () => {
     if (!canSend || sendLock) return;
@@ -179,22 +184,46 @@ export default function ChatInputBar({
     const currentAttachments = attachments ?? [];
 
     if (currentAttachments.length + nextNew.length > maxFiles) {
-      Swal.fire({
-        icon: "error",
-        title: "อัปโหลดไฟล์เกินจำนวนที่กำหนด",
-        text: `อนุญาตสูงสุด ${maxFiles} ไฟล์เท่านั้น`,
-      });
+      if (theme === "dark") {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title1"),
+          text: `${tChatInputError("text11")} ${maxFiles} ${tChatInputError("text12")}`,
+          background: "#2F2F30", // สีพื้นหลังดำ
+          color: "#fff", // สีข้อความเป็นขาว
+          titleColor: "#fff", // สี title เป็นขาว
+          textColor: "#fff", // สี text เป็นขาว
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title1"),
+          text: `${tChatInputError("text11")} ${maxFiles} ${tChatInputError("text12")}`,
+        });
+      }
       return;
     }
 
     const totalAfter = getTotalSize([...currentAttachments, ...nextNew]);
 
     if (totalAfter > maxTotalBytes) {
-      Swal.fire({
-        icon: "error",
-        title: "ขนาดไฟล์รวมเกินกำหนด",
-        text: `ไฟล์ทั้งหมดต้องไม่เกิน ${maxTotalMB}MB`,
-      });
+      if (theme === "dark") {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title2"),
+          text: `${tChatInputError("text2")} ${maxTotalMB}MB`,
+          background: "#2F2F30", // สีพื้นหลังดำ
+          color: "#fff", // สีข้อความเป็นขาว
+          titleColor: "#fff", // สี title เป็นขาว
+          textColor: "#fff", // สี text เป็นขาว
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title2"),
+          text: `${tChatInputError("text2")} ${maxTotalMB}MB`,
+        });
+      }
       return;
     }
 
@@ -227,11 +256,23 @@ export default function ChatInputBar({
       }
 
       if (errors.length) {
-        Swal.fire({
-          icon: "error",
-          title: "ไฟล์ไม่ถูกต้อง",
-          html: errors.join("<br>"),
-        });
+        if (theme === "dark") {
+          Swal.fire({
+            icon: "error",
+            title: tChatInputError("title3"),
+            html: errors.join("<br>"),
+            background: "#2F2F30", // สีพื้นหลังดำ
+            color: "#fff", // สีข้อความเป็นขาว
+            titleColor: "#fff", // สี title เป็นขาว
+            textColor: "#fff", // สี text เป็นขาว
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: tChatInputError("title3"),
+            html: errors.join("<br>"),
+          });
+        }
       }
 
       return ordered;
@@ -279,11 +320,23 @@ export default function ChatInputBar({
   // ---------- logic การอัดเสียง ----------
   const startRecording = async () => {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      Swal.fire({
-        icon: "error",
-        title: "ไม่รองรับการบันทึกเสียง",
-        text: "เบราว์เซอร์ของคุณไม่รองรับการใช้งานไมโครโฟน",
-      });
+      if (theme === "dark") {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title4"),
+          text: tChatInputError("text4"),
+          background: "#2F2F30", // สีพื้นหลังดำ
+          color: "#fff", // สีข้อความเป็นขาว
+          titleColor: "#fff", // สี title เป็นขาว
+          textColor: "#fff", // สี text เป็นขาว
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title4"),
+          text: tChatInputError("text4"),
+        });
+      }
       return;
     }
 
@@ -303,10 +356,21 @@ export default function ChatInputBar({
 
       recorder.onerror = (e) => {
         console.error("MediaRecorder error:", e);
-        Swal.fire({
-          icon: "error",
-          title: "เกิดข้อผิดพลาดในการบันทึกเสียง",
-        });
+        if (theme === "dark") {
+          Swal.fire({
+            icon: "error",
+            title: tChatInputError("title5"),
+            background: "#2F2F30", // สีพื้นหลังดำ
+            color: "#fff", // สีข้อความเป็นขาว
+            titleColor: "#fff", // สี title เป็นขาว
+            textColor: "#fff", // สี text เป็นขาว
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: tChatInputError("title5"),
+          });
+        }
         setIsRecording(false);
         if (mediaStreamRef.current) {
           mediaStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -354,10 +418,21 @@ export default function ChatInputBar({
           addFiles([file]);
         } catch (err) {
           console.error(err);
-          Swal.fire({
-            icon: "error",
-            title: "ไม่สามารถสร้างไฟล์เสียงได้",
-          });
+          if (theme === "dark") {
+            Swal.fire({
+              icon: "error",
+              title: tChatInputError("title6"),
+              background: "#2F2F30", // สีพื้นหลังดำ
+              color: "#fff", // สีข้อความเป็นขาว
+              titleColor: "#fff", // สี title เป็นขาว
+              textColor: "#fff", // สี text เป็นขาว
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: tChatInputError("title6"),
+            });
+          }
         } finally {
           setIsRecording(false);
           mediaRecorderRef.current = null;
@@ -368,11 +443,23 @@ export default function ChatInputBar({
       setIsRecording(true);
     } catch (err) {
       console.error(err);
-      Swal.fire({
-        icon: "error",
-        title: "ไม่สามารถเข้าถึงไมโครโฟนได้",
-        text: "กรุณาตรวจสอบการอนุญาตไมโครโฟนในเบราว์เซอร์",
-      });
+      if (theme === "dark") {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title7"),
+          text: tChatInputError("text7"),
+          background: "#2F2F30", // สีพื้นหลังดำ
+          color: "#fff", // สีข้อความเป็นขาว
+          titleColor: "#fff", // สี title เป็นขาว
+          textColor: "#fff", // สี text เป็นขาว
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: tChatInputError("title7"),
+          text: tChatInputError("text7"),
+        });
+      }
     }
   };
 
@@ -485,10 +572,10 @@ export default function ChatInputBar({
           <Tooltip
             title={
               hasMicFile
-                ? "ลบไฟล์เสียงก่อนจึงจะอัดใหม่ได้"
+                ? tChatSidebar("inputsoundbreak")
                 : isRecording
-                ? "หยุดบันทึกเสียง"
-                : "พูดด้วยเสียง"
+                ? tChatSidebar("inputsoundstop")
+                : tChatSidebar("inputsoundstart")
             }
           >
             <span>

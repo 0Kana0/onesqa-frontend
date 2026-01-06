@@ -14,7 +14,8 @@
     "profile": "ดูโปรไฟล์",
     "theme": "เปลี่ยนธีม",
     "notification": "การเเจ้งเตือน",
-    "logout": "ออกจากระบบ"
+    "logout": "ออกจากระบบ",
+    "loading": "กำลังออกจากระบบ"
   },
   "Sidebar": {
     "dashboard": "Dashboard",
@@ -47,7 +48,10 @@
     "otp1": "กรอกรหัส OTP",
     "otp2": "ระบุ OTP 6 หลัก",
     "recheck1": "ยังไม่ได้รับ OTP ใช่หรือไม่? ",
-    "recheck2": "ส่งใหม่"
+    "recheck2": "ส่งใหม่",
+    "recheck3": "สำเร็จ",
+    "recheck4": "ส่ง OTP ใหม่เรียบร้อย",
+    "loading": "กำลังเข้าสู่ระบบ"
   },
   "DashboardPage": {
     "title1": "แจ้งเตือนการใช้งาน Token",
@@ -61,13 +65,16 @@
     "title3": "สถานะระบบ",
     "subtitle1": "ติดตามการใช้งานระบบ",
     "title4": "การใช้งาน Tokens",
-    "subtitle3": "ติดตามการใช้งาน Tokens"
+    "subtitle3": "ติดตามการใช้งาน Tokens",
+    "select1": "7วันย้อนหลัง",
+    "select2": "30วันย้อนหลัง",
+    "select3": "60วันย้อนหลัง"
   },
   "LogPage": {
     "filter1": "ค้นหาและกรอง Logs",
     "filter2": "ค้นหาและกรองข้อมูล Logs ตามเงื่อนไขต่างๆ",
-    "startDate": "ช่วงวันที่เริ่มต้น",
-    "endDate": "ช่วงวันที่สิ้นสุด",
+    "startDate": "เริ่มต้น",
+    "endDate": "สิ้นสุด",
     "table1": "หัวข้อ Logs",
     "table2": "ประวัติการดำเนินการและเหตุการณ์ในระบบ",
     "button1": "ลบประวัติการแก้ไข",
@@ -75,7 +82,17 @@
     "tablecell2": "ชื่อ",
     "tablecell3": "หัวข้อ",
     "tablecell4": "ข้อมูลเดิม",
-    "tablecell5": "ข้อมูลที่เปลี่ยนแปลง"
+    "tablecell5": "ข้อมูลที่เปลี่ยนแปลง",
+    "select0": "หัวข้อการ Logs",
+    "select1": "กำหนดแนวทางการตั้งคำถาม",
+    "select2": "ตั้งค่าการแจ้งเตือน",
+    "select3": "ตั้งค่า Model ของระบบ",
+    "select4": "ตั้งค่า Model ของผู้ใช้งาน",
+    "select5": "ตั้งค่ากลุ่มผู้ใช้งาน",
+    "select6": "ตั้งค่าบทบาทของผู้ใช้งาน",
+    "notfound": "ไม่พบข้อมูลหัวข้อ Logs",
+    "active": "อนุมัติ",
+    "inactive": "ไม่อนุมัติ"
   },
   "ReportPage": {
     "filter1": "ค้นหาและกรองข้อมูล",
@@ -91,7 +108,13 @@
     "title2": "ผู้ใช้งานอันดับต้น",
     "subtitle2": "ผู้ใช้งานที่มีการใช้งานสูงสุดในเดือนนี้",
     "conversations": "การสนทนา",
-    "title3": "การใช้งาน Tokens"
+    "title3": "การใช้งาน Tokens",
+    "select0": "เลือกช่วงเวลา",
+    "select1": "วันนี้",
+    "select2": "7วันย้อนหลัง",
+    "select3": "1เดือนย้อนหลัง",
+    "notfound": "ไม่พบข้อมูลรายงาน",
+    "notfound1": "ไม่พบข้อมูลอันดับของผู้ใช้งาน"
   },  
   "UserPage": {
     "filter1": "ค้นหาและกรองข้อมูล",
@@ -103,7 +126,16 @@
     "tablecell4": "สถานะ",
     "tablecell5": "AI Access",
     "tablecell6": "ลงชื่อเข้าใช้ล่าสุด",
-    "tablecell7": "ดูรายละเอียด"
+    "tablecell7": "ดูรายละเอียด",
+    "selectrole0": "บทบาททั้งหมด",
+    "selectstatus0": "สถานะ",
+    "selectstatus1": "ใช้งานอยู่",
+    "selectstatus2": "ไม่ใช้งาน",
+    "placeholder1": "ค้นหาผู้ใช้งานจากชื่อ-นามสกุล/กลุ่ม...",
+    "syncuser1": "กำลัง Sync ข้อมูลผู้ใช้...",
+    "syncuser2": "สำเร็จ",
+    "syncuser3": "ดำเนินการเรียบร้อย",
+    "notfound": "ไม่พบข้อมูลผู้ใช้งาน"
   },
   "UserDetailPage": {
     "label1": "กำหนด Tokens ให้ผู้ใช้งาน",
@@ -113,12 +145,24 @@
     "tablecell7": "อีเมล",
     "tablecell4": "โทรศัพท์",
     "tablecell5": "สถานะ",
-    "tablecell6": "กลุ่มงาน"
+    "tablecell6": "กลุ่มงาน",
+    "syncuser1": "กำลังบันทึก Token...",
+    "syncuser2": "สำเร็จ",
+    "syncuser3": "ดำเนินการเรียบร้อย"
   },
   "SettingPage": {
     "button1": "กำหนด Tokens รายกลุ่ม",
     "aititle1": "การตั้งค่า AI Chatbot",
-    "aisubtitle1": "กำหนดแนวทางการตั้งคำถาม (สูงสุด 5 คำถาม)"
+    "aisubtitle1": "กำหนดแนวทางการตั้งคำถาม (สูงสุด 5 คำถาม)",
+    "title": "หัวข้อ",
+    "detail": "รายละเอียด",
+    "newprompt": "เพิ่ม Prompt ใหม่",
+    "notfound1": "ไม่พบข้อมูลรายการ prompt",
+    "notfound3": "ไม่พบข้อมูลกลุ่มผู้ใช้งาน",
+    "syncusermodel1": "กำลังอัปเดต AI...",
+    "syncusertokens1": "กำลังอัปเดต Group...",
+    "syncuser2": "สำเร็จ",
+    "syncuser3": "ดำเนินการเรียบร้อย"
   },
   "GroupFilterBar": {
     "title": "ค้นหาและกรองข้อมูล",
@@ -186,15 +230,20 @@
     "average": "เฉลี่ยต่อวัน"
   },
   "UserGroupSettingCard": {
-    "settoken": "กำหนด Tokens ให้ผู้ใช้งาน",
-    "default": "กำหนด Default Model"
+    "settoken": "กำหนด Tokens ตั้งต้นให้ผู้ใช้งาน",
+    "default": "กำหนด Model ตั้งต้นให้ผู้ใช้งาน",
+    "plustoken": "เติม token ให้ผู้ใช้งานกลุ่มนี้ทุกคน",
+    "minustoken": "ลด token ของผู้ใช้งานกลุ่มนี้ทุกคน"
   },
   "GroupTokenTable": {
-    "tablecell1": "กลุ่มงาน",
-    "tablecell2": "Tokens",
-    "tablecell2sub": "กำหนด Tokens ให้ผู้ใช้งาน",
-    "tablecell3": "โมเดลเริ่มต้น",
-    "tablecell3sub": "กำหนดโมเดลเริ่มต้นให้ผู้ใช้งาน"
+    "tablecell1": "ชื่อกลุ่ม",
+    "tablecell11": "การอนุญาติใช้งาน",
+    "tablecell2": "Tokens ตั้งต้น",
+    "tablecell2sub": "กำหนด Tokens ตั้งต้นให้ผู้ใช้งาน",
+    "tablecell3sub": "กำหนด Model ตั้งต้นให้ผู้ใช้งาน",
+    "tablecell4sub": "เติม token ให้ผู้ใช้งานกลุ่มนี้ทุกคน",
+    "tablecell5sub": "ลด token ของผู้ใช้งานกลุ่มนี้ทุกคน",
+    "tablecell6sub": "ข้อมูล token รวมของผู้ใช้งาน"
   },
   "LogoutAlert": {
     "title": "ต้องการออกจากระบบ",
@@ -203,14 +252,96 @@
     "cancel": "ยกเลิก"
   },
   "DeleteAlert": {
+    "tooltip": "ลบ",
     "title1": "ยืนยันการลบ?",
     "text1": "คุณต้องการลบประวัติการแก้ไขทั้งหมดหรือไม่?",
+    "textprompt1": "คุณต้องการลบแนวทางการตั้งคำถามนี้หรือไม่?",
+    "textgroup1": "คุณต้องการลบกลุ่มนี้หรือไม่?",
+    "textchat1": "คุณต้องการลบแชตนี้หรือไม่?",
     "confirm": "ลบข้อมูล",
     "cancel": "ยกเลิก",
     "title2": "ลบเรียบร้อย!",
-    "text2": "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว"
+    "text2": "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว",
+    "textprompt2": "แนวทางการตั้งคำถามนี้ถูกลบแล้ว",
+    "textgroup2": "กลุ่มนี้ถูกลบแล้ว",
+    "textchat2": "แชตนี้ถูกลบแล้ว"
   },
   "Toast": {
     "title1": "มีการเเจ้งเตือนใหม่เข้ามา"
+  },
+  "ChatSidebar": {
+    "button1": "แชตใหม่",
+    "button2": "ค้นหาแชต",
+    "newgroup": "กลุ่มใหม่",
+    "collapse1": "กลุ่ม",
+    "collapse2": "เเชต",
+    "grouplabel": "ชื่อกลุ่ม",
+    "grouptitlenew": "สร้างกลุ่มใหม่",
+    "grouptitleedit": "เเก้ไขชื่อกลุ่ม",
+    "groupcomfirmnew": "สร้างกลุ่ม",
+    "groupcomfirmedit": "เเก้ไข",
+    "groupdropdownrename": "เปลี่ยนชื่อกลุ่ม",
+    "groupdropdowndelete": "ลบกลุ่ม",
+    "chatlabel": "ชื่อเเชต",
+    "chattitleedit": "เเก้ไขชื่อเเชต",
+    "chatcomfirmedit": "เเก้ไข",
+    "chatdropdownrename": "เปลี่ยนชื่อเเชต",
+    "chatdropdowngroup": "ย้ายไปยังกลุ่ม",
+    "chatdropdowndelete": "ลบเเชต",
+    "chatdropdowndeletegroup": "ลบออกจาก",
+    "groupsearchph": "ค้นหากลุ่ม...",
+    "groupnotfound": "ไม่พบข้อมูลกลุ่ม",
+    "chatsearchph": "ค้นหาแชต...",
+    "chatnotfound": "ไม่พบข้อมูลเเชต",
+    "inputph": "ป้อนข้อความ",
+    "menuitem": "กรุณาเลือกโมเดลคำตอบ",
+    "tooltipcopy": "คัดลอก",
+    "tooltipcopycode": "คัดลอกโค้ด",
+    "tooltipcopycodealready": "คัดลอกแล้ว",
+    "tooltipedit": "แก้ไขข้อความ",
+    "tooltipsubmit": "บันทึก",
+    "tooltipcancel": "ยกเลิก",
+    "inputsoundstart": "พูดด้วยเสียง",
+    "inputsoundstop": "หยุดบันทึกเสียง",
+    "inputsoundbreak": "ลบไฟล์เสียงก่อนจึงจะอัดใหม่ได้",
+    "inputsend1": "ส่ง",
+    "inputsend2": "กรุณาเลือกโมเดลของ Ai",
+    "inputsend3": "แนบไฟล์เสียงแล้ว",
+    "inputsend4": "พิมพ์ข้อความก่อน",
+    "uploadfile": "อัปโหลดไฟล์",
+    "uploadtooltip": "เพิ่ม/แนบไฟล์",
+    "deepresearch": "การค้นคว้าเชิงลึก",
+    "notfound": "ไม่มีกลุ่ม",
+    "notfound1": "ไม่มีแชต"
+  },
+  "LoginError": {
+    "error1": "ไม่สามารถเข้าสู่ระบบได้",
+    "error2": "รับเลข OTP ไม่สำเร็จ"
+  },
+  "ChatError": {
+    "error1": "ส่งคำถามไปยัง Model ไม่สำเร็จ"
+  },
+  "SettingError": {
+    "error1": "ตั้งค่า Prompt ไม่สำเร็จ",
+    "error2": "ตั้งค่า AI ไม่สำเร็จ",
+    "error3": "ตั้งค่า Group ไม่สำเร็จ"
+  },
+  "UserError": {
+    "error1": "Sync ข้อมูล User ไม่สำเร็จ",
+    "error2": "ตั้งค่าจำนวน Token ของ User ไม่สำเร็จ"
+  },
+  "ChatInputError": {
+    "title1": "อัปโหลดไฟล์เกินจำนวนที่กำหนด",
+    "text11": "อนุญาตสูงสุด",
+    "text12": "ไฟล์เท่านั้น",
+    "title2": "ขนาดไฟล์รวมเกินกำหนด",
+    "text2": "ไฟล์ทั้งหมดต้องไม่เกิน",
+    "title3": "ไฟล์ไม่ถูกต้อง",
+    "title4": "ไม่รองรับการบันทึกเสียง",
+    "text4": "เบราว์เซอร์ของคุณไม่รองรับการใช้งานไมโครโฟน",
+    "title5": "เกิดข้อผิดพลาดในการบันทึกเสียง",
+    "title6": "ไม่สามารถสร้างไฟล์เสียงได้",
+    "title7": "ไม่สามารถเข้าถึงไมโครโฟนได้",
+    "text7": "กรุณาตรวจสอบการอนุญาตไมโครโฟนในเบราว์เซอร์"
   }
 }

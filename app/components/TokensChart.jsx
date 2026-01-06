@@ -24,7 +24,7 @@ import { useTranslations } from "next-intl";
 
 /**
  * TokensChart Component
- * @param {Array} data - [{ date: '1 Oct', chatgpt: 900, gemini: 1800, total: 2700 }, ...]
+ * @param {Array} data - [{ date: '1 Oct', gpt: 900, gemini: 1800, total: 2700 }, ...]
  * @param {string} title - ชื่อกราฟ
  * @param {number} height - ความสูงของกราฟ (ค่าเริ่มต้น 350)
  */
@@ -33,6 +33,7 @@ export default function TokensChart({
   subtitle = "สถิติ",
   title = "สถิติการใช้ Tokens รายวัน",
   height = 350,
+  aiGraph = [],
 }) {
   const t = useTranslations("TokensChart");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
@@ -88,26 +89,18 @@ export default function TokensChart({
               wrapperStyle={{ fontSize: 12, marginBottom: 10 }}
             />
           )}
-          {/* เส้น 1: ChatGPT5 */}
-          <Line
-            type="monotone"
-            dataKey="chatgpt"
-            name="ChatGPT 5"
-            stroke="#22c55e"
-            strokeWidth={2}
-            dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
-            activeDot={{ r: 6 }}
-          />
-          {/* เส้น 2: Gemini 2.5 Pro */}
-          <Line
-            type="monotone"
-            dataKey="gemini"
-            name="Gemini 2.5 Pro"
-            stroke="#3b82f6"
-            strokeWidth={2}
-            dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
-            activeDot={{ r: 6 }}
-          />
+          {aiGraph?.map((ai, index) => (
+            <Line
+              key={ai.model_type}
+              type="monotone"
+              dataKey={ai.model_type}        // 👈 model_type
+              name={ai.model_use_name}       // 👈 model_use_name
+              stroke={index === 0 ? "#22c55e" : "#3b82f6"} // หรือใช้ map สี
+              strokeWidth={2}
+              dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 6 }}
+            />
+          ))}
           {/* เส้น 3: รวม */}
           <Line
             type="monotone"

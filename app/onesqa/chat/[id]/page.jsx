@@ -33,10 +33,12 @@ import { GET_CHAT, GET_CHATS } from "@/graphql/chat/queries";
 import PromptList from "@/app/components/chat/PromptList";
 import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const MessagePage = () => {
   const client = useApolloClient();
   const { user } = useAuth();
+  const { locale } = useLanguage();
   const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
   const router = useRouter();
   const { theme } = useTheme();
@@ -47,6 +49,8 @@ const MessagePage = () => {
   const isNew = searchParams.get("new") === "true";
 
   const tInit = useTranslations("Init");
+  const tChatSidebar = useTranslations("ChatSidebar");
+  const tchaterror = useTranslations('ChatError');
 
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)");
@@ -109,6 +113,9 @@ const MessagePage = () => {
     error: promptsError,
     refetch: promptsRefetch,
   } = useQuery(GET_PROMPTS, {
+    variables: {
+      locale: locale,
+    },
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
@@ -191,18 +198,22 @@ const MessagePage = () => {
           input: {
             chat_id: id,
             message: initText,
+            locale: locale,
             fileMessageList,
           },
         },
       });
 
       console.log("✅ Create success:", data.createMessage);
-      chatsRefresh();
+      //chatsRefresh();
+      await client.refetchQueries({
+        include: [GET_CHATS],
+      });
       refetch();
       chatgroupsRefresh();
     } catch (error) {
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     }
   };
@@ -275,7 +286,7 @@ const MessagePage = () => {
       handleMessageSubmitFile(data?.multipleUpload);
     } catch (error) {
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     }
   };
@@ -321,13 +332,17 @@ const MessagePage = () => {
             chat_id: id,
             message: sendText,
             fileMessageList,
+            locale: locale,
           },
         },
       });
 
       console.log("✅ Create success:", data.createMessage);
+      await client.refetchQueries({
+        include: [GET_CHATS],
+      });
       chatgroupsRefresh();
-      chatsRefresh();
+      //chatsRefresh();
       refetch();
     } catch (error) {
       // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
@@ -335,7 +350,7 @@ const MessagePage = () => {
       setAttachments(sendUploads);
 
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     } finally {
       setSending(false);
@@ -382,13 +397,17 @@ const MessagePage = () => {
             chat_id: id,
             message: sendText,
             fileMessageList,
+            locale: locale,
           },
         },
       });
 
       console.log("✅ Create success:", data.createMessage);
+      await client.refetchQueries({
+        include: [GET_CHATS],
+      });
       chatgroupsRefresh();
-      chatsRefresh();
+      //chatsRefresh();
       refetch();
     } catch (error) {
       // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
@@ -396,7 +415,7 @@ const MessagePage = () => {
       setAttachments(sendAttachments);
 
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     } finally {
       setSending(false);
@@ -453,20 +472,24 @@ const MessagePage = () => {
             chat_id: id,
             message: edit_text,
             fileMessageList,
+            locale: locale,
           },
         },
       });
 
       console.log("✅ Update success:", data.updateMessage);
+      await client.refetchQueries({
+        include: [GET_CHATS],
+      });
       chatgroupsRefresh();
-      chatsRefresh();
+      //chatsRefresh();
       refetch();
     } catch (error) {
       // 🔹 ถ้ามี error จากหลังบ้าน → rollback messages กลับของเดิม
       setMessages(prevMessages);
 
       showErrorAlert(error, theme, {
-        title: "ส่งคำถามไปยัง Model ไม่สำเร็จ",
+        title: tchaterror('error1'),
       });
     } finally {
       setSending(false);
@@ -509,6 +532,7 @@ const MessagePage = () => {
       >
         <Box sx={{ display: "flex", gap: 1 }}>
           <ChatInputBar
+            theme = {theme}
             value={text}
             sending={createSending}
             onChange={setText}
@@ -531,11 +555,11 @@ const MessagePage = () => {
               // setText(""); // ล้างหลังส่ง
               // setAttachments([]);
             }}
-            placeholder="ป้อนข้อความ.."
+            placeholder={tChatSidebar("inputph")}
             actions={[
               {
                 key: "deep",
-                label: "Deep Research",
+                label: tChatSidebar("deepresearch"),
                 onClick: () => console.log("deep"),
                 icon: <ScienceOutlinedIcon />,
               },

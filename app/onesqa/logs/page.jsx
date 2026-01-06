@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { NetworkStatus } from "@apollo/client";
 import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
 import { GET_LOGS } from "@/graphql/log/queries";
@@ -32,16 +32,18 @@ import { useTranslations } from "next-intl";
 import { exportLogsToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
 import SmartPagination from "@/app/components/SmartPagination";
+import LocalizedDatePicker from "@/app/components/LocalizedDatePicker";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const mapLogFilterToType = (label) => {
   switch (label) {
     case "กำหนดแนวทางการตั้งคำถาม": return "PROMPT";
     case "ตั้งค่าการแจ้งเตือน": return "ALERT";
-    case "ตั้งค่า Model": return "MODEL";
+    case "ตั้งค่า Model ของระบบ": return "MODEL";
     case "ตั้งค่า Model ของผู้ใช้งาน": return "PERSONAL";
     case "ตั้งค่ากลุ่มผู้ใช้งาน": return "GROUP";
     case "ตั้งค่าบทบาทของผู้ใช้งาน": return "ROLE";
-    default: return null; // "หัวข้อการ Logs แก้ไข" = ทั้งหมด
+    default: return null; // "หัวข้อการ Logs" = ทั้งหมด
   }
 };
 
@@ -49,15 +51,16 @@ const mapTypeToLogFilter = (label) => {
   switch (label) {
     case "PROMPT": return "กำหนดแนวทางการตั้งคำถาม";
     case "ALERT": return "ตั้งค่าการแจ้งเตือน";
-    case "MODEL": return "ตั้งค่า Model";
+    case "MODEL": return "ตั้งค่า Model ของระบบ";
     case "PERSONAL": return "ตั้งค่า Model ของผู้ใช้งาน";
     case "GROUP": return "ตั้งค่ากลุ่มผู้ใช้งาน";
     case "ROLE": return "ตั้งค่าบทบาทของผู้ใช้งาน";
-    default: return null; // "หัวข้อการ Logs แก้ไข" = ทั้งหมด
+    default: return null; // "หัวข้อการ Logs" = ทั้งหมด
   }
 };
 
 const LogPage = () => {
+  const { locale } = useLanguage();
   const client = useApolloClient();
   const t = useTranslations("LogPage");
   const tInit = useTranslations("Init");
@@ -66,7 +69,8 @@ const LogPage = () => {
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
-  const [logFilter, setLogFilter] = useState("หัวข้อการ Logs แก้ไข");
+  const [logType, setLogType] = useState(""); // "" = ทั้งหมด
+  //const [logFilter, setLogFilter] = useState("หัวข้อการ Logs");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
@@ -124,10 +128,12 @@ const LogPage = () => {
     fetchPolicy: "cache-and-network",
     notifyOnNetworkStatusChange: true,
     variables: {
+      locale: locale,
       page: page, 
       pageSize: rowsPerPage,
       where: {
-        logType: mapLogFilterToType(logFilter),
+        //logType: mapLogFilterToType(logFilter),
+        logType: logType || null,
         startDate: startDate,
         endDate: endDate
       }
@@ -136,51 +142,70 @@ const LogPage = () => {
 
   const [deleteLogs] = useMutation(DELETE_LOGS);
 
-  useEffect(() => {
-    //console.log(logsData?.logs?.totalCount);
-    if (!logsData?.logs?.items.length) {
-      setLogRows([]);
-      setTotalCount(0);  
-      return;
-    } 
+  // แปลง type -> label (แสดงในตาราง) อยู่ใน component เท่านั้น
+  const typeLabelMap = useMemo(() => ({
+    PROMPT: t("select1"),
+    ALERT: t("select2"),
+    MODEL: t("select3"),
+    PERSONAL: t("select4"),
+    GROUP: t("select5"),
+    ROLE: t("select6"),
+  }), [t]);
 
-    const transformed = logsData?.logs?.items?.map((log) => {
+  // กันเคส "0" / "1" / "true" / "false"
+  const toBool = (v) =>
+    v === true || v === "true" || v === 1 || v === "1";
+
+  const toApprovalText = (v) => {
+    if (toBool(v)) return t("active");
+    if (v === false || v === "false" || v === 0 || v === "0") return t("inactive");
+    return v == null ? "" : String(v);
+  };
+
+  useEffect(() => {
+    if (!logsData?.logs?.items?.length) {
+      setLogRows([]);
+      setTotalCount(0);
+      return;
+    }
+
+    const transformed = logsData.logs.items.map((log) => {
       const formattedTime = dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss");
 
-      // แปลง log_type เป็น topic
-      let topic = mapTypeToLogFilter(log.log_type);
+      // ✅ ใช้ mapping ใน component
+      const topic = typeLabelMap[log.log_type] ?? log.log_type;
 
-      // แปลง old/new
       let oldValue = log.old_data;
       let newValue = log.new_data;
 
-      // ถ้าเป็น ALERT ให้แสดงเป็น Switch
-      if (log.log_type === "ALERT") {
+      const hasStatus = log.old_status != null || log.new_status != null; // กัน null/undefined
+
+      // ✅ ถ้า ALERT หรือ MODEL ที่มี status ให้โชว์ Switch
+      if (
+        log.log_type === "ALERT" || 
+        (log.log_type === "MODEL" && hasStatus) || 
+        (log.log_type === "PERSONAL" && hasStatus) ||
+        (log.log_type === "GROUP" && hasStatus)
+      ) {
         oldValue = (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <span>{log.old_data}</span>
-            <Switch checked={!!log.old_status} disabled />
+            <Switch checked={toBool(log.old_status)} disabled />
           </Box>
         );
         newValue = (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <span>{log.new_data}</span>
-            <Switch checked={!!log.new_status} disabled />
+            <Switch checked={toBool(log.new_status)} disabled />
           </Box>
         );
       }
 
-      // helper ไว้ใช้ซ้ำ
-      const toApprovalText = (v) => {
-        if (v === true || v === 'true' || v === 1 || v === '1') return 'อนุมัติ';
-        if (v === false || v === 'false' || v === 0 || v === '0') return 'ไม่อนุมัติ';
-        return v == null ? '' : String(v); // กัน null/undefined
-      };
-
-      if (log.log_type === 'MODEL' || log.log_type === 'PERSONAL') {
-        oldValue = log.old_data + " " + toApprovalText(log.old_status);
-        newValue = log.new_data + " " + toApprovalText(log.new_status);
-      }
+      // ✅ PERSONAL โชว์เป็นข้อความ active/inactive
+      // if (log.log_type === "PERSONAL") {
+      //   oldValue = `${log.old_data ?? ""} ${toApprovalText(log.old_status)}`.trim();
+      //   newValue = `${log.new_data ?? ""} ${toApprovalText(log.new_status)}`.trim();
+      // }
 
       return {
         time: formattedTime,
@@ -192,8 +217,8 @@ const LogPage = () => {
     });
 
     setLogRows(transformed);
-    setTotalCount(logsData?.logs?.totalCount)
-  }, [logsData]);
+    setTotalCount(logsData.logs.totalCount ?? 0);
+  }, [logsData, typeLabelMap]); // ✅ ใส่ typeLabelMap เพื่อให้เปลี่ยนภาษาแล้วอัปเดต label
 
   const { allowed, loading, user } = useRequireRole({
     roles: ["ผู้ดูแลระบบ", "superadmin"],
@@ -235,7 +260,7 @@ const LogPage = () => {
   // 🔹 ฟังก์ชันกรองข้อมูล
   // const filteredLogs = logRows.filter((log) => {
   //   const matchesLog =
-  //     logFilter === "หัวข้อการ Logs แก้ไข" || log.topic.includes(logFilter);
+  //     logFilter === "หัวข้อการ Logs" || log.topic.includes(logFilter);
 
   //   // --- แปลงวันที่ใน record ---
   //   const logDate = new Date(dayjs(log.time).format("YYYY-MM-DD"));
@@ -255,7 +280,7 @@ const LogPage = () => {
 
   // ปุ่มล้างตัวกรองทั้งหมด
   const handleClearFilters = () => {
-    setLogFilter("หัวข้อการ Logs แก้ไข"); // กลับไปค่าหมวดหมู่เริ่มต้น
+    setLogType(""); // กลับไปค่าหมวดหมู่เริ่มต้น
     setStartDate(""); // ล้างวันที่เริ่ม
     setEndDate(""); // ล้างวันที่สิ้นสุด
     setPage(1);
@@ -338,58 +363,59 @@ const LogPage = () => {
   };
 
   const handleExportExcel = async () => {
-    // เรียกแบบไม่ส่ง variables (ใช้ค่า default ของ schema)
     const { data } = await client.query({
       query: GET_LOGS,
       fetchPolicy: "network-only",
       variables: {
-        page: page, 
-        pageSize: totalCount,
+        locale,
+        page: 1,                 // ✅ export เอาทั้งหมด แนะนำเริ่มที่หน้า 1
+        pageSize: totalCount || 0,
         where: {
-          logType: mapLogFilterToType(logFilter),
-          startDate: startDate,
-          endDate: endDate
-        }
-      }
+          logType: logType || null,
+          startDate,
+          endDate,
+        },
+      },
     });
 
-    //console.log(data);
-    //console.log(data?.logs?.items);
-    
-    const lowRowExcel = data?.logs?.items ?? [];
+    const rows = data?.logs?.items ?? [];
 
-    const toApprovalText = (v) => {
-      if (v === true || v === "true" || v === 1 || v === "1") return "อนุมัติ";
-      if (v === false || v === "false" || v === 0 || v === "0") return "ไม่อนุมัติ";
-      return v == null ? "" : String(v);
-    };
-
-    const payload = lowRowExcel.map((log) => {
+    const payload = rows.map((log) => {
       const time = dayjs(log.createdAt).format("YYYY-MM-DD HH:mm:ss");
-      const topic = typeof mapTypeToLogFilter === "function"
-        ? mapTypeToLogFilter(log.log_type)
-        : log.log_type;
 
-      if (log.log_type === "ALERT") {
+      // ✅ ใช้ mapping ใน component (ไม่เรียก useTranslations ใน function ภายนอก)
+      const topic = typeLabelMap[log.log_type] ?? log.log_type;
+
+      const hasStatus = log.old_status != null || log.new_status != null;
+
+      // ✅ ALERT หรือ MODEL ที่มี status -> export เป็น ✅ / ❌
+      if (
+        log.log_type === "ALERT" || 
+        (log.log_type === "MODEL" && hasStatus) || 
+        (log.log_type === "PERSONAL" && hasStatus) ||
+        (log.log_type === "GROUP" && hasStatus)
+      ){
         return {
           time,
           name: log.edit_name,
           topic,
-          oldData: `${log.old_data ?? ""} ${log.old_status ? "✅" : "❌"}`,
-          newData: `${log.new_data ?? ""} ${log.new_status ? "✅" : "❌"}`,
+          oldData: `${log.old_data ?? ""} ${toBool(log.old_status) ? "✅" : "❌"}`.trim(),
+          newData: `${log.new_data ?? ""} ${toBool(log.new_status) ? "✅" : "❌"}`.trim(),
         };
       }
 
-      if (log.log_type === "MODEL" || log.log_type === "PERSONAL") {
-        return {
-          time,
-          name: log.edit_name,
-          topic,
-          oldData: `${log.old_data ?? ""} ${toApprovalText(log.old_status)}`,
-          newData: `${log.new_data ?? ""} ${toApprovalText(log.new_status)}`,
-        };
-      }
+      // ✅ PERSONAL -> export เป็น active/inactive (ตาม i18n)
+      // if (log.log_type === "PERSONAL") {
+      //   return {
+      //     time,
+      //     name: log.edit_name,
+      //     topic,
+      //     oldData: `${log.old_data ?? ""} ${toApprovalText(log.old_status)}`.trim(),
+      //     newData: `${log.new_data ?? ""} ${toApprovalText(log.new_status)}`.trim(),
+      //   };
+      // }
 
+      // ✅ อื่นๆ -> ส่งค่าตรง
       return {
         time,
         name: log.edit_name,
@@ -399,8 +425,8 @@ const LogPage = () => {
       };
     });
 
-    exportLogsToExcel(payload);
-  }
+    exportLogsToExcel(payload, locale);
+  };
 
   return (
     <div>
@@ -438,63 +464,54 @@ const LogPage = () => {
             }}
           >
             <Select
-              value={logFilter}
+              value={logType}              // logType เป็น "" | "PROMPT" | ...
               onChange={(e) => {
-                setLogFilter(e.target.value)
-                setPage(1)
+                setLogType(e.target.value);
+                setPage(1);
               }}
               size="small"
               sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
+              displayEmpty                 // ✅ ทำให้ value="" ยัง render ได้
+              renderValue={(value) => {
+                if (value === "") return t("select0"); // ✅ แสดง "ทั้งหมด"
+                return typeLabelMap[value] ?? value;   // ตัวอื่น ๆ
+              }}
             >
-              <MenuItem value="หัวข้อการ Logs แก้ไข">
-                หัวข้อการ Logs แก้ไข
-              </MenuItem>
-              <MenuItem value="กำหนดแนวทางการตั้งคำถาม">
-                กำหนดแนวทางการตั้งคำถาม
-              </MenuItem>
-              <MenuItem value="ตั้งค่าการแจ้งเตือน">
-                ตั้งค่าการแจ้งเตือน
-              </MenuItem>
-              <MenuItem value="ตั้งค่า Model">
-                ตั้งค่า Model
-              </MenuItem>
-              <MenuItem value="ตั้งค่า Model ของผู้ใช้งาน">
-                ตั้งค่า Model ของผู้ใช้งาน
-              </MenuItem>
-              <MenuItem value="ตั้งค่ากลุ่มผู้ใช้งาน">
-                ตั้งค่ากลุ่มผู้ใช้งาน
-              </MenuItem>
-              <MenuItem value="ตั้งค่าบทบาทของผู้ใช้งาน">
-                ตั้งค่าบทบาทของผู้ใช้งาน
-              </MenuItem>
+              <MenuItem value="">{t("select0")}</MenuItem>
+              <MenuItem value="PROMPT">{t("select1")}</MenuItem>
+              <MenuItem value="ALERT">{t("select2")}</MenuItem>
+              <MenuItem value="MODEL">{t("select3")}</MenuItem>
+              <MenuItem value="PERSONAL">{t("select4")}</MenuItem>
+              <MenuItem value="GROUP">{t("select5")}</MenuItem>
+              <MenuItem value="ROLE">{t("select6")}</MenuItem>
             </Select>
 
             {/* วันที่เริ่มต้น */}
-            <TextField
+            <LocalizedDatePicker
               label={t("startDate")}
-              type="date"
               value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value)
+              onChange={(v) => {
+                setStartDate(v)
                 setPage(1)
               }}
-              size="small"
-              sx={{ width: isTablet ? "100%" : 200 }}
-              InputLabelProps={{ shrink: true }}
+              textFieldProps={{
+                size: "small",
+                  sx: { width: isTablet ? "100%" : 200 },
+                }}
             />
 
             {/* วันที่สิ้นสุด */}
-            <TextField
+            <LocalizedDatePicker
               label={t("endDate")}
-              type="date"
               value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value)
+              onChange={(v) => {
+                setEndDate(v)
                 setPage(1)
               }}
-              size="small"
-              sx={{ width: isTablet ? "100%" : 200 }}
-              InputLabelProps={{ shrink: true }}
+              textFieldProps={{
+                size: "small",
+                  sx: { width: isTablet ? "100%" : 200 },
+                }}
             />
           </Box>
         </Box>
@@ -587,7 +604,7 @@ const LogPage = () => {
                   {logRows.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                        ไม่พบข้อมูลหัวข้อ Logs
+                        {t("notfound")}
                       </TableCell>
                     </TableRow>
                   )}

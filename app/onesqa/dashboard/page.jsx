@@ -37,6 +37,7 @@ import {
   TOKEN_REPORTS,
 } from "@/graphql/report/queries";
 import { USER_COUNT_REPORTS } from "@/graphql/user_count/queries";
+import LocalizedDatePicker from "@/app/components/LocalizedDatePicker";
 
 const DashboardPage = () => {
   dayjs.extend(utc);
@@ -176,8 +177,13 @@ const DashboardPage = () => {
       </Typography>
     );
 
-  console.log(aisData?.ais);
-  console.log(chartData?.chartReports);
+  //console.log(aisData?.ais);
+  //console.log(chartData?.chartReports);
+
+  const aiGraph = aisData?.ais?.map(ai => ({
+    model_use_name: ai.model_use_name,
+    model_type: ai.model_type,
+  }));
 
   function pivotUsageByDate(
     rows,
@@ -194,12 +200,12 @@ const DashboardPage = () => {
       if (!r || !r.date) continue;
       const key = r.date; // 'YYYY-MM-DD'
       if (!byDate.has(key))
-        byDate.set(key, { dateISO: key, chatgpt: 0, gemini: 0 });
+        byDate.set(key, { dateISO: key, gpt: 0, gemini: 0 });
 
       const acc = byDate.get(key);
       const tokens = Number(r.total_tokens ?? 0) || 0;
 
-      if (/chatgpt/i.test(r.model)) acc.chatgpt += tokens;
+      if (/gpt/i.test(r.model)) acc.gpt += tokens;
       else if (/gemini/i.test(r.model)) acc.gemini += tokens;
     }
 
@@ -212,14 +218,14 @@ const DashboardPage = () => {
 
     let result = [...byDate.values()]
       .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
-      .map(({ dateISO, chatgpt, gemini }) => {
+      .map(({ dateISO, gpt, gemini }) => {
         const [y, m, d] = dateISO.split("-").map(Number);
         const dt = new Date(Date.UTC(y, m - 1, d));
         return {
           date: fmt.format(dt), // -> "30 Oct 2025"
-          chatgpt,
+          gpt,
           gemini,
-          total: chatgpt + gemini,
+          total: gpt + gemini,
         };
       });
 
@@ -357,35 +363,31 @@ const DashboardPage = () => {
             size="small"
             sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
           >
-            <MenuItem value="7วันย้อนหลัง">7วันย้อนหลัง</MenuItem>
-            <MenuItem value="30วันย้อนหลัง">30วันย้อนหลัง</MenuItem>
-            <MenuItem value="60วันย้อนหลัง">60วันย้อนหลัง</MenuItem>
+            <MenuItem value="7วันย้อนหลัง">{t("select1")}</MenuItem>
+            <MenuItem value="30วันย้อนหลัง">{t("select2")}</MenuItem>
+            <MenuItem value="60วันย้อนหลัง">{t("select3")}</MenuItem>
           </Select>
 
           {/* วันที่เริ่มต้น */}
-          <TextField
+          <LocalizedDatePicker
             label={tReport("startDate")}
-            type="date"
             value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value);
+            onChange={(v) => setStartDate(v)}
+            textFieldProps={{
+              size: "small",
+              sx: { width: isTablet ? "100%" : 200 },
             }}
-            size="small"
-            sx={{ width: isTablet ? "100%" : 200 }}
-            InputLabelProps={{ shrink: true }}
           />
 
           {/* วันที่สิ้นสุด */}
-          <TextField
+          <LocalizedDatePicker
             label={tReport("endDate")}
-            type="date"
             value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value);
+            onChange={(v) => setEndDate(v)}
+            textFieldProps={{
+              size: "small",
+              sx: { width: isTablet ? "100%" : 200 },
             }}
-            size="small"
-            sx={{ width: isTablet ? "100%" : 200 }}
-            InputLabelProps={{ shrink: true }}
           />
         </Box>
       </Box>
@@ -395,6 +397,7 @@ const DashboardPage = () => {
           data={output}
           subtitle={t("subtitle2")}
           title={t("title2")}
+          aiGraph={aiGraph}
         />
       </Box>
 
@@ -441,7 +444,7 @@ const DashboardPage = () => {
             key={p.id}
             style={{ display: "flex", gap: 8, alignItems: "center" }}
           >
-            {p.role_name}
+            {p.role_name_th}
           </li>
         ))}
       </ul> */}

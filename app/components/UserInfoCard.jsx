@@ -123,11 +123,11 @@ export default function UserInfoCard({ user }) {
             {t('status')}:
           </Typography>
           <Chip
-            label={user.status === "ใช้งานอยู่" ? "ใช้งานอยู่" : "ไม่ใช้งาน"}
+            label={user.status}
             size="small"
             sx={{
-              bgcolor: user.status === "ใช้งานอยู่" ? "#E8F5E9" : "#F5F5F5",
-              color: user.status === "ใช้งานอยู่" ? "#2E7D32" : "#757575",
+              bgcolor: user.status === "ใช้งานอยู่" || user.status === "online" ? "#E8F5E9" : "#F5F5F5",
+              color: user.status === "ใช้งานอยู่" || user.status === "online" ? "#2E7D32" : "#757575",
               fontWeight: 500,
             }}
           />

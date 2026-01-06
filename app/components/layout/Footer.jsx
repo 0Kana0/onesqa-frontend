@@ -24,7 +24,7 @@ export default function Footer() {
       }}
     >
       <Typography variant="body2">
-        {t('title1')} {year+543} {t('title2')}
+        {t('title1')} {year} {t('title2')}
       </Typography>
     </Box>
   );

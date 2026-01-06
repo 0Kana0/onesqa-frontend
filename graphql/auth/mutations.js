@@ -17,7 +17,8 @@ export const SIGNIN = gql`
         phone
         position
         group_name
-        role_name
+        role_name_th
+        role_name_en
       }
       token
     }
@@ -51,7 +52,8 @@ export const VERIFY_SIGNIN_WITH_ID = gql`
         phone
         position
         group_name
-        role_name
+        role_name_th
+        role_name_en
       }
     }
   }
@@ -74,7 +76,8 @@ export const REFRESH_TOKEN = gql`
         phone
         position
         group_name
-        role_name
+        role_name_th
+        role_name_en
       }
       token
     }

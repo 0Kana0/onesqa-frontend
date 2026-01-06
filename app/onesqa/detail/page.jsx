@@ -13,9 +13,11 @@ import { GET_USER } from "@/graphql/user/queries";
 import UserInfoCard from "@/app/components/UserInfoCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
 import { useAuth } from "@/app/context/AuthContext";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function DetailPage() {
   const tInit = useTranslations("Init");
+  const { locale } = useLanguage();
   // mock data (จริง ๆ สามารถดึงจาก GraphQL ได้)
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -60,7 +62,10 @@ export default function DetailPage() {
         phone: user.phone || "-",
         position: user.position || "-",
         group: user.group_name || "-",
-        status: user.ai_access ? "ใช้งานอยู่" : "ไม่ใช้งาน",
+        status:
+          locale === "th"
+            ? (user?.is_online ? "ใช้งานอยู่" : "ไม่ใช้งาน")
+            : (user?.is_online ? "online" : "offline"),
         colorMode: user.color_mode || "LIGHT",
         aiModels:
           user.user_ai?.map((ai) => ({
@@ -77,7 +82,7 @@ export default function DetailPage() {
 
       setUserCard(formattedData); // ✅ เก็บเป็น array เสมอ
     }
-  }, [userData]);
+  }, [userData, locale]);
 
   console.log(userCard);
 

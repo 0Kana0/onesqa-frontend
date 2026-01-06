@@ -21,11 +21,14 @@ import { useTranslations } from "next-intl";
 import NotificationCard from "@/app/components/NotificationCard";
 import NotificationToggleCard from "@/app/components/NotificationToggleCard";
 import { toast } from "react-toastify";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { UPDATE_THEME_AND_LOCALE } from "@/graphql/user/mutations";
 
 const PAGE_SIZE = 4;
 
 const NotificationPage = () => {
   const { user } = useAuth();
+  const { locale } = useLanguage();
   const t = useTranslations("NotificationPage");
   const tInit = useTranslations("Init");
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -51,7 +54,12 @@ const NotificationPage = () => {
     refetch,
     networkStatus,
   } = useQuery(MY_NOTIFICATIONS, {
-    variables: { user_id: user?.id ?? "", first: PAGE_SIZE, after: null },
+    variables: { 
+      locale: locale,
+      user_id: user?.id ?? "", 
+      first: PAGE_SIZE, 
+      after: null 
+    },
     skip: !user?.id,
     notifyOnNetworkStatusChange: true, // ให้รู้สถานะระหว่าง fetchMore/refetch
     fetchPolicy: "network-only",
@@ -59,6 +67,7 @@ const NotificationPage = () => {
 
   console.log(data);
 
+  const [updateThemeAndLocale] = useMutation(UPDATE_THEME_AND_LOCALE);
   const [updateSetting] = useMutation(UPDATE_SETTING);
 
   // รวม edges แบบ local state เพื่อควบคุม duplicate เองโดยไม่พึ่ง typePolicies
@@ -90,9 +99,40 @@ const NotificationPage = () => {
   }, [user?.id, refetch]);
 
   useEffect(() => {
-    // ปิด toast ที่กำลังแสดงอยู่ทั้งหมดทันทีเมื่อเข้าหน้านี้
+    // ✅ ปิด toast ทันทีเมื่อเข้าหน้านี้
     toast.dismiss();
   }, []);
+
+  useEffect(() => {
+    // ✅ กันกรณี user ยังไม่มา
+    if (!user?.id) return;
+
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const { data } = await updateThemeAndLocale({
+          variables: {
+            id: user.id,
+            input: { alert: false },
+          },
+        });
+
+        if (!cancelled) {
+          localStorage.removeItem("alert");
+          console.log("✅ Update success:", data?.updateThemeAndLocale);
+        }
+      } catch (err) {
+        console.error("❌ Update theme/locale failed:", err);
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, updateThemeAndLocale, data]);
 
   // โหลดหน้าเพิ่ม
   const loadMore = useCallback(async () => {
@@ -253,8 +293,8 @@ const NotificationPage = () => {
               {settingsData?.settings?.map((setting) => (
                 <NotificationToggleCard
                   key={setting.id}
-                  title={setting.setting_name}
-                  description={setting.setting_detail}
+                  title={locale === "th" ? setting?.setting_name_th : setting?.setting_name_en}
+                  description={locale === "th" ? setting?.setting_detail_th : setting?.setting_detail_en}
                   checked={setting.activity}
                   onChange={async (e) => {
                     const newValue = e.target.checked;
@@ -267,9 +307,9 @@ const NotificationPage = () => {
                           },
                         },
                       });
-                      console.log(
-                        `✅ Updated ${setting.setting_name} to ${newValue}`
-                      );
+                      // console.log(
+                      //   `✅ Updated ${setting.setting_name} to ${newValue}`
+                      // );
                     } catch (err) {
                       console.error("❌ Error updating setting:", err);
                     }
@@ -286,7 +326,7 @@ const NotificationPage = () => {
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
-      {(user?.role_name === "ผู้ดูแลระบบ" || user?.role_name === "superadmin") && (
+      {(user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin") && (
         <Box
           sx={{
             display: "flex",

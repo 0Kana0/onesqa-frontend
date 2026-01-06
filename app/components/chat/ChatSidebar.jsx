@@ -48,6 +48,7 @@ export default function ChatSidebar() {
   const { theme } = useTheme();
   const { toggle } = useSidebar(); // ✅ ดึงจาก Context
 
+  const tChatSidebar = useTranslations("ChatSidebar");
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -261,7 +262,7 @@ export default function ChatSidebar() {
     if (theme === "dark") {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textchat1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -292,7 +293,7 @@ export default function ChatSidebar() {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textchat2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
             background: "#2F2F30", // สีพื้นหลังดำ
@@ -305,7 +306,7 @@ export default function ChatSidebar() {
     } else {
       Swal.fire({
         title: tDelete("title1"),
-        text: tDelete("text1"),
+        text: tDelete("textchat1"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
@@ -332,7 +333,7 @@ export default function ChatSidebar() {
 
           Swal.fire({
             title: tDelete("title2"),
-            text: tDelete("text2"),
+            text: tDelete("textchat2"),
             icon: "success",
             confirmButtonColor: "#3E8EF7",
           });
@@ -361,8 +362,6 @@ export default function ChatSidebar() {
       console.log("✅ Update success:", data.updateChat);
       // refetch();
       // if (id === item.id && pathname === `/onesqa/chat/group/${id}`)
-      //   console.log("dasddsaddda");
-
       //   chatgroupsRefresh();
       await client.refetchQueries({
         include: [GET_CHATS],
@@ -420,7 +419,7 @@ export default function ChatSidebar() {
           <ListItemText
             primary={
               <Typography sx={{ fontSize: 13.5, color: "common.white" }}>
-                เเชต
+                {tChatSidebar("collapse2")}
               </Typography>
             }
           />
@@ -520,7 +519,7 @@ export default function ChatSidebar() {
                 }}
               >
                 <Typography variant="caption" sx={{ opacity: 0.6 }}>
-                  -- ไม่มีแชต --
+                  -- {tChatSidebar("notfound1")} --
                 </Typography>
               </Box>
             )}
@@ -556,9 +555,9 @@ export default function ChatSidebar() {
         onChangeGroup={handleUpdateGroup}
         onDelete={handleDelete}
         // ปรับข้อความได้ตามบริบท เช่น "กลุ่ม"
-        renameLabel="เปลี่ยนชื่อเเชต"
-        changeGroupLabel="ย้ายไปยังกลุ่ม"
-        deleteLabel="ลบเเชต"
+        renameLabel={tChatSidebar("chatdropdownrename")}
+        changeGroupLabel={tChatSidebar("chatdropdowngroup")}
+        deleteLabel={tChatSidebar("chatdropdowndelete")}
         // paperSx={{ minWidth: 200 }} // ถ้าต้องการปรับแต่งเพิ่ม
       />
 
@@ -568,9 +567,9 @@ export default function ChatSidebar() {
         onClose={closeNewProject}
         onCreate={handleUpdateChat}
         initialName={rename?.label} // ถ้าต้องการค่าเริ่มต้น
-        title={"เเก้ไขชื่อเเชต"}
-        label="ชื่อเเชต"
-        confirmLabel={"เเก้ไข"}
+        title={tChatSidebar("chattitleedit")}
+        label={tChatSidebar("chatlabel")}
+        confirmLabel={tChatSidebar("chatcomfirmedit")}
       />
 
       {openSearch && (
