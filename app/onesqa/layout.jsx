@@ -75,6 +75,7 @@ export default function PrivateLayout({ children }) {
           deleteCookie("accessToken", { path: "/" });
           localStorage.removeItem("user");
           router.push("/auth/login");
+          router.refresh();
         });
     }
   }, [error, refreshToken, refetch, router]);

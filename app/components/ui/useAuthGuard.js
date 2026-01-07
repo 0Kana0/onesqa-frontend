@@ -18,6 +18,7 @@ export function useRequireAuth() {
     setReady(true);
     if (!ok) {
       router.replace(`/auth/login`);
+      router.refresh();
     }
   }, [router, pathname]);
 

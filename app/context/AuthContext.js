@@ -130,9 +130,10 @@ export function AuthProvider({ children }) {
     }
 
     setUser(null);
-    router.push("/auth/login");
     deleteCookie("accessToken", { path: "/" });
     localStorage.removeItem("user");
+    router.push("/auth/login");
+    router.refresh();
     //localStorage.removeItem("locale");
   };
 
