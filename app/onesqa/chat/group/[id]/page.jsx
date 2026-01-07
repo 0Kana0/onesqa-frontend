@@ -724,12 +724,12 @@ const ChatgroupPage = () => {
             }}
             placeholder={tChatSidebar("inputph")}
             actions={[
-              {
-                key: "deep",
-                label: tChatSidebar("deepresearch"),
-                onClick: () => console.log("deep"),
-                icon: <ScienceOutlinedIcon />,
-              },
+              // {
+              //   key: "deep",
+              //   label: tChatSidebar("deepresearch"),
+              //   onClick: () => console.log("deep"),
+              //   icon: <ScienceOutlinedIcon />,
+              // },
               // {
               //   key: "canvas",
               //   label: "Canvas",

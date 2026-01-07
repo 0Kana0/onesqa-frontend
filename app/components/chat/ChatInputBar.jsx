@@ -409,9 +409,9 @@ export default function ChatInputBar({
           // 2. ภาษาอังกฤษของข้อความนี้: "Transcribe speech from this file"
           if (onChange) {
             if (locale === "th") {
-              onChange("ถอดคำพูดจากไฟล์ เอาเเค่คำพูดจากไฟล์ไม่ต้องใส่อะไรอย่างอื่น");
+              onChange("ตอบคำถามจากเสียงในไฟล์แบบละเอียด ทำตามเสียงในไฟล์");
             } else {
-              onChange("Transcribe speech from this file");
+              onChange("Answer the questions from the audio in the file in detail, following the audio exactly.");
             }
           }
 

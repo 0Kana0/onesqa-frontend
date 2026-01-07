@@ -402,6 +402,14 @@ export default function ChatBubble({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sending]);
 
+  const HIDDEN_USER_TEXTS = new Set([
+    "ตอบคำถามจากเสียงในไฟล์แบบละเอียด ทำตามเสียงในไฟล์",
+    "Answer the questions from the audio in the file in detail, following the audio exactly.",
+  ]);
+
+  const trimmedText = (text ?? "").trim();
+  const hideUserText = isUser && HIDDEN_USER_TEXTS.has(trimmedText);
+
   const startEdit = () => {
     setDraft(toPlainString(text));
     setIsEditing(true);
@@ -484,48 +492,50 @@ export default function ChatBubble({
         )}
 
         {/* ====== Bubble area: view / edit ====== */}
-        <Paper sx={bubbleSx}>
-          {isEditing && !sending ? (
-            <InputBase
-              autoFocus
-              multiline
-              fullWidth
-              minRows={2}
-              maxRows={12}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-                  e.preventDefault();
-                  saveEdit();
-                } else if (e.key === "Escape") {
-                  e.preventDefault();
-                  cancelEdit();
-                }
-              }}
-              placeholder={tChatSidebar("inputph")}
-              sx={{
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                color: isUser ? "primary.contrastText" : "text.primary",
-              }}
-            />
-          ) : (
-            <>
-              {isUser ? (
-                // ⭐ ฝั่ง user: ยังใช้ Typography ธรรมดา → flow เดิม
-                <Typography
-                  sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
-                >
-                  {text}
-                </Typography>
-              ) : (
-                // ⭐ ฝั่ง assistant: ใช้ GeminiMarkdown แทน Typography
-                <GeminiMarkdown content={text} />
-              )}
-            </>
-          )}
-        </Paper>
+        {(isEditing && !sending) || !hideUserText ? (
+          <Paper sx={bubbleSx}>
+            {isEditing && !sending ? (
+              <InputBase
+                autoFocus
+                multiline
+                fullWidth
+                minRows={2}
+                maxRows={12}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    saveEdit();
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelEdit();
+                  }
+                }}
+                placeholder={tChatSidebar("inputph")}
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  color: isUser ? "primary.contrastText" : "text.primary",
+                }}
+              />
+            ) : (
+              <>
+                {isUser ? (
+                  // ⭐ ฝั่ง user: ยังใช้ Typography ธรรมดา → flow เดิม
+                  <Typography
+                    sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                  >
+                    {text}
+                  </Typography>
+                ) : (
+                  // ⭐ ฝั่ง assistant: ใช้ GeminiMarkdown แทน Typography
+                  <GeminiMarkdown content={text} />
+                )}
+              </>
+            )}
+          </Paper>
+        ) : null}
 
         {/* ====== Foot actions ====== */}
         <Stack
@@ -551,7 +561,7 @@ export default function ChatBubble({
             </>
           ) : (
             <>
-              {enableCopy && (
+              {enableCopy && !hideUserText && (
                 <Tooltip title={tChatSidebar("tooltipcopy")}>
                   <IconButton
                     size="small"
@@ -566,7 +576,7 @@ export default function ChatBubble({
                 <Tooltip title={tChatSidebar("tooltipedit")}>
                   <IconButton
                     size="small"
-                    onClick={startEdit}
+                    onClick={hideUserText ? saveEdit : startEdit}
                     sx={{ ml: -0.5 }}
                     disabled={Boolean(sending)}
                   >
