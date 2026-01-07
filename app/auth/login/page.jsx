@@ -160,8 +160,10 @@ export default function LoginPage() {
           loginResult?.data?.signin?.user?.role_name_th === "superadmin"
         ) {
           router.push("/onesqa/dashboard");
+          router.refresh();
         } else {
           router.push("/onesqa/chat");
+          router.refresh();
         }
       } catch (error) {
         // 👉 ดึงข้อความ error มาเก็บใน state
@@ -366,8 +368,10 @@ export default function LoginPage() {
         loginResult?.data?.verifySigninWithIdennumber?.user?.role_name_th === "superadmin"
       ) {
         router.push("/onesqa/dashboard");
+        router.refresh();
       } else {
         router.push("/onesqa/chat");
+        router.refresh();
       }
     } catch (error) {
       // 👉 ดึงข้อความ error มาเก็บใน state
