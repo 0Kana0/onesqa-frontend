@@ -36,7 +36,7 @@ export default function OnlineUsersListener({online, refetch}) {
           if (!u) return;
 
         },
-        error: (err) => console.error("❌ Subscription error:", err),
+        error: (err) => console.log("❌ Subscription error:", err),
         complete: () => console.log("🔌 Subscription complete ✅"), // <== ต้องมี
       }
     );

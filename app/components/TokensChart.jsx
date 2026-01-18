@@ -1,15 +1,7 @@
 "use client";
 
-import React from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  LinearProgress,
-  Divider,
-  useMediaQuery,
-} from "@mui/material";
+import React, { useMemo } from "react";
+import { Box, useMediaQuery } from "@mui/material";
 import {
   LineChart,
   Line,
@@ -22,25 +14,48 @@ import {
 } from "recharts";
 import { useTranslations } from "next-intl";
 
-/**
- * TokensChart Component
- * @param {Array} data - [{ date: '1 Oct', gpt: 900, gemini: 1800, total: 2700 }, ...]
- * @param {string} title - ชื่อกราฟ
- * @param {number} height - ความสูงของกราฟ (ค่าเริ่มต้น 350)
- */
 export default function TokensChart({
   data = [],
   subtitle = "สถิติ",
   title = "สถิติการใช้ Tokens รายวัน",
   height = 350,
   aiGraph = [],
+  locale = "th", // ✅ รับ locale เข้ามา (th / en / th-TH / en-US)
 }) {
   const t = useTranslations("TokensChart");
-  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+  const isMobile = useMediaQuery("(max-width:600px)");
 
-  // ด้านบนไฟล์
-  const trimYear = (v) =>
-    typeof v === "string" ? v.replace(/\s+\d{4}$/, "") : v;
+  // formatter เดือนตามภาษา
+  const monthFmt = useMemo(() => {
+    const intlLocale = String(locale).startsWith("th") ? "th-TH" : "en-US";
+    return new Intl.DateTimeFormat(intlLocale, { month: "short" }); // ม.ค. / Jan
+  }, [locale]);
+
+  // แปลง tick เช่น "30 Oct 2025" -> "30 ต.ค." หรือ "30 Oct"
+  const formatDateLabel = (v, { showYear = false } = {}) => {
+    if (typeof v !== "string") return v;
+
+    // รองรับ "30 Oct 2025" หรือ "30 Oct"
+    const m = v.match(/^(\d{1,2})\s+([A-Za-z]{3,})\s*(\d{4})?$/);
+    if (!m) return v;
+
+    const day = Number(m[1]);
+    const engMonth = m[2].toLowerCase();
+    const year = m[3] ? Number(m[3]) : null;
+
+    const monthMap = {
+      jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+      jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+    };
+
+    const idx = monthMap[engMonth.slice(0, 3)];
+    if (idx === undefined) return v;
+
+    const localMonth = monthFmt.format(new Date(2020, idx, 1));
+
+    if (showYear && year) return `${day} ${localMonth} ${year}`; // ✅ มีปี
+    return `${day} ${localMonth}`; // ✅ ไม่มีปี
+  };
 
   return (
     <Box
@@ -54,24 +69,18 @@ export default function TokensChart({
         bgcolor: "background.paper",
       }}
     >
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        {subtitle}
-      </Typography>
-      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-        {title}
-      </Typography>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart
-          data={data}
-          margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-        >
+        <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+
           <XAxis
             dataKey="date"
             tick={{ fontSize: 12 }}
-            tickFormatter={trimYear}
+            tickFormatter={(label) => formatDateLabel(label, { showYear: false })}
           />
+
           <YAxis tick={{ fontSize: 12 }} />
+
           <Tooltip
             contentStyle={{
               backgroundColor: "#1e1e2f",
@@ -79,8 +88,10 @@ export default function TokensChart({
               border: "none",
               color: "#fff",
             }}
-            formatter={(value) => value.toLocaleString()}
+            formatter={(value) => Number(value || 0).toLocaleString()}
+            labelFormatter={(label) => formatDateLabel(label, { showYear: true })}
           />
+
           {!isMobile && (
             <Legend
               verticalAlign="top"
@@ -89,19 +100,20 @@ export default function TokensChart({
               wrapperStyle={{ fontSize: 12, marginBottom: 10 }}
             />
           )}
+
           {aiGraph?.map((ai, index) => (
             <Line
               key={ai.model_type}
               type="monotone"
-              dataKey={ai.model_type}        // 👈 model_type
-              name={ai.model_use_name}       // 👈 model_use_name
-              stroke={index === 0 ? "#22c55e" : "#3b82f6"} // หรือใช้ map สี
+              dataKey={ai.model_type}
+              name={ai.model_use_name}
+              stroke={index === 0 ? "#22c55e" : "#3b82f6"}
               strokeWidth={2}
               dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
               activeDot={{ r: 6 }}
             />
           ))}
-          {/* เส้น 3: รวม */}
+
           <Line
             type="monotone"
             dataKey="total"

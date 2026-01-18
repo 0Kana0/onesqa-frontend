@@ -6,11 +6,31 @@ export const GET_REPORTS = gql`
       items {
         id
         date
-        position
+        group
         tokens
         user
         user_id
         chats
+      }
+      page
+      pageSize
+      totalCount
+    }
+  }
+`;
+
+export const GET_PERIOD_REPORTS = gql`
+  query periodReports($page: Int, $pageSize: Int, $period: PeriodInput!, $search: String) {
+    periodReports(page: $page, pageSize: $pageSize, period: $period, search: $search) {
+      items {
+        id
+        user_id
+        user
+        group
+        period
+        period_start
+        chats
+        tokens
       }
       page
       pageSize
@@ -43,6 +63,16 @@ export const CHART_REPORTS = gql`
       date
       model
       total_tokens
+    }
+  }
+`;
+
+export const PERIOD_CHART_REPORTS = gql`
+  query periodChartReports($period: PeriodInput!) {
+    periodChartReports(period: $period) {
+      ts
+      model_type
+      value
     }
   }
 `;

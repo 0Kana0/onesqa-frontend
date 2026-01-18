@@ -1,7 +1,7 @@
 // app/components/chat/ChatInputBar.jsx
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
 import {
   Box,
@@ -12,6 +12,7 @@ import {
   InputBase,
   CircularProgress,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
@@ -19,9 +20,14 @@ import PlusAttachButton from "./PlusAttachButton";
 import FileCard from "./FileCard";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useTranslations } from "next-intl";
+import ImageRoundedIcon from "@mui/icons-material/ImageRounded";
+import MovieRoundedIcon from "@mui/icons-material/MovieRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 
 export default function ChatInputBar({
   theme = "light",
+  messageType = "TEXT",
+  setMessageType,
   value,
   sending = false,
   model,
@@ -52,6 +58,21 @@ export default function ChatInputBar({
 
   const tChatSidebar = useTranslations("ChatSidebar");
   const tChatInputError = useTranslations("ChatInputError");
+  const tPlusAttachButton = useTranslations("PlusAttachButton");
+
+  const typeMeta = useMemo(() => {
+    if (messageType === "IMAGE")
+      return { label: tPlusAttachButton("image"), icon: <ImageRoundedIcon fontSize="small" /> };
+
+    if (messageType === "VIDEO")
+      return { label: tPlusAttachButton("video"), icon: <MovieRoundedIcon fontSize="small" /> };
+
+    if (messageType === "DOC")
+      return { label: tPlusAttachButton("doc"), icon: <DescriptionRoundedIcon fontSize="small" /> };
+
+    return null;
+  }, [messageType, tPlusAttachButton]);
+
   
   // ---------- state สำหรับอัดเสียง ----------
   const [isRecording, setIsRecording] = useState(false);
@@ -355,7 +376,7 @@ export default function ChatInputBar({
       };
 
       recorder.onerror = (e) => {
-        console.error("MediaRecorder error:", e);
+        console.log("MediaRecorder error:", e);
         if (theme === "dark") {
           Swal.fire({
             icon: "error",
@@ -417,7 +438,7 @@ export default function ChatInputBar({
 
           addFiles([file]);
         } catch (err) {
-          console.error(err);
+          console.log(err);
           if (theme === "dark") {
             Swal.fire({
               icon: "error",
@@ -442,7 +463,7 @@ export default function ChatInputBar({
       recorder.start();
       setIsRecording(true);
     } catch (err) {
-      console.error(err);
+      console.log(err);
       if (theme === "dark") {
         Swal.fire({
           icon: "error",
@@ -471,7 +492,7 @@ export default function ChatInputBar({
         setIsRecording(false);
       }
     } catch (err) {
-      console.error(err);
+      console.log(err);
       setIsRecording(false);
     }
   };
@@ -552,7 +573,30 @@ export default function ChatInputBar({
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <PlusAttachButton triggerFile={triggerFile} disabled={disabled} />
 
-          {actions?.length > 0 && (
+          {typeMeta && (
+            <Tooltip title={tPlusAttachButton("cancel")}>
+              <Box
+                onClick={() => setMessageType("TEXT")}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  ml: 1,
+                  cursor: "pointer",
+                  color: "#3E8EF7",
+                  "&:hover": { opacity: 0.85 },
+                  userSelect: "none",
+                }}
+              >
+                {typeMeta.icon}
+                <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
+                  {typeMeta.label}
+                </Typography>
+              </Box>
+            </Tooltip>
+          )}
+
+          {/* {actions?.length > 0 && (
             <Box sx={{ display: "flex", gap: 1, pl: 0.5 }}>
               {actions.map((a) => (
                 <Chip
@@ -565,7 +609,7 @@ export default function ChatInputBar({
                 />
               ))}
             </Box>
-          )}
+          )} */}
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center" }}>

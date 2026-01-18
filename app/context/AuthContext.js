@@ -35,6 +35,8 @@ export function AuthProvider({ children }) {
 
   const router = useRouter();
 
+  const LOGOUT_FLAG = "__logout_in_progress__";
+
   useEffect(() => {
     const checkAuth = async () => {
       // const userData = getCookie("user");
@@ -71,7 +73,7 @@ export function AuthProvider({ children }) {
           //   handleBeforeUnload();
           // };
         } catch (error) {
-          console.error("Error parsing user data:", error);
+          console.log("Error parsing user data:", error);
           deleteCookie("user");
         }
       }
@@ -113,28 +115,36 @@ export function AuthProvider({ children }) {
   };
 
   const logoutContext = async () => {
-    try {
-      // ✅ เรียก mutation ไป backend
-      const userData = localStorage.getItem("user");
-      const parseUserData = JSON.parse(userData);
-
-      const { data } = await setUserOffline({
-        variables: {
-          user_id: parseUserData.id, // ต้องตรงกับ schema
-        },
-      });
-
-      console.log("✅ Update success:", data.setUserOffline);
-    } catch (error) {
-      console.log(error);
+    // ✅ เปิดธง: ระหว่างนี้ errorLink ห้าม redirect
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(LOGOUT_FLAG, "1");
     }
 
-    setUser(null);
-    deleteCookie("accessToken", { path: "/" });
-    localStorage.removeItem("user");
-    router.push("/auth/login");
-    router.refresh();
-    //localStorage.removeItem("locale");
+    try {
+      const userData = localStorage.getItem("user");
+      const parseUserData = userData ? JSON.parse(userData) : null;
+
+      if (parseUserData?.id) {
+        const { data } = await setUserOffline({
+          variables: { user_id: parseUserData.id },
+          // ✅ กันเฉพาะ mutation นี้ไม่ให้ errorLink เด้ง
+          context: { suppressAuthRedirect: true },
+          fetchPolicy: "no-cache",
+        });
+
+        console.log("✅ Update success:", data?.setUserOffline);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setUser(null);
+      deleteCookie("accessToken", { path: "/" });
+      localStorage.removeItem("user");
+
+      // แนะนำให้ใช้ replace จะไม่ย้อนกลับมาหน้าเดิม
+      router.replace("/auth/login");
+      router.refresh();
+    }
   };
 
   return (

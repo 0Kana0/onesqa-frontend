@@ -5,6 +5,7 @@ export const GET_MESSAGES = gql`
     messages(chat_id: $chat_id, user_id: $user_id) {
       id
       role
+      message_type
       text
       createdAt
       updatedAt

@@ -47,7 +47,14 @@ import { GET_GROUP_BY_NAME } from "@/graphql/group/queries";
 const ChatPage = () => {
   const client = useApolloClient();
   const { locale } = useLanguage();
-  const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
+  const { 
+    initText, 
+    setInitText, 
+    initAttachments, 
+    setInitAttachments, 
+    initMessageType, 
+    setInitMessageType 
+  } = useInitText();
   const router = useRouter();
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -127,7 +134,8 @@ const ChatPage = () => {
 
     setInitText("");
     setInitAttachments([]);
-  }, [setInitText, setInitAttachments]);
+    setInitMessageType('TEXT');
+  }, [setInitText, setInitAttachments, setInitMessageType]);
 
   // เพิ่ม useEffect เพื่อ set ค่า model อัตโนมัติ
   useEffect(() => {
@@ -319,6 +327,8 @@ const ChatPage = () => {
         >
           <ChatInputBar
             theme = {theme}
+            messageType = {initMessageType}
+            setMessageType = {setInitMessageType}
             value={initText}
             model={model}
             onChange={setInitText}
@@ -335,7 +345,7 @@ const ChatPage = () => {
                 }
                 // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
               } catch (err) {
-                console.error(err);
+                console.log(err);
               }
             }}
             placeholder={tChatSidebar("inputph")}

@@ -3,7 +3,7 @@
 
 import { Box, CircularProgress, Typography } from "@mui/material";
 
-const FullScreenLoading = ({ text = "กำลังเข้าสู่ระบบ..." }) => {
+const FullScreenLoading = ({ text = "กำลังเข้าสู่ระบบ" }) => {
   return (
     <Box
       sx={{

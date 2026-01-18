@@ -75,3 +75,12 @@ export const GET_GROUP_BY_NAME = gql`
     }
   }
 `;
+
+export const GET_GROUP_WITH_USER_COUNT = gql`
+  query groupWithUserCount {
+    groupWithUserCount {
+      name
+      user_count
+    }
+  }
+`;

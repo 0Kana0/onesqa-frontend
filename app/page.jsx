@@ -38,7 +38,7 @@
 //       mediaRecorder.start();
 //       setIsRecording(true);
 //     } catch (err) {
-//       console.error("ไม่สามารถเข้าถึงไมโครโฟนได้:", err);
+//       console.log("ไม่สามารถเข้าถึงไมโครโฟนได้:", err);
 //       alert("อนุญาตไมโครโฟนในเบราว์เซอร์ก่อนนะ");
 //     }
 //   };
@@ -69,7 +69,7 @@
 //       console.log("อัปโหลดสำเร็จ:", data);
 //       alert("อัปโหลดสำเร็จ");
 //     } catch (err) {
-//       console.error("อัปโหลดล้มเหลว:", err);
+//       console.log("อัปโหลดล้มเหลว:", err);
 //       alert("อัปโหลดไม่สำเร็จ");
 //     }
 //   };

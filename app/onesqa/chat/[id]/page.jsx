@@ -15,7 +15,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { GET_MESSAGES } from "@/graphql/message/queries";
-import { CREATE_MESSAGE, UPDATE_MESSAGE } from "@/graphql/message/mutations";
+import { CREATE_MESSAGE, CREATE_MESSAGE_DOC, CREATE_MESSAGE_IMAGE, CREATE_MESSAGE_VIDEO, UPDATE_MESSAGE } from "@/graphql/message/mutations";
 import { MULTIPLE_UPLOAD } from "@/graphql/file/mutations";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -39,7 +39,14 @@ const MessagePage = () => {
   const client = useApolloClient();
   const { user } = useAuth();
   const { locale } = useLanguage();
-  const { initText, setInitText, initAttachments, setInitAttachments } = useInitText();
+  const { 
+    initText, 
+    setInitText, 
+    initAttachments, 
+    setInitAttachments, 
+    initMessageType, 
+    setInitMessageType 
+  } = useInitText();
   const router = useRouter();
   const { theme } = useTheme();
   const params = useParams();
@@ -120,11 +127,18 @@ const MessagePage = () => {
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
 
-  const [createMessage, { loading: createSending }] = useMutation(CREATE_MESSAGE);
+  const [createMessage, { loading: creatingText }] = useMutation(CREATE_MESSAGE);
+  const [createMessageImage, { loading: creatingImage }] = useMutation(CREATE_MESSAGE_IMAGE);
+  const [createMessageVideo, { loading: creatingVideo }] = useMutation(CREATE_MESSAGE_VIDEO);
+  const [createMessageDoc, { loading: creatingDoc }] = useMutation(CREATE_MESSAGE_DOC);
   const [updateMessage, { loading: editSending }] = useMutation(UPDATE_MESSAGE);
   const [mutate, { loading, error }] = useMutation(MULTIPLE_UPLOAD, {
     client,
   });
+
+  const isSending = Boolean(
+    creatingText || creatingImage || creatingVideo || creatingDoc || editSending
+  );
 
   // ---------- เพิ่มส่วน autoscroll ----------
   const listRef = useRef(null); // กล่องที่เลื่อน
@@ -178,6 +192,7 @@ const MessagePage = () => {
       {
         id: 0,
         role: "user",
+        message_type: initMessageType,
         text: initText,
         files: initAttachments,
         createdAt: null,
@@ -192,29 +207,110 @@ const MessagePage = () => {
       }))
       .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
 
-    try {
-      const { data } = await createMessage({
-        variables: {
-          input: {
-            chat_id: id,
-            message: initText,
-            locale: locale,
-            fileMessageList,
+    if (initMessageType === "IMAGE") {
+      try {
+        const { data } = await createMessageImage({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: initText,
+              locale: locale,
+              fileMessageList,
+            },
           },
-        },
-      });
+        });
 
-      console.log("✅ Create success:", data.createMessage);
-      //chatsRefresh();
-      await client.refetchQueries({
-        include: [GET_CHATS],
-      });
-      refetch();
-      chatgroupsRefresh();
-    } catch (error) {
-      showErrorAlert(error, theme, {
-        title: tchaterror('error1'),
-      });
+        console.log("✅ Create success:", data.createMessageImage);
+        //chatsRefresh();
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        refetch();
+        chatgroupsRefresh();
+      } catch (error) {
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      }
+    } else if (initMessageType === "VIDEO") {
+      try {
+        const { data } = await createMessageVideo({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: initText,
+              locale: locale,
+              fileMessageList,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessageVideo);
+        //chatsRefresh();
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        refetch();
+        chatgroupsRefresh();
+      } catch (error) {
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      }
+    } else if (initMessageType === "DOC") {
+      try {
+        const { data } = await createMessageDoc({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: initText,
+              locale: locale,
+              fileMessageList,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessageDoc);
+        //chatsRefresh();
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        refetch();
+        chatgroupsRefresh();
+      } catch (error) {
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      }
+    } else {
+      try {
+        const { data } = await createMessage({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: initText,
+              locale: locale,
+              fileMessageList,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessage);
+        //chatsRefresh();
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        refetch();
+        chatgroupsRefresh();
+      } catch (error) {
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      }
     }
   };
 
@@ -229,6 +325,7 @@ const MessagePage = () => {
     handleMessageInitSubmit();
     setInitText("");
     setInitAttachments([]);
+    setInitMessageType('TEXT');
     router.replace(`/onesqa/chat/${id}`); // ล้าง query ออก
   }, [isNew, router, id]);
 
@@ -291,7 +388,7 @@ const MessagePage = () => {
     }
   };
   const handleMessageSubmitFile = async (uploads) => {
-    if (!text.trim() || createSending) return; // กันกดซ้ำ / กันข้อความว่าง
+    if (!text.trim() || isSending) return; // กันกดซ้ำ / กันข้อความว่าง
 
     // เตรียมข้อมูลไฟล์ส่งหลังบ้าน
     const fileMessageList = (uploads ?? [])
@@ -315,6 +412,7 @@ const MessagePage = () => {
       {
         id: messages.length,
         role: "user",
+        message_type: initMessageType,
         text: sendText,
         files: sendUploads,
         createdAt: null,
@@ -324,41 +422,145 @@ const MessagePage = () => {
     // 🔹 เคลียร์ input ตอนเริ่มส่งไปหลังบ้านเลย
     setText("");
     setAttachments([]); // ถ้า state ชื่อไม่ตรงก็เปลี่ยนเป็นของโปรเจคจริง
+    setInitMessageType('TEXT');
 
-    try {
-      const { data } = await createMessage({
-        variables: {
-          input: {
-            chat_id: id,
-            message: sendText,
-            fileMessageList,
-            locale: locale,
+    if (initMessageType === "IMAGE") {
+      try {
+        const { data } = await createMessageImage({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
           },
-        },
-      });
+        });
 
-      console.log("✅ Create success:", data.createMessage);
-      await client.refetchQueries({
-        include: [GET_CHATS],
-      });
-      chatgroupsRefresh();
-      //chatsRefresh();
-      refetch();
-    } catch (error) {
-      // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
-      setText(sendText);
-      setAttachments(sendUploads);
+        console.log("✅ Create success:", data.createMessageImage);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
+        setText(sendText);
+        setAttachments(sendUploads);
+        setInitMessageType(initMessageType);
 
-      showErrorAlert(error, theme, {
-        title: tchaterror('error1'),
-      });
-    } finally {
-      setSending(false);
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
+    } else if (initMessageType === "VIDEO") {
+      try {
+        const { data } = await createMessageVideo({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessageVideo);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
+        setText(sendText);
+        setAttachments(sendUploads);
+        setInitMessageType(initMessageType);
+
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
+    } else if (initMessageType === "DOC") {
+      try {
+        const { data } = await createMessageDoc({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessageDoc);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
+        setText(sendText);
+        setAttachments(sendUploads);
+        setInitMessageType(initMessageType);
+
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
+    } else {
+      try {
+        const { data } = await createMessage({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessage);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้าหลังบ้าน error → เอาค่ากลับมา
+        setText(sendText);
+        setAttachments(sendUploads);
+        setInitMessageType(initMessageType);
+
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
     }
   };
 
   const handleMessageSubmit = async () => {
-    if (!text.trim() || createSending) return; // กันกดซ้ำ / กันข้อความว่าง
+    if (!text.trim() || isSending) return; // กันกดซ้ำ / กันข้อความว่าง
 
     // เตรียมข้อมูลไฟล์ส่งหลังบ้าน
     const fileMessageList = (attachments ?? [])
@@ -380,6 +582,7 @@ const MessagePage = () => {
       {
         id: messages.length,
         role: "user",
+        message_type: initMessageType,
         text: sendText,
         files: sendAttachments,
         createdAt: null,
@@ -389,36 +592,140 @@ const MessagePage = () => {
     // 🔹 เคลียร์ช่องกรอก + ไฟล์ ตอน "เริ่มส่ง" เลย
     setText(""); // ล้างหลังส่ง
     setAttachments([]);
+    setInitMessageType('TEXT');
 
-    try {
-      const { data } = await createMessage({
-        variables: {
-          input: {
-            chat_id: id,
-            message: sendText,
-            fileMessageList,
-            locale: locale,
+    if (initMessageType === "IMAGE") {
+      try {
+        const { data } = await createMessageImage({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
           },
-        },
-      });
+        });
 
-      console.log("✅ Create success:", data.createMessage);
-      await client.refetchQueries({
-        include: [GET_CHATS],
-      });
-      chatgroupsRefresh();
-      //chatsRefresh();
-      refetch();
-    } catch (error) {
-      // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
-      setText(sendText);
-      setAttachments(sendAttachments);
+        console.log("✅ Create success:", data.createMessageImage);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
+        setText(sendText);
+        setAttachments(sendAttachments);
+        setInitMessageType(initMessageType);
 
-      showErrorAlert(error, theme, {
-        title: tchaterror('error1'),
-      });
-    } finally {
-      setSending(false);
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
+    } else if (initMessageType === "VIDEO") {
+      try {
+        const { data } = await createMessageVideo({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessageVideo);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
+        setText(sendText);
+        setAttachments(sendAttachments);
+        setInitMessageType(initMessageType);
+
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
+    } else if (initMessageType === "DOC") {
+      try {
+        const { data } = await createMessageDoc({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessageDoc);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
+        setText(sendText);
+        setAttachments(sendAttachments);
+        setInitMessageType(initMessageType);
+
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
+    } else {
+      try {
+        const { data } = await createMessage({
+          variables: {
+            input: {
+              message_type: initMessageType,
+              chat_id: id,
+              message: sendText,
+              fileMessageList,
+              locale: locale,
+            },
+          },
+        });
+
+        console.log("✅ Create success:", data.createMessage);
+        await client.refetchQueries({
+          include: [GET_CHATS],
+        });
+        chatgroupsRefresh();
+        //chatsRefresh();
+        refetch();
+      } catch (error) {
+        // 🔹 ถ้ามี error จากหลังบ้าน: เอาข้อความ + ไฟล์กลับคืน
+        setText(sendText);
+        setAttachments(sendAttachments);
+        setInitMessageType(initMessageType);
+
+        showErrorAlert(error, theme, {
+          title: tchaterror('error1'),
+        });
+      } finally {
+        setSending(false);
+      }
     }
   };
 
@@ -458,6 +765,7 @@ const MessagePage = () => {
       {
         id: Number(edit_id) + 1,
         role: "user",
+        message_type: initMessageType,
         text: edit_text,
         files: edit_message[0].files,
         createdAt: null,
@@ -469,6 +777,7 @@ const MessagePage = () => {
         variables: {
           id: edit_id,
           input: {
+            message_type: initMessageType,
             chat_id: id,
             message: edit_text,
             fileMessageList,
@@ -511,9 +820,9 @@ const MessagePage = () => {
         messages={messages}
         onChangeEdit={handleMessageEdit}
         chat={chatData?.chat?.ai}
-        sending={Boolean(createSending || editSending)}
+        sending={isSending}
       />
-      {(createSending || editSending) && (
+      {isSending && (
         <>
           <ChatThread messages={answer} edit_status={false} />
           <TypingDots size={12} color="primary.main" />
@@ -533,8 +842,10 @@ const MessagePage = () => {
         <Box sx={{ display: "flex", gap: 1 }}>
           <ChatInputBar
             theme = {theme}
+            messageType = {initMessageType}
+            setMessageType = {setInitMessageType}
             value={text}
-            sending={createSending}
+            sending={isSending}
             onChange={setText}
             attachments={attachments}
             setAttachments={setAttachments}
@@ -550,7 +861,7 @@ const MessagePage = () => {
                 }
                 // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
               } catch (err) {
-                console.error(err);
+                console.log(err);
               }
               // setText(""); // ล้างหลังส่ง
               // setAttachments([]);

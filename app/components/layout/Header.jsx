@@ -92,6 +92,7 @@ export default function Header() {
     if (pathname.startsWith("/onesqa/dashboard") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("dashboard");
     else if (pathname.startsWith("/onesqa/chat")) return th("chat");
     else if (pathname.startsWith("/onesqa/users") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("users");
+    else if (pathname.startsWith("/onesqa/history") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("history");
     else if (pathname.startsWith("/onesqa/reports") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("reports");
     else if (pathname.startsWith("/onesqa/settings") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("settings");
     else if (pathname.startsWith("/onesqa/logs") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("logs");
@@ -117,32 +118,41 @@ export default function Header() {
 
   const handleThemeToggle = async () => {
     console.log("🌓 เปลี่ยนธีม");
-    setTheme(theme === "dark" ? "light" : "dark");
-    // ✅ เรียก mutation ไป backend
-    const { data } = await updateThemeAndLocale({
-      variables: {
-        id: user?.id,
-        input: {
-          color_mode: theme === "dark" ? "LIGHT" : "DARK",
+    try {
+      // ✅ เรียก mutation ไป backend
+      const { data } = await updateThemeAndLocale({
+        variables: {
+          id: user?.id,
+          input: {
+            color_mode: theme === "dark" ? "LIGHT" : "DARK",
+          },
         },
-      },
-    });
+      });
 
-    console.log("✅ Update success:", data?.updateThemeAndLocale);
-    handleClose();
+      console.log("✅ Update success:", data?.updateThemeAndLocale);
+      setTheme(theme === "dark" ? "light" : "dark");
+      handleClose();
+    } catch (error) {
+      console.log(error);
+    }
   };
   const handleLocaleToggle = async (locale) => {
     // ✅ เรียก mutation ไป backend
-    const { data } = await updateThemeAndLocale({
-      variables: {
-        id: user?.id,
-        input: {
-          locale,
+    try {
+      const { data } = await updateThemeAndLocale({
+        variables: {
+          id: user?.id,
+          input: {
+            locale,
+          },
         },
-      },
-    });
+      });
 
-    console.log("✅ Update success:", data?.updateThemeAndLocale);
+      console.log("✅ Update success:", data?.updateThemeAndLocale);
+      handleLanguageChange(locale)
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   const handleLogout = async () => {
@@ -167,14 +177,18 @@ export default function Header() {
         });
 
         if (result.isConfirmed) {
-          // ✅ เรียก API logout
-          const logoutResult = await logout();
-          console.log(logoutResult);
+          try {
+            // ✅ เรียก API logout
+            const logoutResult = await logout();
+            console.log(logoutResult);
 
-          setLoggingOut(true); // ✅ เปิด FullScreenLoading
+            setLoggingOut(true); // ✅ เปิด FullScreenLoading
 
-          logoutContext();
-          console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+            logoutContext();
+            console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+          } catch (error) {
+            console.log(error);
+          }
         }
       } else {
         const result = await Swal.fire({
@@ -190,17 +204,21 @@ export default function Header() {
 
         if (result.isConfirmed) {
           // ✅ เรียก API logout
-          const logoutResult = await logout();
-          console.log(logoutResult);
+          try {
+            const logoutResult = await logout();
+            console.log(logoutResult);
 
-          setLoggingOut(true); // ✅ เปิด FullScreenLoading
+            setLoggingOut(true); // ✅ เปิด FullScreenLoading
 
-          logoutContext();
-          console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+            logoutContext();
+            console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+          } catch (error) {
+            console.log(error);
+          }
         }
       }
     } catch (error) {
-      console.error("❌ Logout failed:", error);
+      console.log("❌ Logout failed:", error);
     }
   };
 
@@ -296,7 +314,6 @@ export default function Header() {
             >
               <ButtonBase
                 onClick={() => {
-                  handleLanguageChange("th")
                   handleLocaleToggle("th")
                 }}
                 sx={{
@@ -327,7 +344,6 @@ export default function Header() {
               </Typography>
               <ButtonBase
                 onClick={() => {
-                  handleLanguageChange("en")
                   handleLocaleToggle("en")
                 }}
                 sx={{

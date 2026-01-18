@@ -123,7 +123,7 @@ const NotificationPage = () => {
           console.log("✅ Update success:", data?.updateThemeAndLocale);
         }
       } catch (err) {
-        console.error("❌ Update theme/locale failed:", err);
+        console.log("❌ Update theme/locale failed:", err);
       }
     };
 
@@ -311,7 +311,7 @@ const NotificationPage = () => {
                       //   `✅ Updated ${setting.setting_name} to ${newValue}`
                       // );
                     } catch (err) {
-                      console.error("❌ Error updating setting:", err);
+                      console.log("❌ Error updating setting:", err);
                     }
                   }}
                 />

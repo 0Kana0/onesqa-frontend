@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { GET_USER } from "@/graphql/user/queries";
 import { UPDATE_USER } from "@/graphql/user/mutations";
-import { useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import UserInfoCard from "@/app/components/UserInfoCard";
 import TokenLimitCard from "@/app/components/TokenLimitCard";
 import TokenUsageCard from "@/app/components/TokenUsageCard";
@@ -38,6 +38,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function UserDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { id } = params;
   const { locale } = useLanguage();
   const { theme } = useTheme();
@@ -119,6 +120,16 @@ export default function UserDetailPage() {
       setUserCardTable(formattedData); // ✅ เก็บเป็น array เสมอ
     }
   }, [userData, resetTrigger, locale]);
+
+  useEffect(() => {
+    // รอให้โหลดเสร็จก่อน
+    if (userLoading) return;
+  
+    // ถ้า query ตอบกลับมาแล้วว่า chat เป็น null -> กลับหน้า list
+    if (userData && userData?.user === null) {
+      router.replace("/onesqa/users");
+    }
+  }, [userLoading, userData, router]);
 
   console.log(userCardTable);
 

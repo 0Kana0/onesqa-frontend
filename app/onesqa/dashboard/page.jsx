@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { NetworkStatus } from "@apollo/client";
 import { useMutation, useQuery, useApolloClient } from "@apollo/client/react";
 import { GET_ROLES } from "@/graphql/role/queries";
@@ -15,12 +15,15 @@ import {
   Select,
   MenuItem,
   TextField,
+  Stack,
 } from "@mui/material";
 // ใช้ dayjs (แนะนำเปิด timezone ให้ตรง Asia/Bangkok)
 import dayjs from "dayjs";
+import "dayjs/locale/th";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useTranslations } from "next-intl";
+import { useLanguage } from "@/app/context/LanguageContext";
 import ChatIcon from "@mui/icons-material/Chat";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import GroupIcon from "@mui/icons-material/Group";
@@ -34,25 +37,78 @@ import { useRequireRole } from "@/hook/useRequireRole";
 import {
   CHART_REPORTS,
   MESSAGE_REPORTS,
+  PERIOD_CHART_REPORTS,
   TOKEN_REPORTS,
 } from "@/graphql/report/queries";
 import { USER_COUNT_REPORTS } from "@/graphql/user_count/queries";
 import LocalizedDatePicker from "@/app/components/LocalizedDatePicker";
+import { DataFilter } from "@/app/components/DateFilter";
+import PeriodReportChart from "@/app/components/PeriodReportChart";
+import { PERIOD_USERS_ACTIVE } from "@/graphql/user_daily_active/queries";
+
+function getLast5Years() {
+  const y = new Date().getFullYear();
+  return Array.from({ length: 5 }, (_, i) => y - i);
+}
 
 const DashboardPage = () => {
   dayjs.extend(utc);
   dayjs.extend(timezone);
   dayjs.tz.setDefault("Asia/Bangkok"); // เอาออกได้ถ้าไม่อยาก fix timezone
 
+  const years = useMemo(() => getLast5Years(), []);
+  const now = dayjs();
+  const { locale } = useLanguage();
+
   const t = useTranslations("DashboardPage");
   const tReport = useTranslations("ReportPage");
   const tInit = useTranslations("Init");
+  const tPeriodReportChart = useTranslations("PeriodReportChart");
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
-  const [quickRange, setQuickRange] = useState("30วันย้อนหลัง");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [quickRange, setQuickRange] = useState("7วันย้อนหลัง");
+  const [startDate, setStartDate] = useState(() =>
+    dayjs().subtract(6, "day").startOf("day").format("YYYY-MM-DD")
+  );
+  const [endDate, setEndDate] = useState(() =>
+    dayjs().endOf("day").format("YYYY-MM-DD")
+  );
+
+  const [periodToken, setPeriodToken] = useState({ mode: "daily", date: dayjs() });
+  const [dailyDateToken, setDailyDateToken] = useState(
+    periodToken?.mode === "daily" ? periodToken.date : now
+  );
+  const [monthToken, setMonthToken] = useState(
+    periodToken?.mode === "monthly" ? periodToken.month : now.month() + 1
+  );
+  const [yearToken, setYearToken] = useState(
+    periodToken?.mode === "monthly"
+      ? periodToken.year
+      : periodToken?.mode === "yearly"
+      ? periodToken.year
+      : years[0]
+  );
+
+  const [periodUser, setPeriodUser] = useState({ mode: "daily", date: dayjs() });
+  const [dailyDateUser, setDailyDateUser] = useState(
+    periodUser?.mode === "daily" ? periodUser.date : now
+  );
+  const [monthUser, setMonthUser] = useState(
+    periodUser?.mode === "monthly" ? periodUser.month : now.month() + 1
+  );
+  const [yearUser, setYearUser] = useState(
+    periodUser?.mode === "monthly"
+      ? periodUser.year
+      : periodUser?.mode === "yearly"
+      ? periodUser.year
+      : years[0]
+  );
+
+  const userGraph = [
+    { model_type: "LOGIN", model_use_name: tPeriodReportChart("login") },
+    { model_type: "ACTIVE", model_use_name: tPeriodReportChart("active") }
+  ]
 
   // const { data: meData, loading: meLoading, error: meError } = useQuery(GET_ME);
   // const { data, loading, error, refetch } = useQuery(GET_ROLES);
@@ -114,21 +170,70 @@ const DashboardPage = () => {
     error: chartError,
     networkStatus,
   } = useQuery(CHART_REPORTS, {
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
     variables: {
       startDate: startDate,
       endDate: endDate,
     },
   });
 
+  const periodTokenVar = useMemo(() => ({
+    mode: periodToken?.mode || "daily",
+    date:
+      periodToken?.mode === "daily" && dailyDateToken
+        ? dayjs(dailyDateToken).tz("Asia/Bangkok").startOf("day").format()
+        : null,
+    month: periodToken?.mode === "monthly" ? Number(monthToken) : null,
+    year:
+      periodToken?.mode === "monthly" || periodToken?.mode === "yearly"
+        ? Number(yearToken)
+        : null,
+  }), [periodToken?.mode, dailyDateToken, monthToken, yearToken]);
+
   const {
-    data: onlineUsersData,
-    loading: onlineUsersLoading,
-    error: onlineUsersError,
-    refetch,
-  } = useQuery(ONLINE_USERS, {
-    fetchPolicy: "network-only",
+    data: periodChartData,
+    loading: periodChartLoading,
+    error: periodChartError,
+    networkStatus: periodNetworkStatus,
+  } = useQuery(PERIOD_CHART_REPORTS, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    variables: { period: periodTokenVar },
   });
+
+  const periodUserVar = useMemo(() => ({
+    mode: periodUser?.mode || "daily",
+    date:
+      periodUser?.mode === "daily" && dailyDateUser
+        ? dayjs(dailyDateUser).tz("Asia/Bangkok").startOf("day").format()
+        : null,
+    month: periodUser?.mode === "monthly" ? Number(monthUser) : null,
+    year:
+      periodUser?.mode === "monthly" || periodUser?.mode === "yearly"
+        ? Number(yearUser)
+        : null,
+  }), [periodUser?.mode, dailyDateUser, monthUser, yearUser]);
+
+  const {
+    data: periodUserData,
+    loading: periodUserLoading,
+    error: periodUserError,
+    networkStatus: periodUserNetworkStatus,
+  } = useQuery(PERIOD_USERS_ACTIVE, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    variables: { period: periodUserVar },
+  });
+
+  // const {
+  //   data: onlineUsersData,
+  //   loading: onlineUsersLoading,
+  //   error: onlineUsersError,
+  //   refetch,
+  // } = useQuery(ONLINE_USERS, {
+  //   fetchPolicy: "network-only",
+  // });
 
   useEffect(() => {
     if (!aisData?.ais?.length) return;
@@ -160,9 +265,15 @@ const DashboardPage = () => {
 
   // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
   const isInitialLoading =
-    networkStatus === NetworkStatus.loading && !chartData?.chartReports;
+    networkStatus === NetworkStatus.loading && !chartData;
 
-  if (isInitialLoading)
+  const isInitialLoadingPeriod =
+    periodNetworkStatus === NetworkStatus.loading && !periodChartData;
+
+  const isInitialLoadingPeriodUser =
+    periodUserNetworkStatus === NetworkStatus.loading && !periodUserData;
+
+  if (isInitialLoading || isInitialLoadingPeriod || isInitialLoadingPeriodUser)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -170,7 +281,7 @@ const DashboardPage = () => {
       </Box>
     );
 
-  if (aisError || onlineUsersError || tokenError || messageError || chartError || userCountError)
+  if (aisError || tokenError || messageError || chartError || userCountError || periodChartError || periodUserError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -234,7 +345,6 @@ const DashboardPage = () => {
 
   // ใช้
   const output = pivotUsageByDate(chartData?.chartReports);
-  console.log(output);
 
   const getRangeFromQuick = (range) => {
     const now = dayjs(); // จะใช้ Asia/Bangkok จากด้านบน
@@ -342,7 +452,7 @@ const DashboardPage = () => {
         }}
       >
         <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-          {tReport("filter1")}
+          {t("title2")}
         </Typography>
         {/* 🔹 ส่วนค้นหาและกรองข้อมูล */}
         <Box
@@ -391,17 +501,89 @@ const DashboardPage = () => {
           />
         </Box>
       </Box>
-
       <Box>
-        <TokensChart
-          data={output}
-          subtitle={t("subtitle2")}
-          title={t("title2")}
+        <TokensChart 
+          data={output} 
           aiGraph={aiGraph}
+          locale={locale}
         />
       </Box>
 
       <Box
+        sx={{
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
+          borderRadius: 4,
+          p: isMobile ? 1.5 : 2,
+          bgcolor: "background.paper",
+          mb: 2,
+        }}
+      >
+        <Stack spacing={2}>
+          <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+            {t("title5")}
+          </Typography>
+
+          <DataFilter 
+            value={periodToken} 
+            onChange={setPeriodToken} 
+            dailyDate={dailyDateToken}
+            setDailyDate={setDailyDateToken}
+            month={monthToken}
+            setMonth={setMonthToken}
+            year={yearToken}
+            setYear={setYearToken}
+            now={now}
+            years={years}
+          />
+        </Stack>
+      </Box>
+      <PeriodReportChart 
+        type="model"
+        period={periodToken} 
+        events={periodChartData?.periodChartReports} 
+        locale={locale} 
+        aiGraph={aiGraph}
+      />
+
+      <Box
+        sx={{
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
+          borderRadius: 4,
+          p: isMobile ? 1.5 : 2,
+          bgcolor: "background.paper",
+          mb: 2,
+        }}
+      >
+        <Stack spacing={2}>
+          <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+            {t("title6")}
+          </Typography>
+
+          <DataFilter
+            value={periodUser}
+            onChange={setPeriodUser}
+            dailyDate={dailyDateUser}
+            setDailyDate={setDailyDateUser}
+            month={monthUser}
+            setMonth={setMonthUser}
+            year={yearUser}
+            setYear={setYearUser}
+            now={now}
+            years={years}
+          />
+        </Stack>
+      </Box>
+      <PeriodReportChart 
+        type="user"
+        period={periodUser} 
+        events={periodUserData?.periodUsersActive} 
+        locale={locale} 
+        aiGraph={userGraph}
+      />
+
+      {/* <Box
         sx={{
           border: "1px solid #E5E7EB",
           boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
@@ -416,7 +598,7 @@ const DashboardPage = () => {
           subtitle={t("subtitle1")}
           items={systemData}
         />
-      </Box>
+      </Box> */}
 
       <Box
         sx={{

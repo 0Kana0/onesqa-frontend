@@ -15,6 +15,7 @@ import { InitTextProvider } from "./context/InitTextContext";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AuthRedirectLoadingProvider from "./AuthRedirectLoadingProvider";
 
 function IntlWrapper({ children }) {
   const { locale } = useLanguage();
@@ -41,17 +42,19 @@ export default function Providers({ children }) {
       >
         <MuiThemeProvider>
           <IntlWrapper>
-            <ApolloProvider client={client}>
-              <AuthProvider>
-                <SidebarProvider>
-                  <InitTextProvider>
-                    {children}
-                    {/* ✅ ToastContainer อยู่ข้างนอกทั้งหมด */}
-                    <ToastContainer newestOnTop />
-                  </InitTextProvider>
-                </SidebarProvider>
-              </AuthProvider>
-            </ApolloProvider>
+            <AuthRedirectLoadingProvider>
+              <ApolloProvider client={client}>
+                <AuthProvider>
+                  <SidebarProvider>
+                    <InitTextProvider>
+                      {children}
+                      {/* ✅ ToastContainer อยู่ข้างนอกทั้งหมด */}
+                      <ToastContainer newestOnTop />
+                    </InitTextProvider>
+                  </SidebarProvider>
+                </AuthProvider>
+              </ApolloProvider>
+            </AuthRedirectLoadingProvider>
           </IntlWrapper>
         </MuiThemeProvider>
       </NextThemesProvider>

@@ -18,6 +18,7 @@ export default function ChatThread({ messages = [], dense = false, onChangeEdit 
             key={m.id}
             id={m.id}
             role={m.role}
+            message_type={m.message_type}
             text={m.text}
             files={m.files}
             time={m.createdAt}

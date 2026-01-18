@@ -8,6 +8,30 @@ export const CREATE_MESSAGE = gql`
   }
 `;
 
+export const CREATE_MESSAGE_IMAGE = gql`
+  mutation createMessageImage($input: MessageInput!)  {
+    createMessageImage(input: $input) {
+      text
+    }
+  }
+`;
+
+export const CREATE_MESSAGE_VIDEO = gql`
+  mutation createMessageVideo($input: MessageInput!)  {
+    createMessageVideo(input: $input) {
+      text
+    }
+  }
+`;
+
+export const CREATE_MESSAGE_DOC = gql`
+  mutation createMessageDoc($input: MessageInput!)  {
+    createMessageDoc(input: $input) {
+      text
+    }
+  }
+`;
+
 export const UPDATE_MESSAGE = gql`
   mutation updateMessage($id: ID!, $input: MessageInput!)  {
     updateMessage(id: $id, input: $input) {

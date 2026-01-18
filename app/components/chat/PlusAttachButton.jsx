@@ -1,4 +1,6 @@
 // PlusAttachButton.jsx
+"use client";
+
 import { useState } from "react";
 import {
   IconButton,
@@ -10,15 +12,22 @@ import {
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
-import DriveFolderUploadRoundedIcon from "@mui/icons-material/DriveFolderUploadRounded";
+import ImageRoundedIcon from "@mui/icons-material/ImageRounded";
+import MovieRoundedIcon from "@mui/icons-material/MovieRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import { useTranslations } from "next-intl";
 
+// ✅ ปรับ path ให้ตรงโปรเจกต์คุณ
+import { useInitText } from "@/app/context/InitTextContext";
+
 export default function PlusAttachButton({
-  triggerFile, // () => void  เปิด input[type=file] ที่คุณมีอยู่แล้ว
-  onPickFromDrive, // () => void  เปิดตัวเลือกจากไดรฟ์ (ถ้ายังไม่ทำให้ไม่ต้องส่งมาก็ได้)
+  triggerFile,
+  onPickFromDrive,
   disabled = false,
 }) {
   const tChatSidebar = useTranslations("ChatSidebar");
+  const tPlusAttachButton = useTranslations("PlusAttachButton");
+  const { setInitMessageType } = useInitText();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -30,18 +39,23 @@ export default function PlusAttachButton({
 
   const handleUploadClick = () => {
     handleClose();
-    // ปล่อย event หลังเมนูปิดเพื่อให้ input.click() ติด 100%
+
     setTimeout(() => triggerFile?.(), 0);
   };
 
-  const handleDriveClick = () => {
+  const handleDriveClick = (type) => {
     handleClose();
-    onPickFromDrive?.();
+
+    if (type === "doc") setInitMessageType("DOC");
+    else if (type === "image") setInitMessageType("IMAGE");
+    else if (type === "video") setInitMessageType("VIDEO");
+
+    onPickFromDrive?.(type);
   };
 
   return (
     <>
-      <Tooltip title={tChatSidebar("uploadtooltip")} >
+      <Tooltip title={tChatSidebar("uploadtooltip")}>
         <span>
           <IconButton
             size="small"
@@ -63,7 +77,6 @@ export default function PlusAttachButton({
         open={open}
         onClose={handleClose}
         MenuListProps={{ dense: true }}
-        // ⬆️ ให้แสดงเหนือปุ่ม
         anchorOrigin={{ vertical: "top", horizontal: "left" }}
         transformOrigin={{ vertical: "bottom", horizontal: "left" }}
         disableScrollLock
@@ -79,19 +92,33 @@ export default function PlusAttachButton({
           },
         }}
       >
+        <MenuItem onClick={() => handleDriveClick("image")}>
+          <ListItemIcon>
+            <ImageRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={tPlusAttachButton("createImage")} />
+        </MenuItem>
+
+        <MenuItem onClick={() => handleDriveClick("video")}>
+          <ListItemIcon>
+            <MovieRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={tPlusAttachButton("createVideo")} />
+        </MenuItem>
+
+        <MenuItem onClick={() => handleDriveClick("doc")}>
+          <ListItemIcon>
+            <DescriptionRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={tPlusAttachButton("createDoc")} />
+        </MenuItem>
+
         <MenuItem onClick={handleUploadClick}>
           <ListItemIcon>
             <AttachFileRoundedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary={tChatSidebar("uploadfile")} />
         </MenuItem>
-
-        {/* <MenuItem onClick={handleDriveClick} disabled={!onPickFromDrive}>
-          <ListItemIcon>
-            <DriveFolderUploadRoundedIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="เพิ่มจากไดรฟ์" />
-        </MenuItem> */}
       </Menu>
     </>
   );

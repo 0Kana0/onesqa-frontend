@@ -68,7 +68,7 @@ function CodeBlock({ children, ...props }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {
-      console.error("Copy failed", e);
+      console.log("Copy failed", e);
     }
   };
 
@@ -371,6 +371,7 @@ function GeminiMarkdown({ content }) {
 export default function ChatBubble({
   id,
   role = "assistant",
+  message_type,
   text = "",
   time,
   files = [],
@@ -386,6 +387,7 @@ export default function ChatBubble({
   const isUser = role === "user";
 
   const tChatSidebar = useTranslations("ChatSidebar");
+  const tPlusAttachButton = useTranslations("PlusAttachButton");
 
   // ====== Edit state ======
   const initialPlain = toPlainString(text);
@@ -409,6 +411,22 @@ export default function ChatBubble({
 
   const trimmedText = (text ?? "").trim();
   const hideUserText = isUser && HIDDEN_USER_TEXTS.has(trimmedText);
+
+  const mt = String(message_type || "TEXT").toUpperCase();
+
+  const USER_TYPE_LABEL = {
+    IMAGE: tPlusAttachButton("createImage"),
+    VIDEO: tPlusAttachButton("createVideo"),
+    DOC: tPlusAttachButton("createDoc"),
+  };
+
+  const ASSIST_TYPE_LABEL = {
+    IMAGE: tPlusAttachButton("createImageSuccess"),
+    VIDEO: tPlusAttachButton("createVideoSuccess"),
+    DOC: tPlusAttachButton("createDocSuccess"),
+  };
+
+  const typeLabel = isUser ? USER_TYPE_LABEL[mt] : ASSIST_TYPE_LABEL[mt];
 
   const startEdit = () => {
     setDraft(toPlainString(text));
@@ -476,6 +494,21 @@ export default function ChatBubble({
           width: "100%",
         }}
       >
+        {typeLabel && (
+          <Typography
+            variant="caption"
+            sx={{
+              mb: 0.5,
+              fontWeight: 700,
+              opacity: 0.85,
+              alignSelf: isUser ? "flex-end" : "flex-start",
+              color: isUser ? "#3E8EF7" : "text.secondary",
+            }}
+          >
+            {typeLabel}
+          </Typography>
+        )}
+
         {files?.length > 0 && (
           <Stack spacing={1}>
             {files.map((f, i) => (
@@ -492,7 +525,17 @@ export default function ChatBubble({
         )}
 
         {/* ====== Bubble area: view / edit ====== */}
-        {(isEditing && !sending) || !hideUserText ? (
+        {(
+          // ✅ ตอนกำลังแก้ (มีเฉพาะ user)
+          (isEditing && !sending)
+          // ✅ ไม่ได้แก้: ต้องไม่ hide และ
+          // - user แสดงได้เสมอ
+          // - assistant แสดงเฉพาะ TEXT
+          || (
+            !hideUserText &&
+            (isUser || (!isUser && message_type === "TEXT"))
+          )
+        ) ? (
           <Paper sx={bubbleSx}>
             {isEditing && !sending ? (
               <InputBase
@@ -561,18 +604,20 @@ export default function ChatBubble({
             </>
           ) : (
             <>
-              {enableCopy && !hideUserText && (
+              {/* ✅ Copy:
+                  - user: แสดงได้ทุก message_type (ยกเว้น hideUserText)
+                  - assistant: แสดงเฉพาะ TEXT
+              */}
+              {enableCopy && !hideUserText && (isUser || message_type === "TEXT") && (
                 <Tooltip title={tChatSidebar("tooltipcopy")}>
-                  <IconButton
-                    size="small"
-                    onClick={handleCopy}
-                    sx={{ ml: -0.5 }}
-                  >
+                  <IconButton size="small" onClick={handleCopy} sx={{ ml: -0.5 }}>
                     <ContentCopyIcon fontSize="inherit" />
                   </IconButton>
                 </Tooltip>
               )}
-              {isUser && editable && edit_status && (
+
+              {/* ✅ Edit: เฉพาะฝั่งคำถาม + TEXT */}
+              {isUser && editable && edit_status && message_type === "TEXT" && (
                 <Tooltip title={tChatSidebar("tooltipedit")}>
                   <IconButton
                     size="small"

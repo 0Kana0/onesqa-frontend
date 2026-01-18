@@ -7,6 +7,7 @@
     "dashboard": "Dashboard",
     "chat": "AI Chatbot",
     "users": "จัดการผู้ใช้งาน",
+    "history": "ประวัติการใช้งาน",
     "reports": "รายงาน",
     "settings": "ตั้งค่าระบบ",
     "logs": "ระบบ Logs",
@@ -15,7 +16,8 @@
     "theme": "เปลี่ยนธีม",
     "notification": "การเเจ้งเตือน",
     "logout": "ออกจากระบบ",
-    "loading": "กำลังออกจากระบบ"
+    "loading": "กำลังออกจากระบบ",
+    "tokenloading": "เซสชันการเข้าสู่ระบบหมดอายุ กำลังออกจากระบบ"
   },
   "Sidebar": {
     "dashboard": "Dashboard",
@@ -62,6 +64,8 @@
     "card3": "ผู้ใช้งานระบบ",
     "subtitle2": "สถิติ",
     "title2": "สถิติการใช้ Tokens รายวัน",
+    "title5": "สถิติการใช้ Tokens ตามช่วงเวลา",
+    "title6": "สถิติการใช้งานระบบของผู้ใช้งานตามช่วงเวลา",
     "title3": "สถานะระบบ",
     "subtitle1": "ติดตามการใช้งานระบบ",
     "title4": "การใช้งาน Tokens",
@@ -99,10 +103,12 @@
     "startDate": "เริ่มต้น",
     "endDate": "สิ้นสุด",
     "title1": "รายละเอียดการใช้งาน",
-    "subtitle1": "ข้อมูลการใช้งาน AI Chatbot รายผู้ใช้",
+    "subtitle1": "ข้อมูลการใช้งาน AI Chatbot รายผู้ใช้รายวัน",
+    "subtitle3": "ข้อมูลการใช้งาน AI Chatbot รายผู้ใช้ตามช่วงเวลา",
     "tablecell1": "วันที่",
+    "tablecell6": "ช่วงเวลา",
     "tablecell2": "ผู้ใช้งาน",
-    "tablecell3": "ตำแหน่ง",
+    "tablecell3": "กลุ่ม",
     "tablecell4": "การสนทนา",
     "tablecell5": "Tokens",
     "title2": "ผู้ใช้งานอันดับต้น",
@@ -113,20 +119,25 @@
     "select1": "วันนี้",
     "select2": "7วันย้อนหลัง",
     "select3": "1เดือนย้อนหลัง",
+    "placeholder1": "ค้นหาผู้ใช้งานจากชื่อ-นามสกุล/กลุ่ม...",
     "notfound": "ไม่พบข้อมูลรายงาน",
     "notfound1": "ไม่พบข้อมูลอันดับของผู้ใช้งาน"
   },  
   "UserPage": {
+    "history": "ประวัติการใช้งาน",
     "filter1": "ค้นหาและกรองข้อมูล",
     "title1": "รายชื่อผู้ใช้งาน",
+    "title2": "จำนวนผู้ใช้งานของเเต่ละกลุ่ม",
     "subtitle1": "ข้อมูลและสิทธิ์ผู้ใช้งานระบบ",
     "tablecell1": "ชื่อ - นามสกุล",
     "tablecell2": "บทบาท",
-    "tablecell3": "ตำแหน่ง",
+    "tablecell3": "กลุ่ม",
     "tablecell4": "สถานะ",
     "tablecell5": "AI Access",
     "tablecell6": "ลงชื่อเข้าใช้ล่าสุด",
     "tablecell7": "ดูรายละเอียด",
+    "tablecell8": "ชื่อกลุ่ม",
+    "tablecell9": "จำนวนผู้ใช้งาน",
     "selectrole0": "บทบาททั้งหมด",
     "selectstatus0": "สถานะ",
     "selectstatus1": "ใช้งานอยู่",
@@ -135,7 +146,24 @@
     "syncuser1": "กำลัง Sync ข้อมูลผู้ใช้...",
     "syncuser2": "สำเร็จ",
     "syncuser3": "ดำเนินการเรียบร้อย",
-    "notfound": "ไม่พบข้อมูลผู้ใช้งาน"
+    "notfound": "ไม่พบข้อมูลผู้ใช้งาน",
+    "notfound1": "ไม่พบข้อมูลกลุ่มผู้ใช้งาน"
+  },
+  "HistoryPage": {
+    "startDate": "เริ่มต้น",
+    "endDate": "สิ้นสุด",
+    "filter1": "ค้นหาและกรองข้อมูล",
+    "tablecell1": "ชื่อ - นามสกุล",
+    "tablecell2": "บทบาท",
+    "tablecell3": "กลุ่ม",
+    "tablecell4": "ประเภทการใช้งาน",
+    "tablecell5": "เวลาใช้งาน",
+    "tablecell6": "Browser",
+    "selecttype0": "ประเภทการใช้งาน",
+    "selecttype1": "เข้าสู่ระบบ",
+    "selecttype2": "ออกจากระบบ",
+    "placeholder1": "ค้นหาผู้ใช้งานจากชื่อ-นามสกุล/กลุ่ม...",
+    "notfound": "ไม่พบข้อมูลประวัติการใข้งาน"
   },
   "UserDetailPage": {
     "label1": "กำหนด Tokens ให้ผู้ใช้งาน",
@@ -145,7 +173,7 @@
     "tablecell7": "อีเมล",
     "tablecell4": "โทรศัพท์",
     "tablecell5": "สถานะ",
-    "tablecell6": "กลุ่มงาน",
+    "tablecell6": "กลุ่ม",
     "syncuser1": "กำลังบันทึก Token...",
     "syncuser2": "สำเร็จ",
     "syncuser3": "ดำเนินการเรียบร้อย"
@@ -188,6 +216,12 @@
   "TokensChart": {
     "all": "รวม"
   },
+  "PeriodReportChart": {
+    "period": "ช่วง",
+    "all": "รวม",
+    "login": "ผู้ใช้งานที่เข้าสู่ระบบ",
+    "active": "ผู้ใช้งานที่มีการใช้งานระบบ"
+  },
   "SystemStatusCard": {
     "online": "ปกติ",
     "fail": "ผิดพลาด"
@@ -198,6 +232,11 @@
   },
   "UserTableToolbar": {
     "sync": "เชื่อมต่อข้อมูลผู้ใช้งาน",
+    "export": "ส่งออก",
+    "clear": "ล้างตัวกรอง"
+  },
+  "HistoryToolbar": {
+    "back": "ย้อนกลับ",
     "export": "ส่งออก",
     "clear": "ล้างตัวกรอง"
   },
@@ -220,7 +259,7 @@
     "email": "อีเมล",
     "phone": "โทรศัพท์",
     "status": "สถานะ",
-    "group": "กลุ่มงาน"
+    "group": "กลุ่ม"
   },
   "TokenUsageCardSetting": {
     "settoken": "กำหนด Tokens",
@@ -343,5 +382,25 @@
     "title6": "ไม่สามารถสร้างไฟล์เสียงได้",
     "title7": "ไม่สามารถเข้าถึงไมโครโฟนได้",
     "text7": "กรุณาตรวจสอบการอนุญาตไมโครโฟนในเบราว์เซอร์"
+  },
+  "DatePicker": {
+    "date": "วันที่",
+    "month": "เดือน",
+    "year": "ปี",
+    "choosedate": "รายวัน",
+    "chooseweek": "รายสัปดาห์",
+    "choosemonth": "รายเดือน"
+  },
+  "PlusAttachButton": {
+    "cancel": "คลิกเพื่อยกเลิก",
+    "createImageSuccess": "สร้างรูปภาพสำเร็จ",
+    "createVideoSuccess": "สร้างวิดีโอสำเร็จ",
+    "createDocSuccess": "สร้างเอกสารสำเร็จ",
+    "createImage": "สร้างรูปภาพ",
+    "createVideo": "สร้างวิดีโอ",
+    "createDoc": "สร้างเอกสาร",
+    "image": "รูปภาพ",
+    "video": "วิดีโอ",
+    "doc": "เอกสาร"
   }
 }

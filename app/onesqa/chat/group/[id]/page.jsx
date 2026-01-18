@@ -65,8 +65,14 @@ const PAGE_SIZE = 10; // ✅ lazy loading
 const ChatgroupPage = () => {
   const client = useApolloClient();
   const { locale } = useLanguage();
-  const { initText, setInitText, initAttachments, setInitAttachments } =
-    useInitText();
+  const { 
+    initText, 
+    setInitText, 
+    initAttachments, 
+    setInitAttachments, 
+    initMessageType, 
+    setInitMessageType 
+  } = useInitText();
   const router = useRouter();
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -326,7 +332,8 @@ const ChatgroupPage = () => {
 
     setInitText("");
     setInitAttachments([]);
-  }, [setInitText, setInitAttachments]);
+    setInitMessageType('TEXT');
+  }, [setInitText, setInitAttachments, setInitMessageType]);
 
   if (
     (userLoading || chatsLoading || chatgroupLoading || promptsLoading || groupLoading) &&
@@ -703,6 +710,8 @@ const ChatgroupPage = () => {
         >
           <ChatInputBar
             theme = {theme}
+            messageType = {initMessageType}
+            setMessageType = {setInitMessageType}
             value={initText}
             model={model}
             onChange={setInitText}
@@ -719,7 +728,7 @@ const ChatgroupPage = () => {
                 }
                 // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
               } catch (err) {
-                console.error(err);
+                console.log(err);
               }
             }}
             placeholder={tChatSidebar("inputph")}

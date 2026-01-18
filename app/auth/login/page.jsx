@@ -101,6 +101,10 @@ export default function LoginPage() {
     return () => clearInterval(timer);
   }, [lockRemaining]);
 
+  useEffect(() => {
+    sessionStorage.removeItem("__logout_in_progress__");
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };

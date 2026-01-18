@@ -112,7 +112,9 @@ export default function ChatSearchModal({
         </Typography>
       </Box>
     );
-
+  
+  console.log("chatsError", chatsError);
+  
   // ----- สถานะโหลด/ผิดพลาดรวมสองฝั่ง -----
   if (chatsError)
     return (

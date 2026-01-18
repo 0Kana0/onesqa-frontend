@@ -24,6 +24,7 @@ import {
   IconButton,
   CircularProgress,
   useMediaQuery,
+  Button,
 } from "@mui/material";
 import { GET_USERS } from "@/graphql/user/queries";
 import { GET_ROLES } from "@/graphql/role/queries";
@@ -36,6 +37,7 @@ import { useTranslations } from "next-intl";
 import { exportUsersToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
 import SmartPagination from "@/app/components/SmartPagination";
+import HistoryIcon from "@mui/icons-material/History";
 import {
   closeLoading,
   showLoading,
@@ -43,6 +45,7 @@ import {
 } from "@/util/loadingModal";
 import { showErrorAlert } from "@/util/errorAlert";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { GET_GROUP_WITH_USER_COUNT } from "@/graphql/group/queries";
 
 const normalize = (v) => (v === "ทั้งหมด" || v === "" || v == null ? null : v);
 const normalizeText = (v) => {
@@ -102,6 +105,15 @@ export default function UserPage() {
     loading: rolesLoading,
     error: rolesError,
   } = useQuery(GET_ROLES, {
+    fetchPolicy: "network-only",
+  });
+
+  const {
+    data: groupWithUserCountData,
+    loading: groupWithUserCountLoading,
+    error: groupWithUserCountError,
+    refetch: groupWithUserCountRefetch,
+  } = useQuery(GET_GROUP_WITH_USER_COUNT, {
     fetchPolicy: "network-only",
   });
 
@@ -172,8 +184,7 @@ export default function UserPage() {
   // ]);
 
   const [updateUser] = useMutation(UPDATE_USER);
-  const [syncUsersFromApi, { loading: syncUsersFromApiSending }] =
-    useMutation(SYNC_USERS);
+  const [syncUsersFromApi, { loading: syncUsersFromApiSending }] = useMutation(SYNC_USERS);
 
   // ✅ เมื่อ toggle ปุ่ม
   const handleToggleAccess = useCallback(
@@ -212,7 +223,7 @@ export default function UserPage() {
           prev.map((u) => (u.id === id ? { ...u, aiAccess: serverValue } : u))
         );
       } catch (err) {
-        console.error("Update failed:", err);
+        console.log("Update failed:", err);
         // 5) rollback ถ้ามี error
         setUsers((prev) =>
           prev.map((u) => (u.id === id ? { ...u, aiAccess: prevChecked } : u))
@@ -268,7 +279,7 @@ export default function UserPage() {
       const nextRole = getRoleByName(nextRoleName);
 
       if (!nextRole?.id) {
-        console.error("ไม่พบ role:", nextRoleName);
+        console.log("ไม่พบ role:", nextRoleName);
         return;
       }
 
@@ -299,7 +310,7 @@ export default function UserPage() {
           },
         });
       } catch (err) {
-        console.error("Update role failed:", err);
+        console.log("Update role failed:", err);
 
         // rollback
         setUsers((prev) =>
@@ -402,12 +413,14 @@ export default function UserPage() {
       </Box>
     );
 
-  if (usersError || rolesError)
+  if (usersError || rolesError || groupWithUserCountError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
       </Typography>
     );
+
+  const colCount = user?.role_name_th === "superadmin" ? 8 : 7;
 
   const handleSyncUsers = async () => {
     try {
@@ -417,6 +430,7 @@ export default function UserPage() {
 
       console.log("✅ Create success:", data?.syncUsersFromApi);
       usersRefetch();
+      groupWithUserCountRefetch();
 
       closeLoading();
       await showSuccessAlert({
@@ -440,7 +454,7 @@ export default function UserPage() {
       variables: {
         // ถ้าสกีมามี default page/pageSize ก็ไม่ต้องส่ง
         // ใส่ where ตามฟิลเตอร์หน้า UI (แปลง "ทั้งหมด" -> null)
-        page: page,
+        page: 1,
         pageSize: totalCount,
         where: {
           role: normalize(roleFilter),
@@ -616,15 +630,39 @@ export default function UserPage() {
           borderRadius: 4,
           p: isMobile ? 1.5 : 2,
           bgcolor: "background.paper",
+          mb: 2,
         }}
       >
         {/* 🔹 ตารางผู้ใช้งาน */}
-        <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-          {t("title1")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row", // ✅ สลับแนวตามจอ
+            alignItems: isMobile ? "flex-start" : "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+            {t("subtitle1")}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<HistoryIcon />}
+            onClick={() => router.push(`/onesqa/history`)}
+            sx={{
+              width: isMobile ? "100%" : "none",
+              bgcolor: "#02AA21",
+              color: "white",
+              "&:hover": { bgcolor: "#2E7D32" },
+            }}
+          >
+            {t("history")}
+          </Button>
+        </Box>
+        
+        {/* <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t("subtitle1")}
-        </Typography>
+        </Typography> */}
 
         <Box
           sx={{
@@ -652,7 +690,7 @@ export default function UserPage() {
                   {user?.role_name_th === "superadmin" && (
                     <TableCell>Admin</TableCell>
                   )}
-                  <TableCell>{t("tablecell6")}</TableCell>
+                  {/* <TableCell>{t("tablecell6")}</TableCell> */}
                   <TableCell>{t("tablecell7")}</TableCell>
                 </TableRow>
               </TableHead>
@@ -687,7 +725,7 @@ export default function UserPage() {
                       />
                     </TableCell>
 
-                    <TableCell>{item.position}</TableCell>
+                    <TableCell>{item.group}</TableCell>
 
                     <TableCell>
                       <Chip
@@ -732,7 +770,7 @@ export default function UserPage() {
                       </TableCell>
                     )}
 
-                    <TableCell>{item.lastLogin}</TableCell>
+                    {/* <TableCell>{item.lastLogin}</TableCell> */}
 
                     <TableCell>
                       <IconButton
@@ -752,7 +790,7 @@ export default function UserPage() {
                 {/* ถ้าไม่มีข้อมูล */}
                 {users.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={colCount} align="center" sx={{ py: 4 }}>
                       {t("notfound")}
                     </TableCell>
                   </TableRow>
@@ -776,6 +814,64 @@ export default function UserPage() {
               onChange={(newPage) => setPage(newPage)}
             />
           </Box>
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
+          borderRadius: 4,
+          p: isMobile ? 1.5 : 2,
+          bgcolor: "background.paper",
+        }}
+      >
+        {/* 🔹 ตารางผู้ใช้งาน */}
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+          {t("title2")}
+        </Typography>
+
+        <Box
+          sx={{
+            width: "100%",
+            overflowX: "auto", // ✅ เลื่อนแนวนอนได้
+            overflowY: "hidden",
+            maxWidth: isMobile ? "80vw" : isTablet ? "85vw" : "90vw", // ✅ จำกัดไม่ให้เกินหน้าจอ
+          }}
+        >
+          <TableContainer
+            component={Paper}
+            sx={{
+              borderRadius: 3,
+              display: "inline-block", // ✅ ป้องกันตารางยืดเกิน container
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>{t("tablecell8")}</TableCell>
+                  <TableCell>{t("tablecell9")}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {groupWithUserCountData?.groupWithUserCount?.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.user_count}</TableCell>
+                  </TableRow>
+                ))}
+
+                {/* ถ้าไม่มีข้อมูล */}
+                {groupWithUserCountData?.groupWithUserCount?.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
+                      {t("notfound1")}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
       </Box>
     </Box>

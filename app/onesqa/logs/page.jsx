@@ -23,7 +23,11 @@ import {
   CircularProgress,
   useMediaQuery,
 } from "@mui/material";
-import dayjs from "dayjs"; // ✅ เพิ่มบรรทัดนี้
+// ใช้ dayjs (แนะนำเปิด timezone ให้ตรง Asia/Bangkok)
+import dayjs from "dayjs";
+import "dayjs/locale/th";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import Swal from "sweetalert2";
@@ -60,6 +64,10 @@ const mapTypeToLogFilter = (label) => {
 };
 
 const LogPage = () => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  dayjs.tz.setDefault("Asia/Bangkok"); // เอาออกได้ถ้าไม่อยาก fix timezone
+
   const { locale } = useLanguage();
   const client = useApolloClient();
   const t = useTranslations("LogPage");
@@ -220,6 +228,14 @@ const LogPage = () => {
     setTotalCount(logsData.logs.totalCount ?? 0);
   }, [logsData, typeLabelMap]); // ✅ ใส่ typeLabelMap เพื่อให้เปลี่ยนภาษาแล้วอัปเดต label
 
+  useEffect(() => {
+    // ตั้งค่าเริ่มต้นเป็น "วันนี้"
+    const now = dayjs(); // ใช้ tz default ที่ set แล้ว
+    setStartDate(now.startOf("day").format("YYYY-MM-DD"));
+    setEndDate(now.endOf("day").format("YYYY-MM-DD"));
+    setPage(1);
+  }, []);
+
   const { allowed, loading, user } = useRequireRole({
     roles: ["ผู้ดูแลระบบ", "superadmin"],
     redirectTo: "/onesqa/chat",
@@ -280,9 +296,11 @@ const LogPage = () => {
 
   // ปุ่มล้างตัวกรองทั้งหมด
   const handleClearFilters = () => {
+    const d = dayjs().tz("Asia/Bangkok"); // หรือ dayjs() ก็ได้ถ้าตั้ง default TZ แล้ว
+
     setLogType(""); // กลับไปค่าหมวดหมู่เริ่มต้น
-    setStartDate(""); // ล้างวันที่เริ่ม
-    setEndDate(""); // ล้างวันที่สิ้นสุด
+    setStartDate(d.startOf("day").format("YYYY-MM-DD"));
+    setEndDate(d.endOf("day").format("YYYY-MM-DD"));
     setPage(1);
     console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
