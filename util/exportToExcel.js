@@ -171,6 +171,51 @@ export function exportHistoryToExcel(history, ln = "th") {
   saveAs(blob, fileName);
 }
 
+export function exportSarHistoryToExcel(history, ln = "th") {
+  // ✅ กำหนด header ตามภาษา
+  const headers =
+    ln === "en"
+      ? ["Deleted By", "Educational Institution", "Institution Code", "File Name", "Deleted Date"]
+      : ["ผู้ลบไฟล์", "สถานศึกษา", "รหัส", "ชื่อไฟล์", "เวลาที่ลบ"];
+
+  // ✅ แปลงข้อมูลแต่ละ user
+  const data = history.map((u) => {
+    return [
+      u.delete_name || "-",
+      u.name || "-",
+      u.code || "-",
+      u.sar_file || "-",
+      u.createdAt || "-",
+    ];
+  })
+
+  const worksheetData = [headers, ...data];
+
+  // ✅ สร้าง worksheet & workbook
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Delete History");
+
+  // ✅ ปรับความกว้างคอลัมน์ (แยก base + model)
+  worksheet["!cols"] = [
+    { wch: 20 }, // บทบาท
+    { wch: 50 }, // กลุ่ม
+    { wch: 20 }, // สถานะ
+    { wch: 100 }, // AI Access
+    { wch: 20 }, // ลงชื่อเข้าใช้ล่าสุด
+  ];
+
+  // ✅ สร้างไฟล์ Excel
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([excelBuffer], {
+    type: "application/octet-stream",
+  });
+
+  const fileName = ln === "th" ? "ประวัติการลบไฟล์.xlsx" : "File_Delete_History.xlsx";
+
+  saveAs(blob, fileName);
+}
+
 export function exportReportsToExcel(reports, ln = "th") {
   // ✅ กำหนดหัวตารางตามภาษา
   const headers =

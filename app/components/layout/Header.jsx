@@ -93,6 +93,8 @@ export default function Header() {
     else if (pathname.startsWith("/onesqa/chat")) return th("chat");
     else if (pathname.startsWith("/onesqa/users") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("users");
     else if (pathname.startsWith("/onesqa/history") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("history");
+    else if (pathname.startsWith("/onesqa/academy") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("academy");
+    else if (pathname.startsWith("/onesqa/sarhistory") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("sarhistory");
     else if (pathname.startsWith("/onesqa/reports") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("reports");
     else if (pathname.startsWith("/onesqa/settings") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("settings");
     else if (pathname.startsWith("/onesqa/logs") && (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin")) return th("logs");

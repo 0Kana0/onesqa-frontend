@@ -30,7 +30,7 @@ export default function HistoryToolbar({ onBack, onExport, onClearFilters }) {
         gap: isMobile ? 1 : 0,
       }}
     >
-      {pathname.startsWith("/onesqa/history") ? (
+      {pathname.startsWith("/onesqa/history") || pathname.startsWith("/onesqa/sarhistory") ? (
         <Box
           sx={{
             width: isMobile ? "100%" : "none",

@@ -8,6 +8,8 @@
     "chat": "AI Chatbot",
     "users": "Manage Users",
     "history": "User History",
+    "academy": "Manage Academy",
+    "sarhistory": "File Delete History",
     "reports": "Report",
     "settings": "Settings",
     "logs": "Log System",
@@ -23,6 +25,7 @@
     "dashboard": "Dashboard",
     "chat": "AI Chatbot",
     "users": "Manage Users",
+    "academy": "Manage Academy",
     "reports": "Report",
     "settings": "Settings",
     "logs": "Log System"
@@ -192,6 +195,36 @@
     "syncuser2": "Success",
     "syncuser3": "Completed"
   },
+  "AcademyPage": {
+    "syncacademy1": "Syncing Academy data...",
+    "syncacademy2": "Success",
+    "syncacademy3": "Completed",
+    "searchTitle": "Search for an Educational Institution",
+    "searchPlaceholder": "Enter an institution code to search",
+    "searchBtn": "Search",
+    "clearBtn": "Reset",
+    "title2": "Number Of Academy In Each Level",
+    "code": "Code",
+    "level": "Level",
+    "delete1": "Select all",
+    "delete2": "Delete selected files",
+    "tablecell8": "Academy Level",
+    "tablecell9": "Number Of Academy",
+    "notfound1": "No Academy Found",
+    "notfound2": "No File Found"
+  },
+  "SarHistoryPage": {
+    "startDate": "Start",
+    "endDate": "End",
+    "filter1": "Search and Filter Data",
+    "tablecell1": "Deleted By",
+    "tablecell2": "Educational Institution",
+    "tablecell3": "Institution Code",
+    "tablecell4": "File Name",
+    "tablecell5": "Deleted Date",
+    "placeholder1": "Search files by institution name/code...",
+    "notfound": "No File Deletion History Found"
+  },
   "GroupFilterBar": {
     "title": "Search and Filter Data",
     "searchPlaceholder": "Search Group...",
@@ -234,6 +267,10 @@
     "sync": "Sync data user",
     "export": "Export",
     "clear": "Clear filter"
+  },
+  "AcademyToolbar": {
+    "sync": "Sync data academy",
+    "sarhistory": "File Delete History"
   },
   "HistoryToolbar": {
     "back": "Back",
@@ -297,13 +334,15 @@
     "textprompt1": "Do you want to delete this prompt?",
     "textgroup1": "Do you want to delete this group?",
     "textchat1": "Do you want to delete this chat?",
+    "textfile1": "Do you want to delete this file?",
     "confirm": "Delete",
     "cancel": "Cancel",
     "title2": "Completely deleted!",
     "text2": "All edit history has been deleted",
     "textprompt2": "This prompt has been deleted",
     "textgroup2": "This group has been deleted",
-    "textchat2": "This chat has been deleted"
+    "textchat2": "This chat has been deleted",
+    "textfile2": "This file has been deleted"
   },
   "Toast": {
     "title1": "New Notification"
@@ -328,10 +367,18 @@
     "chatdropdowngroup": "Move to group",
     "chatdropdowndelete": "Delete chat",
     "chatdropdowndeletegroup": "Delete From",
-    "groupsearchph": "Search group...",
+    "groupsearch": "Search group...",
     "groupnotfound": "No group found.",
-    "chatsearchph": "Search chat...",
+    "chatsearch": "Search chat...",
     "chatnotfound": "No chat found.",
+    "academyclose": "close",
+    "academytitle": "Search academy",
+    "academysearch": "Input academy code",
+    "academyupload": "Upload",
+    "academyuploading": "Uploading...",
+    "academynotfound": "No academy found",
+    "academynotfound2": "No file found",
+    "academyenter": "Search",
     "inputph": "Enter a message",
     "menuitem": "Please select a model",
     "tooltipcopy": "Copy",
@@ -350,6 +397,7 @@
     "uploadfile": "Upload File",
     "uploadtooltip": "Add attachment",
     "deepresearch": "Deep Research",
+    "academy": "Academy",
     "notfound": "no group",
     "notfound1": "no chat"
   },
@@ -368,6 +416,9 @@
   "UserError": {
     "error1": "Unable to synchronize user data",
     "error2": "Unable to configure the user's token allocation"
+  },
+  "AcademyError": {
+    "error1": "Unable to synchronize academy data"
   },
   "ChatInputError": {
     "title1": "File upload limit exceeded",

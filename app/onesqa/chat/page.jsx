@@ -43,6 +43,7 @@ import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 import { useLanguage } from "@/app/context/LanguageContext";
 import { GET_GROUP_BY_NAME } from "@/graphql/group/queries";
+import AcademySearchModal from "@/app/components/chat/AcademyButtonModal";
 
 const ChatPage = () => {
   const client = useApolloClient();
@@ -63,6 +64,7 @@ const ChatPage = () => {
   const [model, setModel] = useState("0");
 
   const [active, setActive] = useState(null);
+  const [open, setOpen] = useState(false);
 
   // const steps = [
   //   { prompt_title: "มาตรฐานการประเมินคุณภาพภายนอก" },
@@ -230,10 +232,148 @@ const ChatPage = () => {
     }
   };
 
+  const handleOpen = () => {
+    setOpen(true);
+    //if (isTablet) toggle(); // ปิด sidebar บนจอเล็กเหมือนเดิม
+  };
+
+  const MAX_FILES = 10;
+
+  const guessMime = (name = "") => {
+    const ext = name.toLowerCase().split(".").pop();
+    const map = {
+      pdf: "application/pdf",
+      doc: "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ppt: "application/vnd.ms-powerpoint",
+      pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      xls: "application/vnd.ms-excel",
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      mp3: "audio/mpeg",
+      mp4: "video/mp4",
+    };
+    return map[ext] || "";
+  };
+
+  const isGoogleDriveUrl = (url = "") => {
+    const s = String(url);
+    return s.includes("drive.google.com");
+  };
+
+  const normalizeDriveUrl = (url = "") => {
+    const s = String(url).trim();
+
+    // https://drive.google.com/file/d/<id>/view
+    const m1 = s.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+    if (m1?.[1]) return `https://drive.google.com/uc?export=download&id=${m1[1]}`;
+
+    // https://drive.google.com/open?id=<id> หรือ .../uc?id=<id>
+    const m2 = s.match(/[?&]id=([^&]+)/i);
+    if (m2?.[1] && s.includes("drive.google.com")) {
+      return `https://drive.google.com/uc?export=download&id=${m2[1]}`;
+    }
+
+    return s;
+  };
+
+  const filenameFromCD = (cd = "") => {
+    // Content-Disposition: attachment; filename="xxx.pdf"
+    const m = cd.match(/filename\*?=(?:UTF-8''|")?([^";\n]+)"?/i);
+    if (!m?.[1]) return null;
+    try { return decodeURIComponent(m[1]); } catch { return m[1]; }
+  };
+
+  const fileNameFromUrl = (u = "") => {
+    const clean = String(u).split("?")[0];
+    const last = clean.split("/").pop() || "file";
+    try { return decodeURIComponent(last); } catch { return last; }
+  };
+
+  /**
+   * ✅ unified urlToFile:
+   * - google drive: ใช้ normalize + cd filename + html check
+   * - others: ใช้ชื่อจาก url + guessMime
+   */
+  const urlToFile = async (url) => {
+    const original = String(url || "");
+    const isDrive = isGoogleDriveUrl(original);
+
+    // ✅ ใช้ url ที่ถูก normalize เฉพาะ drive
+    const normalized = isDrive ? normalizeDriveUrl(original) : original;
+
+    // ✅ ทุกกรณีใช้ proxy กัน CORS
+    const proxied = `/api/proxy-file?url=${encodeURIComponent(normalized)}`;
+
+    const res = await fetch(proxied);
+    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+
+    const ct = res.headers.get("content-type") || "";
+
+    // ✅ Drive ต้องกัน HTML (พวกหน้า login/confirm/view)
+    if (isDrive && ct.includes("text/html")) {
+      throw new Error("Google Drive: ไฟล์ไม่ public หรือยังไม่ใช่ direct download");
+    }
+
+    const blob = await res.blob();
+
+    // ---- ตั้งชื่อไฟล์ ----
+    let name = null;
+
+    if (isDrive) {
+      // ✅ Drive: เอาจาก Content-Disposition ก่อน
+      const cd = res.headers.get("content-disposition") || "";
+      name = filenameFromCD(cd);
+
+      // fallback: ตั้งชื่อแบบ pdf ถ้าไม่มีชื่อ
+      if (!name || !name.includes(".")) {
+        name = ct.includes("pdf") ? "google-drive.pdf" : "google-drive-file";
+      }
+    } else {
+      // ✅ non-drive: เอาชื่อจาก url
+      name = fileNameFromUrl(original);
+      // ถ้าไม่มีนามสกุล แต่ content-type เป็น pdf ให้เติม .pdf
+      if (!name.includes(".") && ct.includes("pdf")) name = `${name}.pdf`;
+    }
+
+    const type = blob.type || ct || guessMime(name) || "application/octet-stream";
+
+    const f = new File([blob], name, {
+      type,
+      lastModified: Date.now(),
+    });
+
+    f.__fromSar = true;
+    f.__sarUrl = original;
+
+    return f;
+  };
+
+  const mergeDedup = (prev = [], incoming = []) => {
+    const seen = new Set(prev.map((f) => `${f.name}|${f.size}|${f.lastModified || 0}`));
+    const merged = [...prev];
+
+    for (const f of incoming) {
+      const key = `${f.name}|${f.size}|${f.lastModified || 0}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(f);
+      }
+    }
+    return merged;
+  };
+
   return (
     <>
       <Box
         sx={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row", // ✅ สลับแนวตามจอ
+          alignItems: isMobile ? "flex-start" : "center",
+          justifyContent: "space-between",
+          gap: isMobile ? 1 : 0, // ✅ สลับแนวตามจอ
           px: 5,
           mb: 3,
         }}
@@ -272,7 +412,7 @@ const ChatPage = () => {
             border: "1px solid",
             borderColor: "primary.main",
             backgroundColor: "background.paper",
-            width: "250px",
+            width: isMobile ? "100%" : "250px",
           }}
         >
           <MenuItem value="0">{tChatSidebar("menuitem")}</MenuItem>
@@ -293,6 +433,49 @@ const ChatPage = () => {
             </MenuItem>
           ))}
         </Select>
+
+        {user?.role_name_th === "ผู้ประเมินภายนอก" && (
+          <>
+            <Button
+              variant="contained"
+              onClick={handleOpen}
+              sx={{
+                width: isMobile ? "100%" : "auto",
+                bgcolor: "#1976D2",
+                color: "white",
+                "&:hover": { bgcolor: "#1565C0" },
+              }}
+            >
+              {tChatSidebar("academy")}
+            </Button>
+
+            <AcademySearchModal
+              open={open}
+              onClose={() => setOpen(false)}
+              onUpload={async ({ selectedUrls }) => {
+                try {
+                  // ✅ กันเกิน maxFiles
+                  const remain = MAX_FILES - (initAttachments?.length ?? 0);
+                  if (remain <= 0) return;
+
+                  const urls = selectedUrls.slice(0, remain);
+
+                  // ✅ download -> File[]
+                  const files = await Promise.all(urls.map(urlToFile));
+
+                  // ✅ ใส่เข้า attachments ของ ChatInputBar
+                  setInitAttachments((prev = []) => mergeDedup(prev, files));
+
+                  // ปิด modal หลังเลือกเสร็จ (ถ้าต้องการ)
+                  setOpen(false);
+                } catch (err) {
+                  showErrorAlert(err, theme, { title: "ไม่สามารถนำเข้าไฟล์ได้" });
+                }
+              }}
+            />
+          </>
+        )}
+
       </Box>
       <Container
         maxWidth="md"

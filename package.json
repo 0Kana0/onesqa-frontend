@@ -16,6 +16,7 @@
     "@mui/material": "^7.3.2",
     "@mui/x-date-pickers": "^8.22.1",
     "apollo-upload-client": "^19.0.0",
+    "axios": "^1.13.2",
     "cookies-next": "^6.1.0",
     "dayjs": "^1.11.19",
     "file-saver": "^2.0.5",
@@ -33,6 +34,7 @@
     "recharts": "^3.2.1",
     "remark-gfm": "^4.0.1",
     "sweetalert2": "^11.23.0",
+    "undici": "^7.19.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

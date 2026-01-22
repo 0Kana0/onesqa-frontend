@@ -150,7 +150,7 @@ export default function ProjectSearchModal({
           <SearchRounded fontSize="small" />
           <InputBase
             autoFocus
-            placeholder={tChatSidebar("groupsearchph")}
+            placeholder={tChatSidebar("groupsearch")}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);

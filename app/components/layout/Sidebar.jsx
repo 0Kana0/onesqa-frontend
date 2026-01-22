@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "@mui/icons-material";
+import SchoolIcon from "@mui/icons-material/School";
 import { useTranslations } from "next-intl";
 import { useSidebar } from "../../context/SidebarContext";
 import NewChatButton from "../chat/NewChatButton";
@@ -50,6 +51,7 @@ export default function Sidebar() {
     { text: t('dashboard'), icon: <Home />, path: "/onesqa/dashboard" },
     { text: t('chat'), icon: <Chat />, path: "/onesqa/chat" },
     { text: t('users'), icon: <Group />, path: "/onesqa/users" },
+    { text: t('academy'), icon: <SchoolIcon />, path: "/onesqa/academy" },
     { text: t('reports'), icon: <BarChart />, path: "/onesqa/reports" },
     { text: t('settings'), icon: <Settings />, path: "/onesqa/settings" },
     { text: t('logs'), icon: <History />, path: "/onesqa/logs" },

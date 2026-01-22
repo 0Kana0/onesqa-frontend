@@ -175,7 +175,7 @@ export default function ChatSearchModal({
           <SearchRounded fontSize="small" />
           <InputBase
             autoFocus
-            placeholder={tChatSidebar("chatsearchph")}
+            placeholder={tChatSidebar("chatsearch")}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);

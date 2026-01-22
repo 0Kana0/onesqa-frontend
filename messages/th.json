@@ -8,6 +8,8 @@
     "chat": "AI Chatbot",
     "users": "จัดการผู้ใช้งาน",
     "history": "ประวัติการใช้งาน",
+    "academy": "จัดการสถานศึกษา",
+    "sarhistory": "ประวัติการลบไฟล์",
     "reports": "รายงาน",
     "settings": "ตั้งค่าระบบ",
     "logs": "ระบบ Logs",
@@ -23,6 +25,7 @@
     "dashboard": "Dashboard",
     "chat": "AI Chatbot",
     "users": "จัดการผู้ใช้งาน",
+    "academy": "จัดการสถานศึกษา",
     "reports": "รายงาน",
     "settings": "ตั้งค่าระบบ",
     "logs": "ระบบ Logs"
@@ -192,6 +195,36 @@
     "syncuser2": "สำเร็จ",
     "syncuser3": "ดำเนินการเรียบร้อย"
   },
+  "AcademyPage": {
+    "syncacademy1": "กำลัง Sync ข้อมูลสถานศึกษา...",
+    "syncacademy2": "สำเร็จ",
+    "syncacademy3": "ดำเนินการเรียบร้อย",
+    "searchTitle": "ค้นหาสถานศึกษา",
+    "searchPlaceholder": "ค้นหาสถานศึกษาจากรหัส",
+    "searchBtn": "ค้นหา",
+    "clearBtn": "ล้าง",
+    "title2": "จำนวนสถานศึกษาของเเต่ละระดับ",
+    "code": "รหัส",
+    "level": "ระดับ",
+    "delete1": "เลือกทั้งหมด",
+    "delete2": "ลบไฟล์ที่เลือก",
+    "tablecell8": "ระดับสถานศึกษา",
+    "tablecell9": "จำนวนสถานศึกษา",
+    "notfound1": "ไม่พบข้อมูลสถานศึกษา",
+    "notfound2": "ไม่พบไฟล์"
+  },
+  "SarHistoryPage": {
+    "startDate": "เริ่มต้น",
+    "endDate": "สิ้นสุด",
+    "filter1": "ค้นหาและกรองข้อมูล",
+    "tablecell1": "ผู้ลบไฟล์",
+    "tablecell2": "สถานศึกษา",
+    "tablecell3": "รหัส",
+    "tablecell4": "ชื่อไฟล์",
+    "tablecell5": "เวลาที่ลบ",
+    "placeholder1": "ค้นหาไฟล์จากสถานศึกษา/รหัส...",
+    "notfound": "ไม่พบข้อมูลประวัติการลบไฟล์"
+  },
   "GroupFilterBar": {
     "title": "ค้นหาและกรองข้อมูล",
     "searchPlaceholder": "ค้นหากลุ่ม...",
@@ -234,6 +267,10 @@
     "sync": "เชื่อมต่อข้อมูลผู้ใช้งาน",
     "export": "ส่งออก",
     "clear": "ล้างตัวกรอง"
+  },
+  "AcademyToolbar": {
+    "sync": "เชื่อมต่อข้อมูลสถานศึกษา",
+    "sarhistory": "ประวัติการลบไฟล์"
   },
   "HistoryToolbar": {
     "back": "ย้อนกลับ",
@@ -297,13 +334,15 @@
     "textprompt1": "คุณต้องการลบแนวทางการตั้งคำถามนี้หรือไม่?",
     "textgroup1": "คุณต้องการลบกลุ่มนี้หรือไม่?",
     "textchat1": "คุณต้องการลบแชตนี้หรือไม่?",
+    "textfile1": "คุณต้องการลบไฟล์นี้หรือไม่?",
     "confirm": "ลบข้อมูล",
     "cancel": "ยกเลิก",
     "title2": "ลบเรียบร้อย!",
     "text2": "ประวัติการแก้ไขทั้งหมดถูกลบแล้ว",
     "textprompt2": "แนวทางการตั้งคำถามนี้ถูกลบแล้ว",
     "textgroup2": "กลุ่มนี้ถูกลบแล้ว",
-    "textchat2": "แชตนี้ถูกลบแล้ว"
+    "textchat2": "แชตนี้ถูกลบแล้ว",
+    "textfile2": "ไฟล์นี้ถูกลบแล้ว"
   },
   "Toast": {
     "title1": "มีการเเจ้งเตือนใหม่เข้ามา"
@@ -328,10 +367,18 @@
     "chatdropdowngroup": "ย้ายไปยังกลุ่ม",
     "chatdropdowndelete": "ลบเเชต",
     "chatdropdowndeletegroup": "ลบออกจาก",
-    "groupsearchph": "ค้นหากลุ่ม...",
+    "groupsearch": "ค้นหากลุ่ม...",
     "groupnotfound": "ไม่พบข้อมูลกลุ่ม",
-    "chatsearchph": "ค้นหาแชต...",
+    "chatsearch": "ค้นหาแชต...",
     "chatnotfound": "ไม่พบข้อมูลเเชต",
+    "academyclose": "ปิด",
+    "academytitle": "ค้นหาสถานศึกษา",
+    "academysearch": "ระบุรหัสสถานศึกษา",
+    "academyupload": "อัปโหลด",
+    "academyuploading": "กำลังอัปโหลด...",
+    "academynotfound": "ไม่พบข้อมูลสถานศึกษา",
+    "academyenter": "ค้นหา",
+    "academynotfound2": "ไม่พบไฟล์",
     "inputph": "ป้อนข้อความ",
     "menuitem": "กรุณาเลือกโมเดลคำตอบ",
     "tooltipcopy": "คัดลอก",
@@ -350,6 +397,7 @@
     "uploadfile": "อัปโหลดไฟล์",
     "uploadtooltip": "เพิ่ม/แนบไฟล์",
     "deepresearch": "การค้นคว้าเชิงลึก",
+    "academy": "สถานศึกษา",
     "notfound": "ไม่มีกลุ่ม",
     "notfound1": "ไม่มีแชต"
   },
@@ -366,8 +414,11 @@
     "error3": "ตั้งค่า Group ไม่สำเร็จ"
   },
   "UserError": {
-    "error1": "Sync ข้อมูล User ไม่สำเร็จ",
-    "error2": "ตั้งค่าจำนวน Token ของ User ไม่สำเร็จ"
+    "error1": "Sync ข้อมูลผู้ใช้งานไม่สำเร็จ",
+    "error2": "ตั้งค่าจำนวน Token ของผู้ใช้งานไม่สำเร็จ"
+  },
+  "AcademyError": {
+    "error1": "Sync ข้อมูลสถานศึกษาไม่สำเร็จ"
   },
   "ChatInputError": {
     "title1": "อัปโหลดไฟล์เกินจำนวนที่กำหนด",
