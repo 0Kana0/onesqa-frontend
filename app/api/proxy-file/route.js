@@ -10,6 +10,7 @@ const ALLOWED_HOSTS_EXACT = new Set([
   "thaiqa.net",
   "drive.google.com",
   "drive.usercontent.google.com",
+  "esar.opec.go.th"
 ]);
 
 function isAllowedHost(host) {
