@@ -53,6 +53,19 @@ export default function UserDetailPage() {
 
   const [viewMode, setViewMode] = useState("card"); // ✅ state อยู่ที่นี่
 
+  const formatComma = (n) => {
+    if (n === null || n === undefined || n === "") return "";
+    const x = Number(String(n).replace(/,/g, ""));
+    return Number.isFinite(x) ? x.toLocaleString("en-US") : "";
+  };
+
+  const parseCommaToNumber = (s) => {
+    const raw = String(s ?? "").replace(/,/g, "").trim();
+    if (raw === "") return 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const {
     data: userData,
     loading: userLoading,
@@ -475,18 +488,24 @@ export default function UserDetailPage() {
                           </Typography>
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <TextField
-                              type="number"
-                              value={ai.token || 0}
-                              inputProps={{ step:1000, style: { textAlign: "right" } }}
+                              type="text"
+                              value={formatComma(ai?.token ?? 0)}
+                              inputProps={{
+                                inputMode: "numeric",
+                                step: 1000, // (ยังใส่ไว้ได้ แต่จะไม่มีผลมากใน type="text")
+                                style: { textAlign: "right" },
+                              }}
                               fullWidth
                               sx={{
                                 "& .MuiOutlinedInput-root": { borderRadius: 2 },
                                 "& input": { color: "#757575", fontWeight: 500 },
                                 width: "180px",
                               }}
-                              onChange={(e) =>
-                                handleTokenChange(0, aiIndex, Number(e.target.value))
-                              } // ✅ เรียกฟังก์ชันอัปเดต state
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะตัวเลขกับ comma
+                                handleTokenChange(0, aiIndex, parseCommaToNumber(raw));
+                              }}
                             />
                           </Box>
                         </TableCell>

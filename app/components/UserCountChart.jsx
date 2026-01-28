@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Box, useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery, Typography } from "@mui/material";
 import {
   LineChart,
   Line,
@@ -14,13 +14,13 @@ import {
 } from "recharts";
 import { useTranslations } from "next-intl";
 
-export default function TokensChart({
+export default function UserCountChart({
   data = [],
-  subtitle = "สถิติ",
-  title = "สถิติการใช้ Tokens รายวัน",
+  title = "สถิติผู้ใช้งานรายวัน",
   height = 350,
-  aiGraph = [],
-  locale = "th", // ✅ รับ locale เข้ามา (th / en / th-TH / en-US)
+  locale = "th",
+  dataKey = "total_user",
+  seriesLabel = "Users",
 }) {
   const t = useTranslations("TokensChart");
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -53,13 +53,12 @@ export default function TokensChart({
 
     const localMonth = monthFmt.format(new Date(2020, idx, 1));
 
-    if (showYear && year) return `${day} ${localMonth} ${year}`; // ✅ มีปี
-    return `${day} ${localMonth}`; // ✅ ไม่มีปี
+    if (showYear && year) return `${day} ${localMonth} ${year}`;
+    return `${day} ${localMonth}`;
   };
 
   return (
     <Box
-      elevation={3}
       sx={{
         border: "1px solid #E5E7EB",
         borderRadius: 3,
@@ -101,24 +100,11 @@ export default function TokensChart({
             />
           )}
 
-          {aiGraph?.map((ai, index) => (
-            <Line
-              key={ai.model_type}
-              type="monotone"
-              dataKey={ai.model_type}
-              name={ai.model_use_name}
-              stroke={index === 0 ? "#22c55e" : "#3b82f6"}
-              strokeWidth={2}
-              dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
-              activeDot={{ r: 6 }}
-            />
-          ))}
-
           <Line
             type="monotone"
-            dataKey="total"
-            name={t("all")}
-            stroke="#c084fc"
+            dataKey={dataKey}
+            name={t("totaluser")}
+            stroke="#22c55e"
             strokeWidth={2}
             dot={{ r: 5, fill: "#fff", strokeWidth: 2 }}
             activeDot={{ r: 6 }}

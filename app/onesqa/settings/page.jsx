@@ -141,6 +141,19 @@ const SettingPage = () => {
 
   const [groups, setGroups] = useState([]);
 
+  const formatComma = (n) => {
+    if (n === null || n === undefined || n === "") return "";
+    const x = Number(String(n).replace(/,/g, ""));
+    return Number.isFinite(x) ? x.toLocaleString("en-US") : "";
+  };
+
+  const parseCommaToNumberSafe = (s) => {
+    const raw = String(s ?? "").replace(/,/g, "").trim();
+    if (raw === "") return 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const {
     data: aisData,
     loading: aisLoading,
@@ -402,6 +415,11 @@ const SettingPage = () => {
         color: "#fff", // สีข้อความเป็นขาว
         titleColor: "#fff", // สี title เป็นขาว
         textColor: "#fff", // สี text เป็นขาว
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
@@ -439,6 +457,11 @@ const SettingPage = () => {
         cancelButtonColor: "#3E8EF7",
         confirmButtonText: tDelete("confirm"),
         cancelButtonText: tDelete("cancel"),
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
@@ -807,11 +830,14 @@ const SettingPage = () => {
     if (percent >= 15 && percent <= 30) progressColor = "#FFA726";
     else if (percent < 15) progressColor = "#E53935";
 
+    const formatInt = (n) => Number(n ?? 0).toLocaleString("en-US"); // 1,000,000
+
     return (
       <Box>
         <Typography variant="body2" fontWeight={600}>
-          {used / 1_000_000}M / {total / 1_000_000}M Tokens
+          {formatInt(used)} / {formatInt(total)} Tokens
         </Typography>
+
         <LinearProgress
           variant="determinate"
           value={percent}
@@ -1238,18 +1264,19 @@ const SettingPage = () => {
                               return (
                                 <TableCell key={`init-${group.id}-${model}`} sx={{ minWidth: 220 }}>
                                   <TextField
-                                    type="number"
+                                    type="text"
                                     size="small"
                                     fullWidth
-                                    value={aiRow?.init_token ?? 0}
-                                    onChange={(e) =>
-                                      upsertGroupAiField(
-                                        group.id,
-                                        model,
-                                        "init_token",
-                                        toNumberSafe(e.target.value)
-                                      )
-                                    }
+                                    value={formatComma(aiRow?.init_token ?? 0)}
+                                    onChange={(e) => {
+                                      const raw = e.target.value;
+                                      if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                                      upsertGroupAiField(group.id, model, "init_token", parseCommaToNumberSafe(raw));
+                                    }}
+                                    inputProps={{
+                                      inputMode: "numeric",
+                                      style: { textAlign: "right" },
+                                    }}
                                     sx={{ "& .MuiInputBase-input": { textAlign: "right" } }}
                                   />
                                 </TableCell>
@@ -1263,18 +1290,19 @@ const SettingPage = () => {
                               return (
                                 <TableCell key={`plus-${group.id}-${model}`} sx={{ minWidth: 220 }}>
                                   <TextField
-                                    type="number"
+                                    type="text"
                                     size="small"
                                     fullWidth
-                                    value={aiRow?.plus_token ?? 0}
-                                    onChange={(e) =>
-                                      upsertGroupAiField(
-                                        group.id,
-                                        model,
-                                        "plus_token",
-                                        toNumberSafe(e.target.value)
-                                      )
-                                    }
+                                    value={formatComma(aiRow?.plus_token ?? 0)}
+                                    onChange={(e) => {
+                                      const raw = e.target.value;
+                                      if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                                      upsertGroupAiField(group.id, model, "plus_token", parseCommaToNumberSafe(raw));
+                                    }}
+                                    inputProps={{
+                                      inputMode: "numeric",
+                                      style: { textAlign: "right" },
+                                    }}
                                     sx={{ "& .MuiInputBase-input": { textAlign: "right" } }}
                                   />
                                 </TableCell>
@@ -1288,18 +1316,19 @@ const SettingPage = () => {
                               return (
                                 <TableCell key={`minus-${group.id}-${model}`} sx={{ minWidth: 220 }}>
                                   <TextField
-                                    type="number"
+                                    type="text"
                                     size="small"
                                     fullWidth
-                                    value={aiRow?.minus_token ?? 0}
-                                    onChange={(e) =>
-                                      upsertGroupAiField(
-                                        group.id,
-                                        model,
-                                        "minus_token",
-                                        toNumberSafe(e.target.value)
-                                      )
-                                    }
+                                    value={formatComma(aiRow?.minus_token ?? 0)}
+                                    onChange={(e) => {
+                                      const raw = e.target.value;
+                                      if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                                      upsertGroupAiField(group.id, model, "minus_token", parseCommaToNumberSafe(raw));
+                                    }}
+                                    inputProps={{
+                                      inputMode: "numeric",
+                                      style: { textAlign: "right" },
+                                    }}
                                     sx={{ "& .MuiInputBase-input": { textAlign: "right" } }}
                                   />
                                 </TableCell>
@@ -1343,14 +1372,50 @@ const SettingPage = () => {
                   )}
                 </Box>
 
+                {/* Footer */}
                 {/* ✅ Pagination อยู่นอก TableContainer เพื่อไม่ให้โดน scroll แนวตั้ง */}
-                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-                  <SmartPagination
-                    page={page}
-                    totalPages={totalPages}
-                    disabled={groupsLoading}
-                    onChange={(newPage) => setPage(newPage)}
-                  />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 3,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    mt: 2,
+                  }}
+                >
+                  <Stack 
+                    direction="row" 
+                    spacing={1} 
+                    alignItems="center"
+                    sx={{
+                      ml: 1
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      {tInit("count")}
+                    </Typography>
+                              
+                    <Typography variant="body2" fontWeight={700}>
+                      {totalItems}
+                    </Typography>
+                  </Stack>
+
+                  {/* ✅ มือถือให้ชิดขวา (flex-end) */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: { xs: "flex-end", sm: "flex-end" }, // ถ้าต้องการเฉพาะมือถือ: { xs: "flex-end", sm: "flex-start" }
+                      width: { xs: "100%", sm: "auto" }, // ให้กินเต็มบรรทัดบนมือถือ จะได้ดันไปขวาได้
+                    }}
+                  >
+                    <SmartPagination
+                      page={page}
+                      totalPages={totalPages}
+                      disabled={groupsLoading}
+                      onChange={(newPage) => setPage(newPage)}
+                    />
+                  </Box>
                 </Box>
               </Box>
             )}

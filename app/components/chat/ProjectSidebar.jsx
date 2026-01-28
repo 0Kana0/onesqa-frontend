@@ -23,6 +23,7 @@ import {
   Alert,
   CircularProgress,
   useMediaQuery,
+  Tooltip
 } from "@mui/material";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
@@ -81,6 +82,9 @@ export default function ProjectSidebar() {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selected, setSelected] = useState(null);
   const menuOpen = Boolean(menuAnchor);
+
+  const isOverflow = (el) => el && el.scrollWidth > el.clientWidth;
+  const [showTip, setShowTip] = useState(false);
 
   const {
     data: chatgroupsData,
@@ -209,6 +213,11 @@ export default function ProjectSidebar() {
         color: "#fff", // สีข้อความเป็นขาว
         titleColor: "#fff", // สี title เป็นขาว
         textColor: "#fff", // สี text เป็นขาว
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
@@ -253,6 +262,11 @@ export default function ProjectSidebar() {
         cancelButtonColor: "#3E8EF7",
         confirmButtonText: tDelete("confirm"),
         cancelButtonText: tDelete("cancel"),
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
@@ -417,48 +431,63 @@ export default function ProjectSidebar() {
                   onClick={isTablet ? toggle : undefined}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  <ListItemButton
-                    sx={{
-                      pl: 1.5,
-                      pr: 1,
-                      minHeight: 30,
-                      backgroundColor:
-                        isPage || isGroup
-                          ? "rgba(255,255,255,0.2)"
-                          : "transparent",
-                      "& .kebab": {
-                        opacity: isActive ? 1 : 0,
-                        transition: "opacity .15s",
-                      },
-                      "&:hover .kebab, &:hover .item-icon": {
-                        opacity: 1,
-                      },
-                    }}
-                    disableRipple
-                  >
-                    <ListItemIcon
-                      className="item-icon"
-                      sx={{ minWidth: 36, color: "common.white" }}
-                    >
-                      <FolderOutlined fontSize="small" />
-                    </ListItemIcon>
+                  <Tooltip title={it.label} arrow placement="top">
+                    <Box>
+                      <ListItemButton
+                        sx={{
+                          pl: 1.5,
+                          pr: 1,
+                          minHeight: 30,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          backgroundColor:
+                            isPage || isGroup ? "rgba(255,255,255,0.2)" : "transparent",
+                          "& .kebab": {
+                            opacity: isActive ? 1 : 0,
+                            transition: "opacity .15s",
+                            flexShrink: 0,
+                          },
+                          "&:hover .kebab, &:hover .item-icon": {
+                            opacity: 1,
+                          },
+                        }}
+                        disableRipple
+                      >
+                        <ListItemIcon
+                          className="item-icon"
+                          sx={{ minWidth: 36, color: "common.white", flexShrink: 0 }}
+                        >
+                          <FolderOutlined fontSize="small" />
+                        </ListItemIcon>
 
-                    <ListItemText
-                      primary={it.label}
-                      primaryTypographyProps={{ fontSize: 14 }}
-                    />
+                        <ListItemText
+                          primary={it.label}
+                          sx={{ flex: 1, minWidth: 0 }}
+                          primaryTypographyProps={{
+                            fontSize: 14,
+                            noWrap: true,
+                            sx: { overflow: "hidden", textOverflow: "ellipsis" },
+                          }}
+                        />
 
-                    <IconButton
-                      className="kebab"
-                      size="small"
-                      edge="end"
-                      onClick={(e) => handleOpenMenu(e, it)}
-                      sx={{ color: "common.white" }}
-                      disableRipple
-                    >
-                      <MoreHorizRounded fontSize="small" />
-                    </IconButton>
-                  </ListItemButton>
+                        <IconButton
+                          className="kebab"
+                          size="small"
+                          edge="end"
+                          onClick={(e) => {
+                            e.preventDefault();    // ✅ กันไม่ให้กดแล้วเปิดลิงก์
+                            e.stopPropagation();   // ✅ กัน event bubble
+                            handleOpenMenu(e, it);
+                          }}
+                          sx={{ color: "common.white" }}
+                          disableRipple
+                        >
+                          <MoreHorizRounded fontSize="small" />
+                        </IconButton>
+                      </ListItemButton>
+                    </Box>
+                  </Tooltip>
                 </Link>
               );
             })}

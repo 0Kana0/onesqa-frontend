@@ -423,6 +423,11 @@ const ChatgroupPage = () => {
         color: "#fff", // สีข้อความเป็นขาว
         titleColor: "#fff", // สี title เป็นขาว
         textColor: "#fff", // สี text เป็นขาว
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
@@ -461,6 +466,11 @@ const ChatgroupPage = () => {
         cancelButtonColor: "#3E8EF7",
         confirmButtonText: tDelete("confirm"),
         cancelButtonText: tDelete("cancel"),
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {

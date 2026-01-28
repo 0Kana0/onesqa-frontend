@@ -40,7 +40,8 @@ import {
   PERIOD_CHART_REPORTS,
   TOKEN_REPORTS,
 } from "@/graphql/report/queries";
-import { USER_COUNT_REPORTS } from "@/graphql/user_count/queries";
+import UserCountChart from "@/app/components/UserCountChart";
+import { USER_COUNT_REPORTS, CHART_USER_COUNT_REPORTS } from "@/graphql/user_count/queries";
 import LocalizedDatePicker from "@/app/components/LocalizedDatePicker";
 import { DataFilter } from "@/app/components/DateFilter";
 import PeriodReportChart from "@/app/components/PeriodReportChart";
@@ -67,11 +68,21 @@ const DashboardPage = () => {
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
-  const [quickRange, setQuickRange] = useState("7วันย้อนหลัง");
-  const [startDate, setStartDate] = useState(() =>
+  // ✅ Token chart filter
+  const [quickRangeToken, setQuickRangeToken] = useState("7วันย้อนหลัง");
+  const [startDateToken, setStartDateToken] = useState(() =>
     dayjs().subtract(6, "day").startOf("day").format("YYYY-MM-DD")
   );
-  const [endDate, setEndDate] = useState(() =>
+  const [endDateToken, setEndDateToken] = useState(() =>
+    dayjs().endOf("day").format("YYYY-MM-DD")
+  );
+
+  // ✅ UserCount chart filter
+  const [quickRangeUserCount, setQuickRangeUserCount] = useState("7วันย้อนหลัง");
+  const [startDateUserCount, setStartDateUserCount] = useState(() =>
+    dayjs().subtract(6, "day").startOf("day").format("YYYY-MM-DD")
+  );
+  const [endDateUserCount, setEndDateUserCount] = useState(() =>
     dayjs().endOf("day").format("YYYY-MM-DD")
   );
 
@@ -173,8 +184,22 @@ const DashboardPage = () => {
     fetchPolicy: "cache-and-network",
     notifyOnNetworkStatusChange: true,
     variables: {
-      startDate: startDate,
-      endDate: endDate,
+      startDate: startDateToken,
+      endDate: endDateToken,
+    },
+  });
+
+  const {
+    data: userCountChartData,
+    loading: userCountChartLoading,
+    error: userCountChartError,
+    networkStatus: userCountChartNetworkStatus,
+  } = useQuery(CHART_USER_COUNT_REPORTS, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    variables: {
+      startDate: startDateUserCount,
+      endDate: endDateUserCount,
     },
   });
 
@@ -267,13 +292,16 @@ const DashboardPage = () => {
   const isInitialLoading =
     networkStatus === NetworkStatus.loading && !chartData;
 
+  const isInitialLoadingUserCountChart =
+    userCountChartNetworkStatus === NetworkStatus.loading && !userCountChartData;
+
   const isInitialLoadingPeriod =
     periodNetworkStatus === NetworkStatus.loading && !periodChartData;
 
   const isInitialLoadingPeriodUser =
     periodUserNetworkStatus === NetworkStatus.loading && !periodUserData;
 
-  if (isInitialLoading || isInitialLoadingPeriod || isInitialLoadingPeriodUser)
+  if (isInitialLoading || isInitialLoadingPeriod || isInitialLoadingPeriodUser || isInitialLoadingUserCountChart)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -281,7 +309,7 @@ const DashboardPage = () => {
       </Box>
     );
 
-  if (aisError || tokenError || messageError || chartError || userCountError || periodChartError || periodUserError)
+  if (aisError || tokenError || messageError || chartError || userCountError || periodChartError || periodUserError || userCountChartError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -347,29 +375,59 @@ const DashboardPage = () => {
   const output = pivotUsageByDate(chartData?.chartReports);
 
   const getRangeFromQuick = (range) => {
-    const now = dayjs(); // จะใช้ Asia/Bangkok จากด้านบน
+    const now = dayjs();
     switch (range) {
       case "7วันย้อนหลัง": {
-        const s7 = now.subtract(6, "day").startOf("day"); // รวมวันนี้ = 7 วัน
-        return { start: s7, end: now.endOf("day") };
+        const s = now.subtract(6, "day").startOf("day");
+        return { start: s, end: now.endOf("day") };
       }
       case "30วันย้อนหลัง": {
-        const s30 = now.subtract(29, "day").startOf("day"); // รวมวันนี้ ~30 วัน
-        return { start: s30, end: now.endOf("day") };
+        const s = now.subtract(29, "day").startOf("day");
+        return { start: s, end: now.endOf("day") };
       }
       case "60วันย้อนหลัง": {
-        const s60 = now.subtract(59, "day").startOf("day"); // รวมวันนี้ ~60 วัน
-        return { start: s60, end: now.endOf("day") };
+        const s = now.subtract(59, "day").startOf("day");
+        return { start: s, end: now.endOf("day") };
       }
       default:
         return { start: null, end: null };
     }
   };
-  const applyQuickRange = (range) => {
+  const applyQuickRange = (range, setStart, setEnd) => {
     const { start, end } = getRangeFromQuick(range);
-    setStartDate(start ? start.format("YYYY-MM-DD") : "");
-    setEndDate(end ? end.format("YYYY-MM-DD") : "");
+    setStart(start ? start.format("YYYY-MM-DD") : "");
+    setEnd(end ? end.format("YYYY-MM-DD") : "");
   };
+
+  function mapUserCountChart(rows, { locale = "en-GB" } = {}) {
+    if (!Array.isArray(rows) || rows.length === 0) return [];
+
+    const fmt = new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC", // กันสไลด์วัน
+    });
+
+    return rows
+      .map((r) => {
+        const iso = String(r?.date || "").slice(0, 10); // "YYYY-MM-DD"
+        if (!iso) return null;
+
+        const [y, m, d] = iso.split("-").map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+
+        return {
+          dateISO: iso,
+          date: fmt.format(dt),
+          total_user: Number(r?.total_user ?? 0) || 0,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
+      .map(({ date, total_user }) => ({ date, total_user }));
+  }
+  const userCountSeries = mapUserCountChart(userCountChartData?.chartUserCountReports);
 
   const handleDetail = () => {
     console.log("🟠 เปิดรายละเอียดการใช้งาน Token");
@@ -464,11 +522,11 @@ const DashboardPage = () => {
           }}
         >
           <Select
-            value={quickRange}
+            value={quickRangeToken}
             onChange={(e) => {
               const val = e.target.value;
-              setQuickRange(val);
-              applyQuickRange(val); // << เซ็ต start/end ที่นี่
+              setQuickRangeToken(val);
+              applyQuickRange(val, setStartDateToken, setEndDateToken);
             }}
             size="small"
             sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
@@ -481,23 +539,17 @@ const DashboardPage = () => {
           {/* วันที่เริ่มต้น */}
           <LocalizedDatePicker
             label={tReport("startDate")}
-            value={startDate}
-            onChange={(v) => setStartDate(v)}
-            textFieldProps={{
-              size: "small",
-              sx: { width: isTablet ? "100%" : 200 },
-            }}
+            value={startDateToken}
+            onChange={(v) => setStartDateToken(v)}
+            textFieldProps={{ size: "small", sx: { width: isTablet ? "100%" : 200 } }}
           />
 
           {/* วันที่สิ้นสุด */}
           <LocalizedDatePicker
             label={tReport("endDate")}
-            value={endDate}
-            onChange={(v) => setEndDate(v)}
-            textFieldProps={{
-              size: "small",
-              sx: { width: isTablet ? "100%" : 200 },
-            }}
+            value={endDateToken}
+            onChange={(v) => setEndDateToken(v)}
+            textFieldProps={{ size: "small", sx: { width: isTablet ? "100%" : 200 } }}
           />
         </Box>
       </Box>
@@ -505,6 +557,65 @@ const DashboardPage = () => {
         <TokensChart 
           data={output} 
           aiGraph={aiGraph}
+          locale={locale}
+        />
+      </Box>
+
+      <Box
+        sx={{
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 3px 8px rgba(0,0,0,0.04)",
+          borderRadius: 4,
+          p: isMobile ? 1.5 : 2,
+          bgcolor: "background.paper",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+          {t("titleusercount1")} {/* การ์ดจำนวนผู้ใช้งาน */}
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: isTablet ? "column" : "row",
+            alignItems: isTablet ? "flex-start" : "center",
+            gap: 2,
+          }}
+        >
+          <Select
+            value={quickRangeUserCount}
+            onChange={(e) => {
+              const val = e.target.value;
+              setQuickRangeUserCount(val);
+              applyQuickRange(val, setStartDateUserCount, setEndDateUserCount);
+            }}
+            size="small"
+            sx={{ width: isTablet ? "100%" : "none", flex: 1 }}
+          >
+            <MenuItem value="7วันย้อนหลัง">{t("select1")}</MenuItem>
+            <MenuItem value="30วันย้อนหลัง">{t("select2")}</MenuItem>
+            <MenuItem value="60วันย้อนหลัง">{t("select3")}</MenuItem>
+          </Select>
+
+          <LocalizedDatePicker
+            label={tReport("startDate")}
+            value={startDateUserCount}
+            onChange={(v) => setStartDateUserCount(v)}
+            textFieldProps={{ size: "small", sx: { width: isTablet ? "100%" : 200 } }}
+          />
+
+          <LocalizedDatePicker
+            label={tReport("endDate")}
+            value={endDateUserCount}
+            onChange={(v) => setEndDateUserCount(v)}
+            textFieldProps={{ size: "small", sx: { width: isTablet ? "100%" : 200 } }}
+          />
+        </Box>
+      </Box>
+      <Box>
+        <UserCountChart
+          data={userCountSeries}
           locale={locale}
         />
       </Box>

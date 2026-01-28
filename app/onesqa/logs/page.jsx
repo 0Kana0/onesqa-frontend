@@ -22,6 +22,7 @@ import {
   Switch,
   CircularProgress,
   useMediaQuery,
+  Stack,
 } from "@mui/material";
 // ใช้ dayjs (แนะนำเปิด timezone ให้ตรง Asia/Bangkok)
 import dayjs from "dayjs";
@@ -321,6 +322,11 @@ const LogPage = () => {
         color: "#fff", // สีข้อความเป็นขาว
         titleColor: "#fff", // สี title เป็นขาว
         textColor: "#fff", // สี text เป็นขาว
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
@@ -356,6 +362,11 @@ const LogPage = () => {
         cancelButtonColor: "#3E8EF7",
         confirmButtonText: tDelete("confirm"),
         cancelButtonText: tDelete("cancel"),
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
       }).then(async (result) => {
         if (result.isConfirmed) {
           setLogRows([]); // ✅ ลบข้อมูลทั้งหมด
@@ -635,17 +646,45 @@ const LogPage = () => {
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "flex-end",
+                justifyContent: "space-between",
+                gap: 3,
+                flexWrap: "wrap",
                 alignItems: "center",
                 mt: 2,
               }}
             >
-              <SmartPagination
-                page={page}
-                totalPages={Math.ceil(totalCount / rowsPerPage)}
-                disabled={logsLoading}
-                onChange={(newPage) => setPage(newPage)}
-              />
+              <Stack 
+                direction="row" 
+                spacing={1} 
+                alignItems="center"
+                sx={{
+                  ml: 1
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {tInit("count")}
+                </Typography>
+
+                <Typography variant="body2" fontWeight={700}>
+                  {totalCount}
+                </Typography>
+              </Stack>
+
+              {/* ✅ มือถือให้ชิดขวา (flex-end) */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: { xs: "flex-end", sm: "flex-end" }, // ถ้าต้องการเฉพาะมือถือ: { xs: "flex-end", sm: "flex-start" }
+                  width: { xs: "100%", sm: "auto" }, // ให้กินเต็มบรรทัดบนมือถือ จะได้ดันไปขวาได้
+                }}
+              >
+                <SmartPagination
+                  page={page}
+                  totalPages={Math.ceil(totalCount / rowsPerPage)}
+                  disabled={logsLoading}
+                  onChange={(newPage) => setPage(newPage)}
+                />
+              </Box>
             </Box>
           </Box>
         </Box>

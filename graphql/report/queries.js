@@ -78,8 +78,8 @@ export const PERIOD_CHART_REPORTS = gql`
 `;
 
 export const TOPFIVE_REPORTS = gql`
-  query topFiveReports {
-    topFiveReports {
+  query topFiveReports($month: Int, $year: Int)  {
+    topFiveReports(month: $month, year: $year) {
       rank
       tokens
       name

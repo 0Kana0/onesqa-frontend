@@ -201,7 +201,7 @@ export default function PeriodReportChart({
             tick={{ fontSize: 12 }}
           />
 
-          <YAxis tick={{ fontSize: 12 }} />
+          <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
 
           <Tooltip
             contentStyle={{

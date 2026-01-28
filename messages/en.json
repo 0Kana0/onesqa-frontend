@@ -1,13 +1,14 @@
 {
   "Init": {
     "loading": "Loading data",
-    "error": "An error occurred while loading data"
+    "error": "An error occurred while loading data",
+    "count": "Total data"
   },
   "Header": {
     "dashboard": "Dashboard",
     "chat": "AI Chatbot",
     "users": "Manage Users",
-    "history": "User History",
+    "history": "Login History",
     "academy": "Manage Academy",
     "sarhistory": "File Delete History",
     "reports": "Report",
@@ -75,7 +76,8 @@
     "subtitle3": "Token usage tracking with real-time updates",
     "select1": "Last 7 days",
     "select2": "Last 30 days",
-    "select3": "Last 60 days"
+    "select3": "Last 60 days",
+    "titleusercount1": "Daily Summary of Total System Users"
   },
   "LogPage": {
     "filter1": "Search and Filter Logs",
@@ -127,7 +129,7 @@
     "notfound1": "No User Ranking Data Found"
   },  
   "UserPage": {
-    "history": "History",
+    "history": "Login History",
     "filter1": "Search and Filter Data",
     "title1": "User List",
     "title2": "Number Of User In Each Group",
@@ -141,6 +143,7 @@
     "tablecell7": "Details",
     "tablecell8": "Group Name",
     "tablecell9": "Number Of User",
+    "totalgroup": "Total User",
     "selectrole0": "All Role",
     "selectstatus0": "Status",
     "selectstatus1": "Online",
@@ -156,6 +159,7 @@
     "startDate": "Start",
     "endDate": "End",
     "filter1": "Search and Filter Data",
+    "button1": "Clear Login History",
     "tablecell1": "Name",
     "tablecell2": "Role",
     "tablecell3": "Group",
@@ -166,7 +170,7 @@
     "selecttype1": "Login",
     "selecttype2": "Logout",
     "placeholder1": "Search user by name/group...",
-    "notfound": "No User History Found"
+    "notfound": "No Login History Found"
   },
   "UserDetailPage": {
     "label1": "Assign tokens to users",
@@ -206,6 +210,7 @@
     "title2": "Number Of Academy In Each Level",
     "code": "Code",
     "level": "Level",
+    "totalacademy": "Total Academy",
     "delete1": "Select all",
     "delete2": "Delete selected files",
     "tablecell8": "Academy Level",
@@ -217,6 +222,7 @@
     "startDate": "Start",
     "endDate": "End",
     "filter1": "Search and Filter Data",
+    "button1": "Clear File Delete History",
     "tablecell1": "Deleted By",
     "tablecell2": "Educational Institution",
     "tablecell3": "Institution Code",
@@ -247,7 +253,8 @@
     "title1": "from last month"
   },
   "TokensChart": {
-    "all": "all"
+    "all": "all",
+    "totaluser": "total user"
   },
   "PeriodReportChart": {
     "period": "period",
@@ -331,6 +338,8 @@
     "tooltip": "delete",
     "title1": "Confirm delete?",
     "text1": "Do you want to delete all editing history?",
+    "textloginhistory1": "Do you want to delete all login history?",
+    "textsarhistory1": "Do you want to delete all file delete history?",
     "textprompt1": "Do you want to delete this prompt?",
     "textgroup1": "Do you want to delete this group?",
     "textchat1": "Do you want to delete this chat?",
@@ -338,7 +347,9 @@
     "confirm": "Delete",
     "cancel": "Cancel",
     "title2": "Completely deleted!",
-    "text2": "All edit history has been deleted",
+    "text2": "All editing history has been deleted",
+    "textloginhistory2": "All login history has been deleted",
+    "textsarhistory2": "All file delete history has been deleted",
     "textprompt2": "This prompt has been deleted",
     "textgroup2": "This group has been deleted",
     "textchat2": "This chat has been deleted",

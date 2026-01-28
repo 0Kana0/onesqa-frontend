@@ -29,6 +29,19 @@ export default function TokenUsageCardSetting({
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
+  const formatComma = (n) => {
+    if (n === null || n === undefined || n === "") return "";
+    const x = Number(String(n).replace(/,/g, ""));
+    return Number.isFinite(x) ? x.toLocaleString("en-US") : "";
+  };
+
+  const parseCommaToNumber = (s) => {
+    const raw = String(s ?? "").replace(/,/g, "").trim();
+    if (raw === "") return 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   // ✅ คำนวณเปอร์เซ็นต์การใช้งาน
   const percent = Math.min((remain / total) * 100, 100);
 
@@ -63,12 +76,23 @@ export default function TokenUsageCardSetting({
           {t('settoken')}
         </Typography>
         <TextField
-          type="number"
+          type="text"
           fullWidth
           size="small"
           variant="outlined"
-          value={defaultLimit}
-          onChange={(e) => onLimitChange(e.target.value)} // ✅ เรียกไปยัง parent
+          value={formatComma(defaultLimit)}
+          onChange={(e) => {
+            const raw = e.target.value;
+
+            // ✅ อนุญาตเฉพาะตัวเลขและ comma
+            if (!/^[0-9,]*$/.test(raw)) return;
+
+            onLimitChange(parseCommaToNumber(raw)); // ✅ ส่งเป็น number ให้ parent
+          }}
+          inputProps={{
+            inputMode: "numeric",
+            style: { textAlign: "right" },
+          }}
           sx={{
             mt: 0.5,
             mb: 1.5,

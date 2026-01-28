@@ -156,6 +156,11 @@ const AcademyPage = () => {
     }
   };
 
+  const totalAcademyCount = countAcademyData?.countByAcademyLevel?.reduce(
+    (sum, item) => sum + Number(item?.count ?? 0),
+    0
+  ) ?? 0;
+
   // ✅ สมมติชื่อ field ที่ query คืนมาเป็น academyByCode (แก้ให้ตรง schema ของคุณถ้าชื่อไม่ตรง)
   const academy = academyData?.academyByCode ?? null;
   const sarFiles = academy?.sar_file;
@@ -215,6 +220,11 @@ const AcademyPage = () => {
       cancelButtonColor: "#3E8EF7",
       confirmButtonText: tDelete?.("confirm"),
       cancelButtonText: tDelete?.("cancel"),
+      // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+      focusConfirm: true,
+      didOpen: () => {
+        Swal.getConfirmButton()?.focus();
+      },
       ...swalBase,
     }).then(async (result) => {
       if (!result.isConfirmed) return;
@@ -539,6 +549,14 @@ const AcademyPage = () => {
                     <TableCell>{item.count}</TableCell>
                   </TableRow>
                 ))}
+
+                {/* ✅ แถวรวมทั้งหมด (แสดงเมื่อมีข้อมูล) */}
+                {countAcademyData?.countByAcademyLevel?.length > 0 && (
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: "bold" }}>{t("totalacademy")}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>{totalAcademyCount}</TableCell>
+                  </TableRow>
+                )}
 
                 {countAcademyData?.countByAcademyLevel?.length === 0 && (
                   <TableRow>

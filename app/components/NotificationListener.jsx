@@ -89,7 +89,7 @@ export default function NotificationListener({
                 closeOnClick: true,
                 pauseOnHover: true,
                 draggable: true,
-                theme: "light",
+                //theme: "light",
                 onClick: () => {
                   setHasNotification(false)
                   localStorage.removeItem("alert");

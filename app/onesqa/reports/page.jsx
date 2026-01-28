@@ -65,6 +65,8 @@ const ReportPage = () => {
   const client = useApolloClient();
   const t = useTranslations("ReportPage");
   const tInit = useTranslations("Init");
+  const tDatePicker = useTranslations("DatePicker");
+
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
@@ -76,6 +78,10 @@ const ReportPage = () => {
   const [pageList, setPageList] = useState(1);
   const rowsPerPageList = 5;
   const [totalCountList, setTotalCountList] = useState(0);
+
+  // ✅ filter สำหรับ Top 5
+  const [topMonth, setTopMonth] = useState(now.month() + 1); // 1..12
+  const [topYear, setTopYear] = useState(now.year());
 
   // ✅ TABLE 2 (รายงานตาม DataFilter: daily/monthly/yearly)
   const [searchPeriod, setSearchPeriod] = useState("");
@@ -100,6 +106,17 @@ const ReportPage = () => {
       ? periodReport.year
       : years[0]
   );
+
+  const monthOptions = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(
+      locale?.startsWith("th") ? "th-TH" : "en-US",
+      { month: "long" }
+    );
+    return Array.from({ length: 12 }, (_, i) => ({
+      value: i + 1,
+      label: fmt.format(new Date(2000, i, 1)),
+    }));
+  }, [locale]);
 
   const {
     data: aisData,
@@ -162,8 +179,14 @@ const ReportPage = () => {
     data: topfiveData,
     loading: topfiveLoading,
     error: topfiveError,
+    networkStatus: topfiveNetworkStatus,
   } = useQuery(TOPFIVE_REPORTS, {
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
+    variables: {
+      month: topMonth,
+      year: topYear,
+    },
   });
 
   useEffect(() => {
@@ -197,7 +220,10 @@ const ReportPage = () => {
   const isInitialLoadingPeriod =
     periodNetworkStatus === NetworkStatus.loading && !periodReportsData;
 
-  if (isInitialLoading || isInitialLoadingPeriod) {
+  const isInitialLoadingTopfive =
+    topfiveNetworkStatus === NetworkStatus.loading && !topfiveData;
+
+  if (isInitialLoading || isInitialLoadingPeriod || isInitialLoadingTopfive) {
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -485,21 +511,50 @@ const ReportPage = () => {
             </Table>
           </TableContainer>
 
+          {/* Footer */}
           {/* 📄 Pagination */}
           <Box
             sx={{
               display: "flex",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
+              gap: 3,
+              flexWrap: "wrap",
               alignItems: "center",
               mt: 2,
             }}
           >
-            <SmartPagination
-              page={pageList}
-              totalPages={Math.ceil(totalCountList / rowsPerPageList)}
-              disabled={reportsLoading}
-              onChange={(newPage) => setPageList(newPage)}
-            />
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              alignItems="center"
+              sx={{
+                ml: 1
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {tInit("count")}
+              </Typography>
+                        
+              <Typography variant="body2" fontWeight={700}>
+                {totalCountList}
+              </Typography>
+            </Stack>
+
+            {/* ✅ มือถือให้ชิดขวา (flex-end) */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: { xs: "flex-end", sm: "flex-end" }, // ถ้าต้องการเฉพาะมือถือ: { xs: "flex-end", sm: "flex-start" }
+                width: { xs: "100%", sm: "auto" }, // ให้กินเต็มบรรทัดบนมือถือ จะได้ดันไปขวาได้
+              }}
+            >
+              <SmartPagination
+                page={pageList}
+                totalPages={Math.ceil(totalCountList / rowsPerPageList)}
+                disabled={reportsLoading}
+                onChange={(newPage) => setPageList(newPage)}
+              />
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -664,21 +719,50 @@ const ReportPage = () => {
             </Table>
           </TableContainer>
 
+          {/* Footer */}
           {/* 📄 Pagination */}
           <Box
             sx={{
               display: "flex",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
+              gap: 3,
+              flexWrap: "wrap",
               alignItems: "center",
               mt: 2,
             }}
           >
-            <SmartPagination
-              page={pagePeriod}
-              totalPages={Math.ceil(totalCountPeriod / rowsPerPagePeriod)}
-              disabled={periodReportsLoading}   // ✅ สำคัญ: อย่าใช้ reportsLoading
-              onChange={(newPage) => setPagePeriod(newPage)}
-            />
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              alignItems="center"
+              sx={{
+                ml: 1
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {tInit("count")}
+              </Typography>
+                        
+              <Typography variant="body2" fontWeight={700}>
+                {totalCountPeriod}
+              </Typography>
+            </Stack>
+
+            {/* ✅ มือถือให้ชิดขวา (flex-end) */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: { xs: "flex-end", sm: "flex-end" }, // ถ้าต้องการเฉพาะมือถือ: { xs: "flex-end", sm: "flex-start" }
+                width: { xs: "100%", sm: "auto" }, // ให้กินเต็มบรรทัดบนมือถือ จะได้ดันไปขวาได้
+              }}
+            >
+              <SmartPagination
+                page={pagePeriod}
+                totalPages={Math.ceil(totalCountPeriod / rowsPerPagePeriod)}
+                disabled={periodReportsLoading}   // ✅ สำคัญ: อย่าใช้ reportsLoading
+                onChange={(newPage) => setPagePeriod(newPage)}
+              />
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -705,6 +789,38 @@ const ReportPage = () => {
 
         {/* ลิสต์ผู้ใช้งาน */}
         <Stack spacing={1.5}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 2, mb: 2 }}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label={tDatePicker("month")}
+              value={topMonth}
+              onChange={(e) => setTopMonth(Number(e.target.value))}
+            >
+              {monthOptions.map((x) => (
+                <MenuItem key={x.value} value={x.value}>
+                  {x.label}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label={tDatePicker("year")}
+              value={topYear}
+              onChange={(e) => setTopYear(Number(e.target.value))}
+            >
+              {years.map((y) => (
+                <MenuItem key={y} value={y}>
+                  {y}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+
           {topfiveData?.topFiveReports?.map((user) => (
             <Box
               key={user.rank}

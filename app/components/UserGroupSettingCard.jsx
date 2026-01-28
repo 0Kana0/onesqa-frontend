@@ -34,6 +34,19 @@ export default function UserGroupSettingCard({
 
   const toNumber = (v) => Number(v || 0);
 
+  const formatComma = (n) => {
+    if (n === null || n === undefined || n === "") return "";
+    const x = Number(String(n).replace(/,/g, ""));
+    return Number.isFinite(x) ? x.toLocaleString("en-US") : "";
+  };
+
+  const parseCommaToNumber = (s) => {
+    const raw = String(s ?? "").replace(/,/g, "").trim();
+    if (raw === "") return 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   return (
     <Card
       elevation={0}
@@ -104,13 +117,22 @@ export default function UserGroupSettingCard({
                 {t("settoken")}
               </Typography>
               <TextField
-                type="number"
+                type="text"
                 fullWidth
                 size="small"
-                value={aiRow.init_token ?? 0}
-                onChange={(e) =>
-                  onGroupAiChange?.(idx, "init_token", toNumber(e.target.value))
-                }
+                value={formatComma(aiRow?.init_token ?? 0)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+
+                  // ✅ รับเฉพาะตัวเลขกับ comma
+                  if (!/^[0-9,]*$/.test(raw)) return;
+
+                  onGroupAiChange?.(idx, "init_token", parseCommaToNumber(raw));
+                }}
+                inputProps={{
+                  inputMode: "numeric",
+                  style: { textAlign: "right" },
+                }}
                 sx={{
                   mt: 0.5,
                   mb: 1.25,
@@ -123,13 +145,19 @@ export default function UserGroupSettingCard({
                 {t("plustoken")}
               </Typography>
               <TextField
-                type="number"
+                type="text"
                 fullWidth
                 size="small"
-                value={aiRow.plus_token ?? 0}
-                onChange={(e) =>
-                  onGroupAiChange?.(idx, "plus_token", toNumber(e.target.value))
-                }
+                value={formatComma(aiRow?.plus_token ?? 0)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                  onGroupAiChange?.(idx, "plus_token", parseCommaToNumber(raw));
+                }}
+                inputProps={{
+                  inputMode: "numeric",
+                  style: { textAlign: "right" },
+                }}
                 sx={{
                   mt: 0.5,
                   mb: 1.25,
@@ -142,13 +170,19 @@ export default function UserGroupSettingCard({
                 {t("minustoken")}
               </Typography>
               <TextField
-                type="number"
+                type="text"
                 fullWidth
                 size="small"
-                value={aiRow.minus_token ?? 0}
-                onChange={(e) =>
-                  onGroupAiChange?.(idx, "minus_token", toNumber(e.target.value))
-                }
+                value={formatComma(aiRow?.minus_token ?? 0)}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                  onGroupAiChange?.(idx, "minus_token", parseCommaToNumber(raw));
+                }}
+                inputProps={{
+                  inputMode: "numeric",
+                  style: { textAlign: "right" },
+                }}
                 sx={{
                   mt: 0.5,
                   "& .MuiInputBase-input": { textAlign: "right" },

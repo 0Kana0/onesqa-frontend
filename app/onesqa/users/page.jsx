@@ -25,6 +25,7 @@ import {
   CircularProgress,
   useMediaQuery,
   Button,
+  Stack,
 } from "@mui/material";
 import { GET_USERS } from "@/graphql/user/queries";
 import { GET_ROLES } from "@/graphql/role/queries";
@@ -421,6 +422,10 @@ export default function UserPage() {
     );
 
   const colCount = user?.role_name_th === "superadmin" ? 8 : 7;
+  const totalUserCount = groupWithUserCountData?.groupWithUserCount?.reduce(
+    (sum, item) => sum + Number(item?.user_count ?? 0),
+    0
+  ) ?? 0;
 
   const handleSyncUsers = async () => {
     try {
@@ -799,20 +804,50 @@ export default function UserPage() {
             </Table>
           </TableContainer>
 
+          {/* Footer */}
           {/* 🔹 Pagination */}
           <Box
             sx={{
               display: "flex",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
+              gap: 3,
+              flexWrap: "wrap",
+              alignItems: "center",
               mt: 2,
             }}
           >
-            <SmartPagination
-              page={page}
-              totalPages={Math.ceil(totalCount / rowsPerPage)}
-              disabled={usersLoading}
-              onChange={(newPage) => setPage(newPage)}
-            />
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              alignItems="center"
+              sx={{
+                ml: 1
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {tInit("count")}
+              </Typography>
+            
+              <Typography variant="body2" fontWeight={700}>
+                {totalCount}
+              </Typography>
+            </Stack>
+
+            {/* ✅ มือถือให้ชิดขวา (flex-end) */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: { xs: "flex-end", sm: "flex-end" }, // ถ้าต้องการเฉพาะมือถือ: { xs: "flex-end", sm: "flex-start" }
+                width: { xs: "100%", sm: "auto" }, // ให้กินเต็มบรรทัดบนมือถือ จะได้ดันไปขวาได้
+              }}
+            >
+              <SmartPagination
+                page={page}
+                totalPages={Math.ceil(totalCount / rowsPerPage)}
+                disabled={usersLoading}
+                onChange={(newPage) => setPage(newPage)}
+              />
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -860,6 +895,14 @@ export default function UserPage() {
                     <TableCell>{item.user_count}</TableCell>
                   </TableRow>
                 ))}
+
+                {/* ✅ แถวรวมทั้งหมด (แสดงเมื่อมีข้อมูล) */}
+                {groupWithUserCountData?.groupWithUserCount?.length > 0 && (
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: "bold" }}>{t("totalgroup")}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>{totalUserCount}</TableCell>
+                  </TableRow>
+                )}
 
                 {/* ถ้าไม่มีข้อมูล */}
                 {groupWithUserCountData?.groupWithUserCount?.length === 0 && (

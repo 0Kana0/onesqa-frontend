@@ -12,6 +12,20 @@ export default function TokenLimitCard({
   max = 10000000,
   step = 1000,
 }) {
+  const formatComma = (n) => {
+    if (n === null || n === undefined || n === "") return "";
+    const x = Number(String(n).replace(/,/g, ""));
+    if (!Number.isFinite(x)) return "";
+    return x.toLocaleString("en-US");
+  };
+
+  const parseComma = (s) => {
+    const raw = String(s ?? "").replace(/,/g, "").trim();
+    if (raw === "" || raw === "-" ) return "";
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : "";
+  };
+
   return (
     <Box
       sx={{
@@ -34,24 +48,25 @@ export default function TokenLimitCard({
       {/* 🔹 ช่องกรอกตัวเลข */}
       <Box>
         <TextField
-          type="number"
-          value={value}
-          onChange={(e) => onChange?.(Number(e.target.value))}
+          type="text"
+          value={formatComma(value)}
+          onChange={(e) => {
+            const raw = e.target.value;
+
+            // ✅ อนุญาตเฉพาะตัวเลขกับ comma
+            if (!/^[0-9,]*$/.test(raw)) return;
+
+            const n = parseComma(raw);
+            onChange?.(n === "" ? 0 : n); // หรือส่ง "" ก็ได้ถ้าคุณอยากให้ว่างได้
+          }}
           inputProps={{
-            min,
-            max,
-            step,
+            inputMode: "numeric",   // มือถือขึ้น keypad ตัวเลข
             style: { textAlign: "right" },
           }}
           fullWidth
           sx={{
-            "& .MuiOutlinedInput-root": {
-              borderRadius: 2,
-            },
-            "& input": {
-              color: "#757575",
-              fontWeight: 500,
-            },
+            "& .MuiOutlinedInput-root": { borderRadius: 2 },
+            "& input": { color: "#757575", fontWeight: 500 },
           }}
         />
       </Box>

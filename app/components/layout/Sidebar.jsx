@@ -45,37 +45,41 @@ export default function Sidebar() {
 
   const isAdmin = ["ผู้ดูแลระบบ", "superadmin"].includes(user?.role_name_th);
   const chatPageCheckOne = isAdmin && !pathname.startsWith("/onesqa/chat");
-  const chatPageCheckTwo = (isAdmin && pathname.startsWith("/onesqa/chat")) || !isAdmin;
+  const chatPageCheckTwo =
+    (isAdmin && pathname.startsWith("/onesqa/chat")) || !isAdmin;
 
   const menuItems = [
-    { text: t('dashboard'), icon: <Home />, path: "/onesqa/dashboard" },
-    { text: t('chat'), icon: <Chat />, path: "/onesqa/chat" },
-    { text: t('users'), icon: <Group />, path: "/onesqa/users" },
-    { text: t('academy'), icon: <SchoolIcon />, path: "/onesqa/academy" },
-    { text: t('reports'), icon: <BarChart />, path: "/onesqa/reports" },
-    { text: t('settings'), icon: <Settings />, path: "/onesqa/settings" },
-    { text: t('logs'), icon: <History />, path: "/onesqa/logs" },
+    { text: t("dashboard"), icon: <Home />, path: "/onesqa/dashboard" },
+    { text: t("chat"), icon: <Chat />, path: "/onesqa/chat" },
+    { text: t("users"), icon: <Group />, path: "/onesqa/users" },
+    { text: t("academy"), icon: <SchoolIcon />, path: "/onesqa/academy" },
+    { text: t("reports"), icon: <BarChart />, path: "/onesqa/reports" },
+    { text: t("settings"), icon: <Settings />, path: "/onesqa/settings" },
+    { text: t("logs"), icon: <History />, path: "/onesqa/logs" },
   ];
 
   // ✅ ถ้าเป็น mobile และ sidebar ปิด => ไม่ render Drawer เลย
   if (isTablet && !open) return null;
-  
+
   const handleInitPage = () => {
-    if (user?.role_name_th === "ผู้ดูแลระบบ" || user?.role_name_th === "superadmin") {
-      if (isTablet) toggle()
+    if (
+      user?.role_name_th === "ผู้ดูแลระบบ" ||
+      user?.role_name_th === "superadmin"
+    ) {
+      if (isTablet) toggle();
       router.push("/onesqa/dashboard");
     } else {
-      if (isTablet) toggle()
+      if (isTablet) toggle();
       router.push("/onesqa/chat");
     }
-  }
+  };
 
   return (
     <Drawer
       variant={isTablet ? "temporary" : "permanent"}
       open={open}
       onClose={chatPageCheckTwo ? toggle : undefined} // ✅ ใช้ฟังก์ชันจาก Context
-      ModalProps={{ keepMounted: true }}       // ✅ ช่วยเรื่อง perf บนมือถือ
+      ModalProps={{ keepMounted: true }} // ✅ ช่วยเรื่อง perf บนมือถือ
       sx={(theme) => ({
         ...(chatPageCheckTwo
           ? {
@@ -98,7 +102,7 @@ export default function Sidebar() {
             ? {
                 // ✅ ชุด "อันบน" (เมื่อ true)
                 width: 280,
-                height: "100dvh",          // หรือ "100vh"
+                height: "100dvh", // หรือ "100vh"
                 maxHeight: "100dvh",
                 overflowY: "auto",
                 overflowX: "visible",
@@ -122,10 +126,15 @@ export default function Sidebar() {
           p: 2,
         }}
       >
-        {(open || chatPageCheckTwo) ? (
+        {open || chatPageCheckTwo ? (
           <Typography
             variant="subtitle1"
-            sx={{ fontWeight: "bold", display: "flex", alignItems: "center", cursor: "pointer" }}
+            sx={{
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
             onClick={() => handleInitPage()}
           >
             <Box
@@ -152,8 +161,8 @@ export default function Sidebar() {
             onClick={toggle} // ✅ ใช้ฟังก์ชันจาก Context
             sx={{
               position: "absolute",
-              top: 64,                // อยู่กลางแนวตั้ง
-              right: -12,                // เยื้องออกมานิดจากขอบ sidebar
+              top: 64, // อยู่กลางแนวตั้ง
+              right: -12, // เยื้องออกมานิดจากขอบ sidebar
               transform: "translateY(-50%)",
               backgroundColor: "white",
               color: "#3E8EF7",
@@ -169,7 +178,11 @@ export default function Sidebar() {
               zIndex: 2000,
             }}
           >
-            {open ? <ChevronLeft fontSize="small" /> : <ChevronRight fontSize="small" />}
+            {open ? (
+              <ChevronLeft fontSize="small" />
+            ) : (
+              <ChevronRight fontSize="small" />
+            )}
           </IconButton>
         )}
       </Box>
@@ -179,12 +192,18 @@ export default function Sidebar() {
         <List sx={{ mt: 1 }}>
           {menuItems.map((item, index) => {
             const isActive = pathname.startsWith(item.path);
+            const isChatNewTab = item.path === "/onesqa/chat";
 
             return (
               <ListItem key={index} disablePadding sx={{ display: "block" }}>
-                <Link 
-                  href={item.path} 
-                  onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
+                <Link
+                  href={item.path}
+                  target={isChatNewTab ? "_blank" : undefined}
+                  rel={isChatNewTab ? "noopener noreferrer" : undefined}
+                  onClick={() => {
+                    // ✅ toggle เฉพาะตอนจอเล็ก (จะเปิดแท็บใหม่อยู่แล้ว)
+                    if (isTablet) toggle();
+                  }}
                   style={{ textDecoration: "none" }}
                 >
                   <ListItemButton
@@ -193,12 +212,13 @@ export default function Sidebar() {
                       justifyContent: open ? "initial" : "center",
                       px: 2.5,
                       py: 1.5,
-                      borderLeft: isActive ? "4px solid white" : "4px solid transparent",
-                      backgroundColor: isActive ? "rgba(255,255,255,0.2)" : "transparent",
-                      //transition: "all 0.2s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "rgba(255,255,255,0.25)",
-                      },
+                      borderLeft: isActive
+                        ? "4px solid white"
+                        : "4px solid transparent",
+                      backgroundColor: isActive
+                        ? "rgba(255,255,255,0.2)"
+                        : "transparent",
+                      "&:hover": { backgroundColor: "rgba(255,255,255,0.25)" },
                     }}
                   >
                     <ListItemIcon
@@ -211,10 +231,14 @@ export default function Sidebar() {
                     >
                       {item.icon}
                     </ListItemIcon>
+
                     {open && (
                       <ListItemText
                         primary={item.text}
-                        primaryTypographyProps={{ fontSize: 15, color: "#ffffff" }}
+                        primaryTypographyProps={{
+                          fontSize: 15,
+                          color: "#ffffff",
+                        }}
                       />
                     )}
                   </ListItemButton>
@@ -225,8 +249,8 @@ export default function Sidebar() {
         </List>
       ) : (
         <Box sx={{ p: 0.5 }}>
-          <NewChatButton/>
-          <ProjectSidebar/>
+          <NewChatButton />
+          <ProjectSidebar />
           <ChatSidebar />
         </Box>
       )}

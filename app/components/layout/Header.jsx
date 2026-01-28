@@ -176,6 +176,11 @@ export default function Header() {
           color: "#fff", // สีข้อความเป็นขาว
           titleColor: "#fff", // สี title เป็นขาว
           textColor: "#fff", // สี text เป็นขาว
+          // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+          focusConfirm: true,
+          didOpen: () => {
+            Swal.getConfirmButton()?.focus();
+          },
         });
 
         if (result.isConfirmed) {
@@ -202,6 +207,11 @@ export default function Header() {
           cancelButtonText: t("cancel"),
           confirmButtonColor: "#3E8EF7", // พื้นขาว
           cancelButtonColor: "#d33",
+          // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+          focusConfirm: true,
+          didOpen: () => {
+            Swal.getConfirmButton()?.focus();
+          },
         });
 
         if (result.isConfirmed) {

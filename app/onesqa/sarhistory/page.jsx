@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { NetworkStatus } from "@apollo/client";
-import { useApolloClient, useQuery } from "@apollo/client/react";
+import { useApolloClient, useQuery, useMutation } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
 
 import dayjs from "dayjs";
@@ -28,8 +28,11 @@ import {
   CircularProgress,
   useMediaQuery,
   Stack,
+  Button,
 } from "@mui/material";
 
+import Swal from "sweetalert2";
+import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
@@ -43,6 +46,7 @@ import LocalizedDatePicker from "@/app/components/LocalizedDatePicker";
 // ✅ เปลี่ยนเป็น query ของ login history
 import { exportSarHistoryToExcel } from "@/util/exportToExcel";
 import { GET_SAR_HISTORY } from "@/graphql/sarhistory/queries";
+import { DELETE_SAR_HISTORYS } from "@/graphql/sarhistory/mutations";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -64,6 +68,7 @@ const SarHistoryPage = () => {
 
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)");
+  const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
 
   // 🔹 state (คงเดิม)
   const [search, setSearch] = useState("");
@@ -112,6 +117,8 @@ const SarHistoryPage = () => {
       where: whereVars,
     },
   });
+
+  const [deleteSarHistorys] = useMutation(DELETE_SAR_HISTORYS);
 
   // ✅ require role เหมือนเดิม
   const { allowed, loading, user } = useRequireRole({
@@ -172,6 +179,91 @@ const SarHistoryPage = () => {
       </Typography>
     );
   }
+
+  // ✅ ฟังก์ชันลบทั้งหมดพร้อม SweetAlert2
+  const handleDeleteAll = () => {
+    if (theme === "dark") {
+      Swal.fire({
+        title: tDelete("title1"),
+        text: tDelete("textsarhistory1"),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
+        cancelButtonColor: "#3E8EF7",
+        confirmButtonText: tDelete("confirm"),
+        cancelButtonText: tDelete("cancel"),
+        background: "#2F2F30", // สีพื้นหลังดำ
+        color: "#fff", // สีข้อความเป็นขาว
+        titleColor: "#fff", // สี title เป็นขาว
+        textColor: "#fff", // สี text เป็นขาว
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          setRows([]); // ✅ ลบข้อมูลทั้งหมด
+          setTotalCount(0);
+    
+          try {
+            // ✅ เรียก mutation ไป backend
+            const { data } = await deleteSarHistorys();
+            console.log("✅ Delete success:", data.deleteSarHistorys);
+          } catch (error) {
+            console.log(error);
+          }
+    
+          Swal.fire({
+            title: tDelete("title2"),
+            text: tDelete("textsarhistory2"),
+            icon: "success",
+            confirmButtonColor: "#3E8EF7",
+            background: "#2F2F30", // สีพื้นหลังดำ
+            color: "#fff", // สีข้อความเป็นขาว
+            titleColor: "#fff", // สี title เป็นขาว
+            textColor: "#fff", // สี text เป็นขาว
+          });
+        }
+      });
+    } else {
+      Swal.fire({
+        title: tDelete("title1"),
+        text: tDelete("textsarhistory1"),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33", // สีแดงสำหรับปุ่มยืนยัน
+        cancelButtonColor: "#3E8EF7",
+        confirmButtonText: tDelete("confirm"),
+        cancelButtonText: tDelete("cancel"),
+        // ✅ กด Enter = confirm (เพราะโฟกัสอยู่ที่ปุ่ม confirm)
+        focusConfirm: true,
+        didOpen: () => {
+          Swal.getConfirmButton()?.focus();
+        },
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          setRows([]); // ✅ ลบข้อมูลทั้งหมด
+          setTotalCount(0);
+              
+          try {
+            // ✅ เรียก mutation ไป backend
+            const { data } = await deleteSarHistorys();
+            console.log("✅ Delete success:", data.deleteSarHistorys);
+          } catch (error) {
+            console.log(error);
+          }
+    
+          Swal.fire({
+            title: tDelete("title2"),
+            text: tDelete("textsarhistory2"),
+            icon: "success",
+            confirmButtonColor: "#3E8EF7",
+          });
+        }
+      });
+    }
+  };
 
   const handleExportExcel = async () => {
     const { data } = await client.query({
@@ -313,6 +405,30 @@ const SarHistoryPage = () => {
           mb: 2,
         }}
       >
+        {/* Header */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            mb: 2,
+            gap: 1,
+          }}
+        >
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            sx={{ width: isTablet ? "100%" : "none", borderRadius: 2 }}
+            onClick={() => {
+              handleDeleteAll()
+              setPage(1)
+            }}
+          >
+            {t("button1")}
+          </Button>
+        </Box>
+        
         <Box
           sx={{
             width: "100%",
@@ -369,13 +485,50 @@ const SarHistoryPage = () => {
             </Table>
           </TableContainer>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <SmartPagination
-              page={page}
-              totalPages={Math.ceil(totalCount / rowsPerPage)}
-              disabled={historyLoading}
-              onChange={(newPage) => setPage(newPage)}
-            />
+          {/* Footer */}
+          {/* 🔹 Pagination */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 3,
+              flexWrap: "wrap",
+              alignItems: "center",
+              mt: 2,
+            }}
+          >
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              alignItems="center"
+              sx={{
+                ml: 1
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {tInit("count")}
+              </Typography>
+                        
+              <Typography variant="body2" fontWeight={700}>
+                {totalCount}
+              </Typography>
+            </Stack>
+
+            {/* ✅ มือถือให้ชิดขวา (flex-end) */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: { xs: "flex-end", sm: "flex-end" }, // ถ้าต้องการเฉพาะมือถือ: { xs: "flex-end", sm: "flex-start" }
+                width: { xs: "100%", sm: "auto" }, // ให้กินเต็มบรรทัดบนมือถือ จะได้ดันไปขวาได้
+              }}
+            >
+              <SmartPagination
+                page={page}
+                totalPages={Math.ceil(totalCount / rowsPerPage)}
+                disabled={historyLoading}
+                onChange={(newPage) => setPage(newPage)}
+              />
+            </Box>
           </Box>
         </Box>
       </Box>
