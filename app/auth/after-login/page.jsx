@@ -6,7 +6,6 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { setCookie, deleteCookie } from "cookies-next";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "next-themes";
 import { useTranslations } from 'next-intl';
@@ -49,50 +48,6 @@ export default function AfterLoginPage() {
   const [refreshToken] = useMutation(REFRESH_TOKEN);
 
   const [loadingScreen, setLoadingScreen] = useState(false);
-
-  // ✅ ถ้า Unauthorized → ลอง refresh token แล้ว refetch me
-  useEffect(() => {
-    if (!error?.message?.includes("Unauthorized")) return;
-
-    setLoadingScreen(true); // ✅ เปิด loading ทันที
-
-    refreshToken()
-      .then((res) => {
-        const payload = res?.data?.refreshToken;
-        if (payload?.user) {
-          accessTokenContext(payload?.token || null);
-          userContext(payload.user);
-          handleLanguageChange(payload.user?.locale || "th");
-          setTheme(mapTheme(payload.user?.color_mode) || "light");
-
-          if (payload.user?.alert === true) {
-            localStorage.setItem("alert", payload.user.alert);
-          } else {
-            localStorage.removeItem("alert");
-          }
-
-          if (payload?.token) {
-            setCookie("accessToken", payload.token, {
-              path: "/",
-              maxAge: 60 * 15,
-              sameSite: "lax",
-              // secure: process.env.NODE_ENV === "production",
-            });
-          }
-
-          return refetch();
-        }
-
-        // ถ้า refresh ได้แต่ไม่มี user ก็ให้ไป login
-        throw new Error("Refresh token failed");
-      })
-      .catch(() => {
-        deleteCookie("accessToken", { path: "/" });
-        localStorage.removeItem("user");
-        router.replace("/auth/login");
-        router.refresh();
-      });
-  }, [error, refreshToken, refetch, router, handleLanguageChange, setTheme]);
 
   // ✅ ได้ me แล้ว → เก็บ user + redirect ไป safeTarget
   useEffect(() => {
