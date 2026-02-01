@@ -25,6 +25,7 @@ export const GET_USERS = gql`
             model_name
             model_use_name
             model_type
+            message_type
           }
         }
         user_role {
@@ -66,6 +67,7 @@ export const GET_USER = gql`
           model_name
           model_use_name
           model_type
+          message_type
         }
       }
       user_role {

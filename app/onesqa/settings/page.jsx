@@ -163,6 +163,17 @@ const SettingPage = () => {
   });
 
   const {
+    data: aiTypeData,
+    loading: aiTypeLoading,
+    error: aiTypeError,
+  } = useQuery(GET_AIS, {
+    variables: {
+      message_type: "TEXT",
+    },
+    fetchPolicy: "network-only",
+  });
+
+  const {
     data: promptsData,
     loading: promptsLoading,
     error: promptsError,
@@ -334,7 +345,7 @@ const SettingPage = () => {
   if (loading) return null; // หรือใส่ Skeleton ก็ได้
   if (!allowed) return null; // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
-  if (aisLoading || promptsLoading)
+  if (aisLoading || promptsLoading || aiTypeLoading)
     return (
       <Box sx={{ textAlign: "center", mt: 5 }}>
         <CircularProgress />
@@ -344,7 +355,7 @@ const SettingPage = () => {
 
   console.log(groupsError);
 
-  if (aisError || promptsError || groupsError)
+  if (aisError || promptsError || groupsError || aiTypeError)
     return (
       <Typography color="error" sx={{ mt: 5 }}>
         ❌ {tInit("error")}
@@ -352,6 +363,7 @@ const SettingPage = () => {
     );
 
   const modelOptions = aisData?.ais?.map(ai => ai.model_use_name);
+  const modelTypeOptions = aiTypeData?.ais?.map(ai => ai.model_use_name);
   const totalItems =
     groupsData?.groups?.total ||
     groupsData?.groups?.totalItems ||
@@ -979,7 +991,7 @@ const SettingPage = () => {
             aiFilter={aiFilter}
             setAiFilter={setAiFilter}
             setPage={setPage}
-            modelOptions={modelOptions}
+            modelOptions={modelTypeOptions}
           />
           <Box
             sx={{
@@ -1061,7 +1073,7 @@ const SettingPage = () => {
                             status={group.status}
                             model={group.model_use_name}         // group default model
                             groupAis={group.groupAis || []}      // list ใหม่ (มี today/avg/token_count/token_all แล้ว)
-                            modelOptions={modelOptions}
+                            modelOptions={modelTypeOptions}
                             onGroupChange={(field, value) => handleGroupChange(group.id, field, value)}
                             onGroupAiChange={(index, field, value) =>
                               handleGroupAiChange(group.id, index, field, value)
@@ -1083,7 +1095,20 @@ const SettingPage = () => {
                             const remain = m.token_count ?? 0;
 
                             return (
-                              <Box sx={{ flex: 1 }} key={`${group.id}-${m.model_use_name}`}>
+                              <Box
+                                key={`${group.id}-${m.model_use_name}`}
+                                sx={(theme) => ({
+                                  // มือถือ = 1 ต่อแถว, จอ >= sm = 2 ต่อแถว
+                                  flex: {
+                                    xs: "1 1 100%",
+                                    sm: `0 0 calc((100% - ${theme.spacing(2)}) / 2)`,
+                                  },
+                                  maxWidth: {
+                                    xs: "100%",
+                                    sm: `calc((100% - ${theme.spacing(2)}) / 2)`,
+                                  },
+                                })}
+                              >
                                 <TokenUsageCard
                                   title={m.model_use_name}
                                   remain={remain}
@@ -1249,7 +1274,7 @@ const SettingPage = () => {
                                 }
                                 fullWidth
                               >
-                                {modelOptions.map((option, i) => (
+                                {modelTypeOptions.map((option, i) => (
                                   <MenuItem key={i} value={option}>
                                     {option}
                                   </MenuItem>

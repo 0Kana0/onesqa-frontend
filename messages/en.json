@@ -64,7 +64,7 @@
     "message1p1": "Token usage is at",
     "message1p2": "Please monitor usage closely to avoid service interruption",
     "card1": "Total Conversations",
-    "card2": "Tokens Used",
+    "card2": "Token Used",
     "card3": "System Users",
     "subtitle2": "Statistics",
     "title2": "Daily Token Usage Statistics",
@@ -115,7 +115,7 @@
     "tablecell2": "User",
     "tablecell3": "Group",
     "tablecell4": "Conversations",
-    "tablecell5": "Tokens",
+    "tablecell5": "Token",
     "title2": "Top Users",
     "subtitle2": "Users with highest usage this month",
     "conversations": "Conversations",
@@ -173,7 +173,7 @@
     "notfound": "No Login History Found"
   },
   "UserDetailPage": {
-    "label1": "Assign tokens to users",
+    "label1": "Assign token to users",
     "tablecell1": "Username",
     "tablecell2": "Name",
     "tablecell3": "Position",
@@ -181,12 +181,12 @@
     "tablecell4": "Phone",
     "tablecell5": "Status",
     "tablecell6": "Group",
-    "syncuser1": "Saving tokens...",
+    "syncuser1": "Saving token...",
     "syncuser2": "Success",
     "syncuser3": "Completed"
   },
   "SettingPage": {
-    "button1": "Set Tokens by Group",
+    "button1": "Set Token by Group",
     "aititle1": "AI Chatbot Configuration",
     "aisubtitle1": "Set guidelines for question formulation (Maximum 5 questions)",
     "title": "Title",
@@ -306,7 +306,7 @@
     "group": "Group"
   },
   "TokenUsageCardSetting": {
-    "settoken": "Set Tokens",
+    "settoken": "Set Token",
     "remaining": "Remaining",
     "used": "Already in use",
     "today": "Today",
@@ -315,17 +315,17 @@
   "UserGroupSettingCard": {
     "settoken": "Set Default Token Quota For Users",
     "default": "Set Default AI Model For Users",
-    "plustoken": "Add Tokens To All Users In This Group",
-    "minustoken": "Deduct Tokens From All Users In This Group"
+    "plustoken": "Add Token To All Users In This Group",
+    "minustoken": "Deduct Token From All Users In This Group"
   },
   "GroupTokenTable": {
     "tablecell1": "Group",
     "tablecell11": "AI Access",
-    "tablecell2": "Default Token",
-    "tablecell2sub": "Set Default Token Quota For Users",
-    "tablecell3sub": "Set Default AI Model For Users",
-    "tablecell4sub": "Add Tokens To All Users In This Group",
-    "tablecell5sub": "Deduct Tokens From All Users In This Group",
+    "tablecell2": "Default Model",
+    "tablecell2sub": "Set Default AI Model For Users",
+    "tablecell3sub": "Set Default Token Quota For Users",
+    "tablecell4sub": "Add Token To All Users In This Group",
+    "tablecell5sub": "Deduct Token From All Users In This Group",
     "tablecell6sub": "Total User Token Data"
   },
   "LogoutAlert": {

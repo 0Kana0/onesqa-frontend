@@ -64,16 +64,16 @@
     "message1p1": "การใช้งาน Token อยู่ที่",
     "message1p2": "กรุณาติดตามการใช้งานอย่างใกล้ชิด",
     "card1": "การสนทนาทั้งหมด",
-    "card2": "Tokens ที่ใช้",
+    "card2": "Token ที่ใช้",
     "card3": "ผู้ใช้งานระบบ",
     "subtitle2": "สถิติ",
-    "title2": "สถิติการใช้ Tokens รายวัน",
-    "title5": "สถิติการใช้ Tokens ตามช่วงเวลา",
+    "title2": "สถิติการใช้ Token รายวัน",
+    "title5": "สถิติการใช้ Token ตามช่วงเวลา",
     "title6": "สถิติการใช้งานระบบของผู้ใช้งานตามช่วงเวลา",
     "title3": "สถานะระบบ",
     "subtitle1": "ติดตามการใช้งานระบบ",
-    "title4": "การใช้งาน Tokens",
-    "subtitle3": "ติดตามการใช้งาน Tokens",
+    "title4": "การใช้งาน Token",
+    "subtitle3": "ติดตามการใช้งาน Token",
     "select1": "7วันย้อนหลัง",
     "select2": "30วันย้อนหลัง",
     "select3": "60วันย้อนหลัง",
@@ -115,11 +115,11 @@
     "tablecell2": "ผู้ใช้งาน",
     "tablecell3": "กลุ่ม",
     "tablecell4": "การสนทนา",
-    "tablecell5": "Tokens",
+    "tablecell5": "Token",
     "title2": "ผู้ใช้งานอันดับต้น",
     "subtitle2": "ผู้ใช้งานที่มีการใช้งานสูงสุดในเดือนนี้",
     "conversations": "การสนทนา",
-    "title3": "การใช้งาน Tokens",
+    "title3": "การใช้งาน Token",
     "select0": "เลือกช่วงเวลา",
     "select1": "วันนี้",
     "select2": "7วันย้อนหลัง",
@@ -173,7 +173,7 @@
     "notfound": "ไม่พบข้อมูลประวัติการใช้งาน"
   },
   "UserDetailPage": {
-    "label1": "กำหนด Tokens ให้ผู้ใช้งาน",
+    "label1": "กำหนด Token ให้ผู้ใช้งาน",
     "tablecell1": "ชื่อผู้ใช้",
     "tablecell2": "ชื่อ - นามสกุล",
     "tablecell3": "ตำแหน่ง",
@@ -186,7 +186,7 @@
     "syncuser3": "ดำเนินการเรียบร้อย"
   },
   "SettingPage": {
-    "button1": "กำหนด Tokens รายกลุ่ม",
+    "button1": "กำหนด Token รายกลุ่ม",
     "aititle1": "การตั้งค่า AI Chatbot",
     "aisubtitle1": "กำหนดแนวทางการตั้งคำถาม (สูงสุด 5 คำถาม)",
     "title": "หัวข้อ",
@@ -306,14 +306,14 @@
     "group": "กลุ่ม"
   },
   "TokenUsageCardSetting": {
-    "settoken": "กำหนด Tokens",
+    "settoken": "กำหนด Token",
     "remaining": "คงเหลือ",
     "used": "ใช้งานแล้ว",
     "today": "วันนี้",
     "average": "เฉลี่ยต่อวัน"
   },
   "UserGroupSettingCard": {
-    "settoken": "กำหนด Tokens ตั้งต้นให้ผู้ใช้งาน",
+    "settoken": "กำหนด Token ตั้งต้นให้ผู้ใช้งาน",
     "default": "กำหนด Model ตั้งต้นให้ผู้ใช้งาน",
     "plustoken": "เติม token ให้ผู้ใช้งานกลุ่มนี้ทุกคน",
     "minustoken": "ลด token ของผู้ใช้งานกลุ่มนี้ทุกคน"
@@ -321,9 +321,9 @@
   "GroupTokenTable": {
     "tablecell1": "ชื่อกลุ่ม",
     "tablecell11": "การอนุญาติใช้งาน",
-    "tablecell2": "Tokens ตั้งต้น",
-    "tablecell2sub": "กำหนด Tokens ตั้งต้นให้ผู้ใช้งาน",
-    "tablecell3sub": "กำหนด Model ตั้งต้นให้ผู้ใช้งาน",
+    "tablecell2": "Model ตั้งต้น",
+    "tablecell2sub": "กำหนด Model ตั้งต้นให้ผู้ใช้งาน",
+    "tablecell3sub": "กำหนด Token ตั้งต้นให้ผู้ใช้งาน",
     "tablecell4sub": "เติม token ให้ผู้ใช้งานกลุ่มนี้ทุกคน",
     "tablecell5sub": "ลด token ของผู้ใช้งานกลุ่มนี้ทุกคน",
     "tablecell6sub": "ข้อมูล token รวมของผู้ใช้งาน"

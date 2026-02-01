@@ -319,7 +319,9 @@ const DashboardPage = () => {
   //console.log(aisData?.ais);
   //console.log(chartData?.chartReports);
 
-  const aiGraph = aisData?.ais?.map(ai => ({
+  const aiGraph = (aisData?.ais ?? [])
+  .filter((ai) => String(ai?.message_type).toUpperCase() === "TEXT")
+  .map((ai) => ({
     model_use_name: ai.model_use_name,
     model_type: ai.model_type,
   }));
@@ -432,6 +434,11 @@ const DashboardPage = () => {
   const handleDetail = () => {
     console.log("🟠 เปิดรายละเอียดการใช้งาน Token");
   };
+
+  console.log("chartData?.chartReports", chartData?.chartReports);
+  console.log("output", output);
+  console.log("periodChartData?.periodChartReports", periodChartData?.periodChartReports);
+  console.log("aiGraph", aiGraph);
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>

@@ -276,13 +276,14 @@ export default function UserDetailPage() {
         <Box
           sx={{
             position: "relative",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gridTemplateAreas: isMobile
+              ? `"left" "right" "bottom"`
+              : `"left right" "bottom bottom"`,
             gap: 3,
-            flexWrap: "wrap",
             p: isMobile ? 0 : 3,
-            overflow: "hidden", // ✅ กันไม่ให้เกินขอบ
+            overflow: "hidden",
             "&::before": {
               content: '""',
               position: "absolute",
@@ -290,21 +291,21 @@ export default function UserDetailPage() {
               top: 0,
               left: 0,
               width: "100%",
-              height: "33%", // ✅ แสดงแค่ 1/3 ของพื้นที่
-              bgcolor: isMobile ? "none" : "primary.main",
+              height: "33%",
+              bgcolor: isMobile ? "transparent" : "primary.main", // ✅ แนะนำใช้ transparent แทน none
               zIndex: 0,
             },
           }}
         >
-          {/* 🔹 กล่องซ้าย */}
-          <Box sx={{ flex: 1, position: "relative", zIndex: 1 }}>
+          {/* 🔹 Box 1: ซ้าย */}
+          <Box sx={{ gridArea: "left", position: "relative", zIndex: 1 }}>
             <UserInfoCard user={userCardTable[0]} />
           </Box>
 
-          {/* 🔹 กล่องขวา */}
+          {/* 🔹 Box 2: ขวา */}
           <Box
             sx={{
-              flex: 1,
+              gridArea: "right",
               minWidth: 250,
               display: "flex",
               flexDirection: "column",
@@ -320,19 +321,18 @@ export default function UserDetailPage() {
             {userCardTable[0]?.aiModels?.map((ai, index) => (
               <TokenLimitCard
                 key={index}
-                title={
-                  ai.model_use
-                }
+                title={ai.model_use}
                 label={t("label1")}
                 value={ai.token}
-                onChange={(newValue) => handleTokenChange(0, index, newValue)} // ✅ ใช้ฟังก์ชันแยก
+                onChange={(newValue) => handleTokenChange(0, index, newValue)}
               />
             ))}
           </Box>
 
+          {/* 🔹 Box 3: ล่าง (เต็มแถว) */}
           <Box
             sx={{
-              flex: 1,
+              gridArea: "bottom",
               minWidth: 250,
               display: "flex",
               flexDirection: "column",
@@ -348,9 +348,7 @@ export default function UserDetailPage() {
             {userCardTable[0]?.aiModels?.map((ai, index) => (
               <TokenUsageCard
                 key={index}
-                title={
-                  ai.model_use
-                }
+                title={ai.model_use}
                 remain={ai.remain}
                 total={ai.token_all}
                 today={ai.today}

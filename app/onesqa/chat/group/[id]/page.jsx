@@ -355,6 +355,10 @@ const ChatgroupPage = () => {
       </Typography>
     );
 
+  const textUserAis = (userData?.user?.user_ai ?? []).filter(
+    (ua) => String(ua?.ai?.message_type).toUpperCase() === "TEXT"
+  );
+
   const handleOpenMenu = (e, item) => {
     e.preventDefault();
     e.stopPropagation(); // กันไม่ให้ Link ทำงาน
@@ -751,9 +755,7 @@ const ChatgroupPage = () => {
       >
         <Select
           value={model}
-          onChange={(e) => {
-            setModel(e.target.value);
-          }}
+          onChange={(e) => setModel(e.target.value)}
           size="small"
           displayEmpty
           renderValue={(selected) => {
@@ -765,26 +767,17 @@ const ChatgroupPage = () => {
               );
             }
 
-            const ua = (userData?.user?.user_ai ?? []).find(
+            const ua = textUserAis.find(
               (x) => String(x.ai_id ?? x.id) === String(selected)
             );
 
             return (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  minWidth: 0,
-                }}
-              >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
                 <Avatar
                   src={getAiLogo(ua?.ai)}
                   alt={ua?.ai?.model_type ?? "AI"}
                   sx={{ width: 20, height: 20 }}
-                  imgProps={{
-                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
-                  }}
+                  imgProps={{ onError: (e) => (e.currentTarget.src = AI_LOGOS.default) }}
                 />
                 <Typography noWrap sx={{ minWidth: 0 }}>
                   {ua?.ai?.model_use_name ?? "AI"}
@@ -800,16 +793,15 @@ const ChatgroupPage = () => {
           }}
         >
           <MenuItem value="0">{tChatSidebar("menuitem")}</MenuItem>
-          {(userData?.user?.user_ai ?? []).map((ua) => (
+
+          {textUserAis.map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Avatar
                   src={getAiLogo(ua.ai)}
                   alt={ua.ai?.model_type ?? "AI"}
                   sx={{ width: 20, height: 20 }}
-                  imgProps={{
-                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
-                  }}
+                  imgProps={{ onError: (e) => (e.currentTarget.src = AI_LOGOS.default) }}
                 />
                 <Typography noWrap>{ua.ai?.model_use_name}</Typography>
               </Box>

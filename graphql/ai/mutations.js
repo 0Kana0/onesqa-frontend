@@ -14,6 +14,7 @@ export const UPDATE_AI = gql`
       model_name
       model_use_name
       model_type
+      message_type
       token_count
       token_all
     }

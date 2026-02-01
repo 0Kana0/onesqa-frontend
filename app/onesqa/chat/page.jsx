@@ -173,6 +173,10 @@ const ChatPage = () => {
   console.log(initAttachments);
   console.log("groupData", groupData.groupByName);
 
+  const textUserAis = (userData?.user?.user_ai ?? []).filter(
+    (ua) => String(ua?.ai?.message_type).toUpperCase() === "TEXT"
+  );
+
   const onClear = () => setInitAttachments([]);
   const handleSubmitFile = async () => {
     if (!initAttachments.length) return;
@@ -385,22 +389,24 @@ const ChatPage = () => {
           displayEmpty
           renderValue={(selected) => {
             if (selected === "0") {
-              return <Typography sx={{ opacity: 0.7 }}>{tChatSidebar("menuitem")}</Typography>;
+              return (
+                <Typography sx={{ opacity: 0.7 }}>
+                  {tChatSidebar("menuitem")}
+                </Typography>
+              );
             }
 
-            const ua = (userData?.user?.user_ai ?? []).find(
+            const ua = textUserAis.find(
               (x) => String(x.ai_id ?? x.id) === String(selected)
             );
-
+            
             return (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
                 <Avatar
                   src={getAiLogo(ua?.ai)}
                   alt={ua?.ai?.model_type ?? "AI"}
                   sx={{ width: 20, height: 20 }}
-                  imgProps={{
-                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
-                  }}
+                  imgProps={{ onError: (e) => (e.currentTarget.src = AI_LOGOS.default) }}
                 />
                 <Typography noWrap sx={{ minWidth: 0 }}>
                   {ua?.ai?.model_use_name ?? "AI"}
@@ -417,16 +423,14 @@ const ChatPage = () => {
         >
           <MenuItem value="0">{tChatSidebar("menuitem")}</MenuItem>
 
-          {(userData?.user?.user_ai ?? []).map((ua) => (
+          {textUserAis.map((ua) => (
             <MenuItem key={ua.id} value={ua.ai_id ?? ua.id}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Avatar
                   src={getAiLogo(ua.ai)}
                   alt={ua.ai?.model_type ?? "AI"}
                   sx={{ width: 20, height: 20 }}
-                  imgProps={{
-                    onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
-                  }}
+                  imgProps={{ onError: (e) => (e.currentTarget.src = AI_LOGOS.default) }}
                 />
                 <Typography noWrap>{ua.ai?.model_use_name}</Typography>
               </Box>

@@ -595,6 +595,7 @@ const MessagePage = () => {
     // 🔹 เคลียร์ช่องกรอก + ไฟล์ ตอน "เริ่มส่ง" เลย
     setText(""); // ล้างหลังส่ง
     setAttachments([]);
+    setActive(null);
     setInitMessageType('TEXT');
 
     if (initMessageType === "IMAGE") {
