@@ -235,7 +235,7 @@ export default function ProjectSidebar() {
             });
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
-              router.push("/onesqa/chat");
+              router.replace("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }
@@ -284,7 +284,7 @@ export default function ProjectSidebar() {
             });
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
-              router.push("/onesqa/chat");
+              router.replace("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }

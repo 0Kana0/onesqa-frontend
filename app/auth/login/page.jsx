@@ -31,6 +31,7 @@ import { SIGNIN, SIGNIN_WITH_ID, VERIFY_SIGNIN_WITH_ID } from "@/graphql/auth/mu
 import { useRedirectIfAuthed } from "../../components/ui/useAuthGuard"
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 import { showSuccessAlert } from "@/util/loadingModal";
+import { getStoredUser } from "@/util/authStorage";
 
 export default function LoginPage() {
   useRedirectIfAuthed()
@@ -51,10 +52,10 @@ export default function LoginPage() {
 
   const [role, setRole] = useState("staff"); // staff | external
   //const [form, setForm] = useState({ username: "Admin01", password: "admin1234@" });
-  //const [form, setForm] = useState({ username: "Minerta", password: "096-896-5242" });
-  const [form, setForm] = useState({ username: "", password: "" });
-  //const [citizenId, setCitizenId] = useState("6-3758-67232-20-1");
-  const [citizenId, setCitizenId] = useState("");
+  const [form, setForm] = useState({ username: "Minerta", password: "096-896-5242" });
+  //const [form, setForm] = useState({ username: "", password: "" });
+  const [citizenId, setCitizenId] = useState("6-3758-67232-20-1");
+  //const [citizenId, setCitizenId] = useState("");
   const [channel, setChannel] = useState("sms"); // sms | email
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState("");
@@ -129,6 +130,12 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (role === "staff") {
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        window.location.replace("/onesqa/dashboard")
+        return;
+      }
+
       console.log("Login data:", { role, form, citizenId, channel });
 
       try {
@@ -164,10 +171,10 @@ export default function LoginPage() {
           loginResult?.data?.signin?.user?.role_name_th === "ผู้ดูแลระบบ" || 
           loginResult?.data?.signin?.user?.role_name_th === "superadmin"
         ) {
-          router.push("/onesqa/dashboard");
+          router.replace("/onesqa/dashboard");
           router.refresh();
         } else {
-          router.push("/onesqa/chat");
+          router.replace("/onesqa/chat");
           router.refresh();
         }
       } catch (error) {
@@ -202,6 +209,12 @@ export default function LoginPage() {
       }
 
     } else if (role === "external") {
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        window.location.replace("/onesqa/dashboard")
+        return;
+      }
+
       console.log("Login data:", { role, form, citizenId, channel });
 
       // ✅ เก็บเฉพาะตัวเลข
@@ -266,6 +279,12 @@ export default function LoginPage() {
 
   const handleResendOtp = async (e) => {
     e.preventDefault();
+
+    const storedUser = getStoredUser();
+    if (storedUser) {
+      window.location.replace("/onesqa/dashboard")
+      return;
+    }
 
     // ✅ เก็บเฉพาะตัวเลข
     const onlyDigits = citizenId.replace(/\D/g, "");
@@ -332,6 +351,12 @@ export default function LoginPage() {
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
+
+    const storedUser = getStoredUser();
+    if (storedUser) {
+      window.location.replace("/onesqa/dashboard")
+      return;
+    }
     
     // ✅ เก็บเฉพาะตัวเลข
     const onlyDigits = citizenId.replace(/\D/g, "");
@@ -372,10 +397,10 @@ export default function LoginPage() {
         loginResult?.data?.verifySigninWithIdennumber?.user?.role_name_th === "ผู้ดูแลระบบ" || 
         loginResult?.data?.verifySigninWithIdennumber?.user?.role_name_th === "superadmin"
       ) {
-        router.push("/onesqa/dashboard");
+        router.replace("/onesqa/dashboard");
         router.refresh();
       } else {
-        router.push("/onesqa/chat");
+        router.replace("/onesqa/chat");
         router.refresh();
       }
     } catch (error) {

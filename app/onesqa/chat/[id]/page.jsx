@@ -36,6 +36,7 @@ import { GET_PROMPTS } from "@/graphql/prompt/queries";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 import { useLanguage } from "@/app/context/LanguageContext";
 import AcademySearchModal from "@/app/components/chat/AcademyButtonModal";
+import { DELETE_CHAT } from "@/graphql/chat/mutations";
 
 const MessagePage = () => {
   const client = useApolloClient();
@@ -129,6 +130,8 @@ const MessagePage = () => {
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true, // ✅ ให้ re-render ตอนกำลัง refetch
   });
+
+  const [deleteChat] = useMutation(DELETE_CHAT);
 
   const [createMessage, { loading: creatingText }] = useMutation(CREATE_MESSAGE);
   const [createMessageImage, { loading: creatingImage }] = useMutation(CREATE_MESSAGE_IMAGE);
@@ -235,6 +238,15 @@ const MessagePage = () => {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
         });
+
+        // ✅ เรียก mutation ไป backend
+        const { data } = await deleteChat({
+          variables: {
+            id: id,
+          },
+        });
+        console.log("✅ Delete success:", data.deleteChat);
+        router.replace("/onesqa/chat");
       }
     } else if (initMessageType === "VIDEO") {
       try {
@@ -261,6 +273,15 @@ const MessagePage = () => {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
         });
+
+        // ✅ เรียก mutation ไป backend
+        const { data } = await deleteChat({
+          variables: {
+            id: id,
+          },
+        });
+        console.log("✅ Delete success:", data.deleteChat);
+        router.replace("/onesqa/chat");
       }
     } else if (initMessageType === "DOC") {
       try {
@@ -287,6 +308,15 @@ const MessagePage = () => {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
         });
+
+        // ✅ เรียก mutation ไป backend
+        const { data } = await deleteChat({
+          variables: {
+            id: id,
+          },
+        });
+        console.log("✅ Delete success:", data.deleteChat);
+        router.replace("/onesqa/chat");
       }
     } else {
       try {
@@ -313,6 +343,15 @@ const MessagePage = () => {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
         });
+
+        // ✅ เรียก mutation ไป backend
+        const { data } = await deleteChat({
+          variables: {
+            id: id,
+          },
+        });
+        console.log("✅ Delete success:", data.deleteChat);
+        router.replace("/onesqa/chat");
       }
     }
   };

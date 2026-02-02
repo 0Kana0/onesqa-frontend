@@ -291,7 +291,7 @@ export default function ChatSidebar() {
             refetch();
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/${id}`)
-              router.push("/onesqa/chat");
+              router.replace("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }
@@ -336,7 +336,7 @@ export default function ChatSidebar() {
             refetch();
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/${id}`)
-              router.push("/onesqa/chat");
+              router.replace("/onesqa/chat");
           } catch (error) {
             console.log(error);
           }
