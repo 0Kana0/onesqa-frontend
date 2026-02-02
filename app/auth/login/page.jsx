@@ -52,10 +52,10 @@ export default function LoginPage() {
 
   const [role, setRole] = useState("staff"); // staff | external
   //const [form, setForm] = useState({ username: "Admin01", password: "admin1234@" });
-  const [form, setForm] = useState({ username: "Minerta", password: "096-896-5242" });
-  //const [form, setForm] = useState({ username: "", password: "" });
-  const [citizenId, setCitizenId] = useState("6-3758-67232-20-1");
-  //const [citizenId, setCitizenId] = useState("");
+  //const [form, setForm] = useState({ username: "Minerta", password: "096-896-5242" });
+  const [form, setForm] = useState({ username: "", password: "" });
+  //const [citizenId, setCitizenId] = useState("6-3758-67232-20-1");
+  const [citizenId, setCitizenId] = useState("");
   const [channel, setChannel] = useState("sms"); // sms | email
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState("");
