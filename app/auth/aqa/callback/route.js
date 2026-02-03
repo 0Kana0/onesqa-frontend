@@ -46,6 +46,7 @@ export async function POST(request) {
         variables: { username, aqa_code },
       }),
       cache: "no-store",
+      credentials: 'include'
     });
 
     const gqlJson = await gqlRes.json();
