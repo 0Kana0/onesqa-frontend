@@ -49,6 +49,7 @@ import GroupFilterBar from "@/app/components/GroupFilterBar";
 import SmartPagination from "@/app/components/SmartPagination";
 import { closeLoading, showLoading, showSuccessAlert } from "@/util/loadingModal";
 import { useLanguage } from "@/app/context/LanguageContext";
+import TokenSummaryModalButton from "@/app/components/TokenSummaryModalButton";
 
 const normalize = (v) => (v === 'โมเดลทั้งหมด' || v === '' || v == null ? null : v);
 const normalizeText = (v) => {
@@ -68,6 +69,7 @@ const SettingPage = () => {
   const tInit = useTranslations("Init");
   const tDelete = useTranslations("DeleteAlert"); // สำหรับข้อความลบ
   const tsettingerror = useTranslations('SettingError');
+  const tError = useTranslations('ErrorAlert');
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -649,6 +651,7 @@ const SettingPage = () => {
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tsettingerror('error1'),
+          t: tError
         });
       }
 
@@ -679,6 +682,7 @@ const SettingPage = () => {
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tsettingerror('error1'),
+          t: tError
         });
       }
 
@@ -724,6 +728,7 @@ const SettingPage = () => {
         closeLoading();
         showErrorAlert(error, theme, {
           title: tsettingerror('error2'),
+          t: tError
         });
       }
     } else if (selected === "Tokens") {
@@ -799,6 +804,7 @@ const SettingPage = () => {
         closeLoading();
         showErrorAlert(error, theme, {
           title: tsettingerror('error3'),
+          t: tError
         });
 
         setGroups((prev) =>
@@ -993,6 +999,7 @@ const SettingPage = () => {
             setPage={setPage}
             modelOptions={modelTypeOptions}
           />
+          <TokenSummaryModalButton />
           <Box
             sx={{
               border: "1px solid #E5E7EB",

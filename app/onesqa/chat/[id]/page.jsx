@@ -61,6 +61,8 @@ const MessagePage = () => {
   const tInit = useTranslations("Init");
   const tChatSidebar = useTranslations("ChatSidebar");
   const tchaterror = useTranslations('ChatError');
+  const tError = useTranslations('ErrorAlert');
+  const tAcademyError = useTranslations('AcademyError');
 
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)");
@@ -237,6 +239,7 @@ const MessagePage = () => {
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
 
         // ✅ เรียก mutation ไป backend
@@ -272,6 +275,7 @@ const MessagePage = () => {
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
 
         // ✅ เรียก mutation ไป backend
@@ -307,6 +311,7 @@ const MessagePage = () => {
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
 
         // ✅ เรียก mutation ไป backend
@@ -342,6 +347,7 @@ const MessagePage = () => {
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
 
         // ✅ เรียก mutation ไป backend
@@ -426,6 +432,7 @@ const MessagePage = () => {
     } catch (error) {
       showErrorAlert(error, theme, {
         title: tchaterror('error1'),
+        t: tError
       });
     }
   };
@@ -495,6 +502,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -528,6 +536,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -561,6 +570,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -594,6 +604,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -666,6 +677,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -699,6 +711,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -732,6 +745,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -765,6 +779,7 @@ const MessagePage = () => {
 
         showErrorAlert(error, theme, {
           title: tchaterror('error1'),
+          t: tError
         });
       } finally {
         setSending(false);
@@ -842,6 +857,7 @@ const MessagePage = () => {
 
       showErrorAlert(error, theme, {
         title: tchaterror('error1'),
+        t: tError
       });
     } finally {
       setSending(false);
@@ -1024,7 +1040,10 @@ const MessagePage = () => {
                 setAttachments((prev = []) => mergeDedup(prev, files));
                 setOpen(false);
               } catch (err) {
-                showErrorAlert(err, theme, { title: "ไม่สามารถนำเข้าไฟล์ได้" });
+                showErrorAlert(err, theme, { 
+                  title: tAcademyError("error2"),
+                  t: tError
+                });
               }
             }}
           />

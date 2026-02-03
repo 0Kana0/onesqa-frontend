@@ -77,6 +77,8 @@ const ChatPage = () => {
   const tInit = useTranslations("Init");
   const tChatSidebar = useTranslations("ChatSidebar");
   const tchaterror = useTranslations('ChatError');
+  const tError = useTranslations('ErrorAlert');
+  const tAcademyError = useTranslations('AcademyError');
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -195,6 +197,7 @@ const ChatPage = () => {
     } catch (error) {
       showErrorAlert(error, theme, {
         title: tchaterror('error1'),
+        t: tError
       });
     }
   };
@@ -232,6 +235,7 @@ const ChatPage = () => {
     } catch (error) {
       showErrorAlert(error, theme, {
         title: tchaterror('error1'),
+        t: tError
       });
     }
   };
@@ -473,7 +477,10 @@ const ChatPage = () => {
                   // ปิด modal หลังเลือกเสร็จ (ถ้าต้องการ)
                   setOpen(false);
                 } catch (err) {
-                  showErrorAlert(err, theme, { title: "ไม่สามารถนำเข้าไฟล์ได้" });
+                  showErrorAlert(err, theme, { 
+                    title: tAcademyError("error2"),
+                    t: tError
+                  });
                 }
               }}
             />

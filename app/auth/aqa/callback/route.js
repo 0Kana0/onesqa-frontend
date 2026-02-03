@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
+  console.log("HIT /auth/aqa/callback");  // ✅ ถ้าไม่ขึ้น log = ไม่ถึง handler
   try {
     const form = await request.formData();
     const username = String(form.get("username") || "");

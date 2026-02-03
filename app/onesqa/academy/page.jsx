@@ -61,6 +61,7 @@ const AcademyPage = () => {
   const tInit = useTranslations("Init");
   const tacademyerror = useTranslations("AcademyError");
   const tDelete = useTranslations("DeleteAlert");
+  const tError = useTranslations('ErrorAlert');
 
   const isMobile = useMediaQuery("(max-width:600px)");
   const isTablet = useMediaQuery("(max-width:1200px)");
@@ -152,6 +153,7 @@ const AcademyPage = () => {
       closeLoading();
       showErrorAlert(error, theme, {
         title: tacademyerror("error1"),
+        t: tError
       });
     }
   };

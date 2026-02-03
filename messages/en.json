@@ -429,7 +429,8 @@
     "error2": "Unable to configure the user's token allocation"
   },
   "AcademyError": {
-    "error1": "Unable to synchronize academy data"
+    "error1": "Unable to synchronize academy data",
+    "error2": "Unable to upload the file"
   },
   "ChatInputError": {
     "title1": "File upload limit exceeded",
@@ -464,5 +465,19 @@
     "image": "Image",
     "video": "Video",
     "doc": "Document"
+  },
+  "TokenSummaryModalButton": {
+    "button": "Token Allocation Summary",
+    "title": "Token Allocation Summary for All Models",
+    "diff": "Available Token Balance",
+    "used": "Tokens Already Allocated",
+    "loading": "Loading data...",
+    "error": "Failed to load data",
+    "notfound": "No data found"
+  },
+  "ErrorAlert": {
+    "fallbackMessage": "An error has occurred. The request cannot be processed.",
+    "title": "An Error Has Occurred",
+    "confirm": "OK"
   }
 }

@@ -62,6 +62,7 @@ export default function UserPage() {
   const t = useTranslations("UserPage");
   const tInit = useTranslations("Init");
   const tusererror = useTranslations('UserError');
+  const tError = useTranslations('ErrorAlert');
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
@@ -446,7 +447,8 @@ export default function UserPage() {
     } catch (error) {
       closeLoading();
       showErrorAlert(error, theme, { 
-        title: tusererror('error1'), 
+        title: tusererror('error1'),
+        t: tError
       });
     }
   };

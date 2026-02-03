@@ -41,6 +41,7 @@ export default function LoginPage() {
   const { accessTokenContext, userContext } = useAuth();
   const t = useTranslations('LoginPage');
   const tloginerror = useTranslations('LoginError');
+  const tError = useTranslations('ErrorAlert');
 
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
 
@@ -205,6 +206,7 @@ export default function LoginPage() {
 
         showErrorAlert(error, theme, {
           title: tloginerror('error1'),
+          t: tError
         });
       }
 
@@ -272,6 +274,7 @@ export default function LoginPage() {
 
         showErrorAlert(error, theme, {
           title: tloginerror('error2'),
+          t: tError
         });
       }
     }
@@ -345,6 +348,7 @@ export default function LoginPage() {
       
       showErrorAlert(error, theme, {
         title: tloginerror('error2'),
+        t: tError
       });
     }
   };
@@ -432,6 +436,7 @@ export default function LoginPage() {
 
       showErrorAlert(error, theme, {
         title: tloginerror('error1'),
+        t: tError
       });
     }
   };

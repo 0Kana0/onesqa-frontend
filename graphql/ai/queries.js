@@ -20,3 +20,20 @@ export const GET_AIS = gql`
     }
   }
 `;
+
+export const GET_SUM_TOKEN_BY_MODEL = gql`
+  query sumTokenCountByModel {
+    sumTokenCountByModel {
+      ai_id
+      model_name
+      model_use_name
+      model_type
+      message_type
+      ai_token_count
+      total_token_count
+      total_token_all
+      user_count
+      diff_token_count
+    }
+  }
+`;

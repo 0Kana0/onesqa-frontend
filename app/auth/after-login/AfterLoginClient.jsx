@@ -37,6 +37,7 @@ export default function AfterLoginPage() {
 
   const t = useTranslations('LoginPage');
   const tloginerror = useTranslations('LoginError');
+  const tError = useTranslations('ErrorAlert');
   
   const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
 

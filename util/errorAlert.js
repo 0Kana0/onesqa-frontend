@@ -2,7 +2,7 @@
 import Swal from "sweetalert2";
 
 // ดึงข้อความ error จาก Apollo / GraphQL / ทั่วไป
-export function extractErrorMessage(error, fallbackMessage = "เกิดข้อผิดพลาด ไม่สามารถทำรายการได้") {
+export function extractErrorMessage(error, fallbackMessage) {
   if (!error) return fallbackMessage;
 
   const err = error;
@@ -40,30 +40,34 @@ export function extractErrorMessage(error, fallbackMessage = "เกิดข้
 }
 
 // แสดง SweetAlert2 สำหรับ error (ใช้ซ้ำได้ทุกหน้า)
+// ✅ รองรับ i18n โดยส่ง `t` (จาก useTranslations("ErrorAlert")) เข้ามาใน options
 export function showErrorAlert(error, theme = "light", options = {}) {
-  const message = extractErrorMessage(
-    error,
-    options.fallbackMessage || "เกิดข้อผิดพลาด ไม่สามารถทำรายการได้"
-  );
-  // console.log("message", message);
+  const t = options.t; // function จาก next-intl (เช่น useTranslations("ErrorAlert"))
+
+  const fallbackMessage =
+    options.fallbackMessage ?? (t ? t("fallbackMessage") : "An error has occurred.");
+
+  const title = options.title ?? (t ? t("title") : "An Error Has Occurred");
+
+  const confirmButtonText =
+    options.confirmButtonText ?? (t ? t("confirm") : "OK");
+
+  const message = extractErrorMessage(error, fallbackMessage);
+
+  const commonConfig = {
+    icon: options.icon || "error",
+    title,
+    text: message,
+    confirmButtonText,
+  };
 
   if (theme === "dark") {
     return Swal.fire({
-      icon: options.icon || "error",
-      title: options.title || "เกิดข้อผิดพลาด",
-      text: message,
-      confirmButtonText: "ตกลง",
-      background: "#2F2F30", // สีพื้นหลังดำ
-      color: "#fff", // สีข้อความเป็นขาว
-      titleColor: "#fff", // สี title เป็นขาว
-      textColor: "#fff", // สี text เป็นขาว
-    });
-  } else {
-    return Swal.fire({
-      icon: options.icon || "error",
-      title: options.title || "เกิดข้อผิดพลาด",
-      text: message,
-      confirmButtonText: "ตกลง",
+      ...commonConfig,
+      background: "#2F2F30",
+      color: "#fff",
     });
   }
+
+  return Swal.fire(commonConfig);
 }

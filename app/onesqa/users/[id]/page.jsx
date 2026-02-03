@@ -35,6 +35,7 @@ import { useRequireRole } from "@/hook/useRequireRole";
 import { extractErrorMessage, showErrorAlert } from "@/util/errorAlert"; // ปรับ path ให้ตรงโปรเจกต์จริง
 import { closeLoading, showLoading, showSuccessAlert } from "@/util/loadingModal";
 import { useLanguage } from "@/app/context/LanguageContext";
+import TokenSummaryModalButton from "@/app/components/TokenSummaryModalButton";
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -45,6 +46,7 @@ export default function UserDetailPage() {
   const t = useTranslations("UserDetailPage");
   const tInit = useTranslations("Init");
   const tusererror = useTranslations('UserError');
+  const tError = useTranslations('ErrorAlert');
   
   const { open, toggle } = useSidebar(); // ✅ ดึงจาก Context
 
@@ -259,7 +261,8 @@ export default function UserDetailPage() {
     } catch (error) {
       closeLoading();
       showErrorAlert(error, theme, {
-        title: tusererror('error2')
+        title: tusererror('error2'),
+        t: tError
       });
     }
   };
@@ -272,6 +275,7 @@ export default function UserDetailPage() {
         viewMode={viewMode}
         onViewChange={handleViewChange}
       />
+      <TokenSummaryModalButton />
       {viewMode === "card" ? (
         <Box
           sx={{
