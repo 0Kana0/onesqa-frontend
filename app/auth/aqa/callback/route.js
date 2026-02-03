@@ -11,7 +11,8 @@ export async function POST(request) {
       return NextResponse.redirect(new URL("/auth/login", request.url), 303);
     }
 
-    const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT;
+    const endpoint = process.env.GRAPHQL_ENDPOINT_INTERNAL;
+    console.log("GRAPHQL endpoint =", endpoint);
     if (!endpoint) return NextResponse.redirect(new URL("/auth/login", request.url), 303);
 
     const gqlRes = await fetch(endpoint, {
