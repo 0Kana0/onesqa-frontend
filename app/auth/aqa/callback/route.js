@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 
+function getOrigin(request) {
+  const xfHost = request.headers.get("x-forwarded-host");
+  const host = xfHost || request.headers.get("host") || "chatbot.onesqa.or.th";
+  const proto = request.headers.get("x-forwarded-proto") || "https";
+
+  return `${proto}://${host}`;
+}
+
 export async function POST(request) {
   console.log("HIT /auth/aqa/callback");  // ✅ ถ้าไม่ขึ้น log = ไม่ถึง handler
   console.log("request", request);
@@ -73,9 +81,11 @@ export async function POST(request) {
         : (gqlRes.headers.get("set-cookie") ? [gqlRes.headers.get("set-cookie")] : []);
 
     console.log("setCookies", setCookies);
-    
+
+    const origin = getOrigin(request);
+
     // ไปหน้า bridge ก่อน
-    const bridgeUrl = new URL("/auth/after-login", request.url);
+    const bridgeUrl = new URL("/auth/after-login", origin);
     bridgeUrl.searchParams.set("target", target);
 
     const res = NextResponse.redirect(bridgeUrl, 303);
