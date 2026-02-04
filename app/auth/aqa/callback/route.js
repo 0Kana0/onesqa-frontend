@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   console.log("HIT /auth/aqa/callback");  // ✅ ถ้าไม่ขึ้น log = ไม่ถึง handler
+  console.log("request", request);
+
   try {
     const form = await request.formData();
     const username = String(form.get("username") || "");
@@ -77,6 +79,8 @@ export async function POST(request) {
     bridgeUrl.searchParams.set("target", target);
 
     const res = NextResponse.redirect(bridgeUrl, 303);
+
+    console.log("res", res);
 
     // ส่ง Set-Cookie ให้ browser
     for (const c of setCookies) {

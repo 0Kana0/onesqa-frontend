@@ -22,6 +22,8 @@ export const GET_GROUPS = gql`
           }
         }
 
+        user_count
+
         # ✅ เพิ่มตรงนี้: today/average แยกตาม Model
         models {
           ai_id

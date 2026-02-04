@@ -316,7 +316,8 @@
     "settoken": "กำหนด Token ตั้งต้นให้ผู้ใช้งาน",
     "default": "กำหนด Model ตั้งต้นให้ผู้ใช้งาน",
     "plustoken": "เติม token ให้ผู้ใช้งานกลุ่มนี้ทุกคน",
-    "minustoken": "ลด token ของผู้ใช้งานกลุ่มนี้ทุกคน"
+    "minustoken": "ลด token ของผู้ใช้งานกลุ่มนี้ทุกคน",
+    "unit": "คน"
   },
   "GroupTokenTable": {
     "tablecell1": "ชื่อกลุ่ม",
@@ -326,7 +327,8 @@
     "tablecell3sub": "กำหนด Token ตั้งต้นให้ผู้ใช้งาน",
     "tablecell4sub": "เติม token ให้ผู้ใช้งานกลุ่มนี้ทุกคน",
     "tablecell5sub": "ลด token ของผู้ใช้งานกลุ่มนี้ทุกคน",
-    "tablecell6sub": "ข้อมูล token รวมของผู้ใช้งาน"
+    "tablecell6sub": "ข้อมูล token รวมของผู้ใช้งาน",
+    "unit": "คน"
   },
   "LogoutAlert": {
     "title": "ต้องการออกจากระบบ",

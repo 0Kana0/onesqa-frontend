@@ -323,6 +323,7 @@ const SettingPage = () => {
         id: g.id,
         name: g.name,
         status: g.status,
+        user_count: g.user_count,
         model_use_name: defaultModel,
         groupAis,
       };
@@ -1076,6 +1077,7 @@ const SettingPage = () => {
                       <Box sx={{ display: "flex", flexWrap: "wrap", width: "100%", gap: 1 }} key={group.id}>
                         <Box sx={{ flex: 1 }}>
                           <UserGroupSettingCard
+                            user_count={group.user_count}
                             roleName={group.name}
                             status={group.status}
                             model={group.model_use_name}         // group default model
@@ -1259,7 +1261,7 @@ const SettingPage = () => {
                         {groups.map((group) => (
                           <TableRow key={group.id} hover>
                             <TableCell sx={{ whiteSpace: "nowrap" }}>
-                              <Typography fontWeight={600}>{group.name}</Typography>
+                              <Typography fontWeight={600}>{group.name}: {group.user_count} {ttable("unit")}</Typography>
                             </TableCell>
 
                             <TableCell>

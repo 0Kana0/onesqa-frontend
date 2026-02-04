@@ -14,6 +14,7 @@ import {
 import { useTranslations } from "next-intl";
 
 export default function UserGroupSettingCard({
+  user_count,
   roleName = "Admin",
   status = false,              // ✅ เพิ่ม
 
@@ -59,7 +60,7 @@ export default function UserGroupSettingCard({
       {/* ✅ แถวเดียว: ชื่อกลุ่ม + Toggle */}
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h6" fontWeight={700}>
-          {roleName}
+          {roleName}: {user_count} {t("unit")}
         </Typography>
 
         <FormControlLabel

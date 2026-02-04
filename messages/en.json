@@ -316,7 +316,8 @@
     "settoken": "Set Default Token Quota For Users",
     "default": "Set Default AI Model For Users",
     "plustoken": "Add Token To All Users In This Group",
-    "minustoken": "Deduct Token From All Users In This Group"
+    "minustoken": "Deduct Token From All Users In This Group",
+    "unit": "Users"
   },
   "GroupTokenTable": {
     "tablecell1": "Group",
@@ -326,7 +327,8 @@
     "tablecell3sub": "Set Default Token Quota For Users",
     "tablecell4sub": "Add Token To All Users In This Group",
     "tablecell5sub": "Deduct Token From All Users In This Group",
-    "tablecell6sub": "Total User Token Data"
+    "tablecell6sub": "Total User Token Data",
+    "unit": "Users"
   },
   "LogoutAlert": {
     "title": "Want to log out",
