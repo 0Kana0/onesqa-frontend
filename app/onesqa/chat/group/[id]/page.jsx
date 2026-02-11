@@ -137,7 +137,7 @@ const ChatgroupPage = () => {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "network-only",
   });
-  console.log(chatsData?.chats?.edges);
+  // console.log(chatsData?.chats?.edges);
 
   const {
     data: promptsData,
@@ -170,7 +170,7 @@ const ChatgroupPage = () => {
       id: user?.id,
     },
   });
-  console.log(userData?.user?.user_ai);
+  // console.log(userData?.user?.user_ai);
 
   const {
     data: groupData,
@@ -194,7 +194,7 @@ const ChatgroupPage = () => {
       user_id: user?.id,
     },
   });
-  console.log(chatgroupData?.chatgroup);
+  // console.log(chatgroupData?.chatgroup);
 
   const [createChat] = useMutation(CREATE_CHAT);
   const [updateChat] = useMutation(UPDATE_CHAT);
@@ -374,7 +374,7 @@ const ChatgroupPage = () => {
 
   // ตัวอย่าง action (เปลี่ยนชื่อ / ลบ)
   const handleRename = () => {
-    console.log("rename:", selected?.label);
+    // console.log("rename:", selected?.label);
     setRename(selected);
     setNewOpen(true);
     handleCloseMenu();
@@ -391,7 +391,7 @@ const ChatgroupPage = () => {
   };
   const handleUpdateChat = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
-    console.log("เเก้ไขชื่อเเชต:", name);
+    // console.log("เเก้ไขชื่อเเชต:", name);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -404,12 +404,12 @@ const ChatgroupPage = () => {
           },
         },
       });
-      console.log("✅ Update success:", data.updateChat);
+      // console.log("✅ Update success:", data.updateChat);
       refetch();
       setNewOpen(false);
       setRename(null);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
 
@@ -443,11 +443,11 @@ const ChatgroupPage = () => {
                 id: selected?.id,
               },
             });
-            console.log("✅ Delete success:", data.deleteChat);
+            // console.log("✅ Delete success:", data.deleteChat);
             refetch();
             handleCloseMenu();
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -486,11 +486,11 @@ const ChatgroupPage = () => {
                 id: selected?.id,
               },
             });
-            console.log("✅ Delete success:", data.deleteChat);
+            // console.log("✅ Delete success:", data.deleteChat);
             refetch();
             handleCloseMenu();
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -509,7 +509,7 @@ const ChatgroupPage = () => {
     handleCloseMenu();
   };
   const handleUpdateGroupData = async (item) => {
-    console.log("rename", rename);
+    // console.log("rename", rename);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -521,14 +521,14 @@ const ChatgroupPage = () => {
           },
         },
       });
-      console.log("✅ Update success:", data.updateChat);
+      // console.log("✅ Update success:", data.updateChat);
       refetch();
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
   const handleDeleteGroup = async () => {
-    console.log("selected", selected);
+    // console.log("selected", selected);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -540,7 +540,7 @@ const ChatgroupPage = () => {
           },
         },
       });
-      console.log("✅ Update success:", data.updateChat);
+      // console.log("✅ Update success:", data.updateChat);
 
       await client.refetchQueries({
         include: [GET_CHATS],
@@ -548,7 +548,7 @@ const ChatgroupPage = () => {
       setNewOpen(false);
       setRename(null);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
 
@@ -563,7 +563,7 @@ const ChatgroupPage = () => {
           user_id: user?.id,
         },
       });
-      console.log(data);
+      // console.log(data);
       setInitAttachments(data?.multipleUpload);
       //onClear();
       handleCreateChat();
@@ -599,7 +599,7 @@ const ChatgroupPage = () => {
         },
       });
 
-      console.log("✅ Create success:", data.createChat);
+      // console.log("✅ Create success:", data.createChat);
       // ✅ ส่งพารามิเตอร์ new=true ไปด้วย
       router.push(`/onesqa/chat/${data.createChat.id}?new=true`);
       //refetch();
@@ -919,7 +919,7 @@ const ChatgroupPage = () => {
                 }
                 // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
               } catch (err) {
-                console.log(err);
+                // console.log(err);
               }
             }}
             placeholder={tChatSidebar("inputph")}
@@ -941,7 +941,7 @@ const ChatgroupPage = () => {
             onAttachClick={() => console.log("attach menu")}
             onFilesSelected={(fileList) => {
               const files = Array.from(fileList); // FileList -> File[]
-              console.log("selected files:", files);
+              // console.log("selected files:", files);
             }}
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4"
             sx={{
@@ -1117,7 +1117,7 @@ const ChatgroupPage = () => {
           onClose={() => setOpenSearch(false)}
           onSelect={(item) => {
             // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
-            console.log("เลือก:", item);
+            // console.log("เลือก:", item);
             handleUpdateGroupData(item);
             // ตัวอย่าง: ไปหน้าแชตของ item.id
             // router.push(`/chat/${item.id}`);

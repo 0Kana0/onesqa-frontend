@@ -2,7 +2,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Box, Stack, Typography, IconButton } from '@mui/material';
+import {
+  Box, Stack, Typography, IconButton, useMediaQuery, Tooltip
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CloseRounded from '@mui/icons-material/CloseRounded';
 import PictureAsPdfRounded from '@mui/icons-material/PictureAsPdfRounded';
@@ -81,20 +83,25 @@ export default function FileCard({
   sx,
 }) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const ext = (fileType || extFromTitle(title) || '').toLowerCase();
   const vis = getVisuals(ext, theme);
 
-  return (
+  const card = (
     <Box
       sx={{
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: 1.25,
-        px: 1.25,
-        py: 0.75,
-        pr: 4.5,
-        width: "300px",
+        gap: isMobile ? 1 : 1.25,
+        px: isMobile ? 1 : 1.25,
+        py: isMobile ? 0.6 : 0.75,
+        pr: isMobile ? 4 : 4.5,
+
+        width: isMobile ? '100px' : '300px',
+        maxWidth: '100%',
+
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 3,
@@ -107,8 +114,8 @@ export default function FileCard({
       {/* ไอคอนสี่เหลี่ยมทางซ้าย */}
       <Box
         sx={{
-          width: 36,
-          height: 36,
+          width: isMobile ? 32 : 36,
+          height: isMobile ? 32 : 36,
           borderRadius: 1.5,
           display: 'grid',
           placeItems: 'center',
@@ -128,14 +135,15 @@ export default function FileCard({
         sx={{ minWidth: 0, flex: 1 }}
       >
         <Stack spacing={0.25}>
-          <Typography
-            variant="subtitle2"
-            noWrap
-            title={title}
-            sx={{ lineHeight: 1.25, maxWidth: '100%' }}
-          >
-            {title}
-          </Typography>
+          {!isMobile && (
+            <Typography
+              variant="subtitle2"
+              noWrap
+              sx={{ lineHeight: 1.25, maxWidth: '100%' }}
+            >
+              {title}
+            </Typography>
+          )}
           <Typography variant="caption" color="text.secondary">
             {typeLabel || vis.label}
           </Typography>
@@ -164,5 +172,19 @@ export default function FileCard({
         </IconButton>
       )}
     </Box>
+  );
+
+  return (
+    <Tooltip
+      title={title || ''}
+      placement="top"
+      arrow
+      disableHoverListener={!title}
+    >
+      {/* Tooltip ต้องการ element เดียว */}
+      <Box sx={{ display: 'inline-block', maxWidth: '100%' }}>
+        {card}
+      </Box>
+    </Tooltip>
   );
 }

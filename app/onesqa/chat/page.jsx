@@ -172,8 +172,8 @@ const ChatPage = () => {
       </Typography>
     );
 
-  console.log(initAttachments);
-  console.log("groupData", groupData.groupByName);
+  // console.log(initAttachments);
+  // console.log("groupData", groupData.groupByName);
 
   const textUserAis = (userData?.user?.user_ai ?? []).filter(
     (ua) => String(ua?.ai?.message_type).toUpperCase() === "TEXT"
@@ -190,7 +190,7 @@ const ChatPage = () => {
           user_id: user?.id,
         },
       });
-      console.log(data);
+      // console.log(data);
       setInitAttachments(data?.multipleUpload)
       //onClear();
       handleCreateChat()
@@ -225,7 +225,7 @@ const ChatPage = () => {
         },
       });
 
-      console.log("✅ Create success:", data.createChat);
+      // console.log("✅ Create success:", data.createChat);
       //refetch();
       // await client.refetchQueries({
       //   include: [GET_CHATS],
@@ -503,8 +503,8 @@ const ChatPage = () => {
           src="/images/chatIcon.png" // ✅ ใส่โลโก้ของคุณใน public/
           alt="chatIcon"
           sx={{
-            width: 300,
-            height: 300,
+            width: isMobile ? 240 : 300,
+            height: isMobile ? 240 : 300,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -539,7 +539,7 @@ const ChatPage = () => {
                 }
                 // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
               } catch (err) {
-                console.log(err);
+                // console.log(err);
               }
             }}
             placeholder={tChatSidebar("inputph")}
@@ -561,7 +561,7 @@ const ChatPage = () => {
             onAttachClick={() => console.log("attach menu")}
             onFilesSelected={(fileList) => {
               const files = Array.from(fileList); // FileList -> File[]
-              console.log("selected files:", files);
+              // console.log("selected files:", files);
             }}
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4"
             sx={{

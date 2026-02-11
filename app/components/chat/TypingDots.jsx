@@ -1,6 +1,10 @@
 // app/components/common/TypingDots.jsx
 "use client";
-import { Box, Avatar } from "@mui/material";
+import { 
+  Box, 
+  Avatar,
+  useMediaQuery,
+} from "@mui/material";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import { keyframes } from "@mui/system";
 
@@ -14,6 +18,8 @@ export default function TypingDots({
   color = "text.secondary", // สี
   gap = 0.6, // ระยะห่างสัมพันธ์กับ size
 }) {
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+
   const dotStyle = {
     width: size,
     height: size,
@@ -27,9 +33,11 @@ export default function TypingDots({
       display: "flex",
       gap: 1.5
     }}>
-      <Avatar sx={{ bgcolor: "background.paper", color: "text.secondary" }}>
-        <SmartToyOutlinedIcon />
-      </Avatar>
+      {!isMobile && (
+        <Avatar sx={{ bgcolor: "background.paper", color: "text.secondary" }}>
+          <SmartToyOutlinedIcon />
+        </Avatar>
+      )}
       <Box
         sx={{
           display: "inline-flex",

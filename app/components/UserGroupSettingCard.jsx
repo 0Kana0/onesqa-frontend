@@ -10,6 +10,7 @@ import {
   Divider,
   FormControlLabel,
   Switch,
+  Card as InnerCard,
 } from "@mui/material";
 import { useTranslations } from "next-intl";
 
@@ -23,9 +24,8 @@ export default function UserGroupSettingCard({
   groupAis = [],
   modelOptions = [],
 
-  // callbacks
-  onGroupChange,     // (field, value) -> เปลี่ยนค่า group-level เช่น model_use_name
-  onGroupAiChange,   // (index, field, value) -> เปลี่ยนค่าใน groupAis[index]
+  onGroupChange, // (field, value)
+  onGroupAiChange, // (index, field, value)
 }) {
   const t = useTranslations("UserGroupSettingCard");
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -46,6 +46,15 @@ export default function UserGroupSettingCard({
     if (raw === "") return 0;
     const n = Number(raw);
     return Number.isFinite(n) ? n : 0;
+  };
+
+  // ✅ แสดงผลรวม = token ที่กรอก * จำนวนผู้ใช้งาน
+  const users = toNumber(user_count);
+  const totalByUsers = (v) => toNumber(v) * users;
+
+  const renderTotalText = (v, sign) => {
+    const total = totalByUsers(v);
+    return `× ${users.toLocaleString("en-US")} = ${sign}${formatComma(total)}`;
   };
 
   return (
@@ -99,7 +108,7 @@ export default function UserGroupSettingCard({
 
         <Stack spacing={1.5}>
           {groupAis.map((aiRow, idx) => (
-            <Card
+            <InnerCard
               key={`${aiRow.ai_id || aiRow.model_use_name}-${idx}`}
               elevation={0}
               sx={{
@@ -113,7 +122,7 @@ export default function UserGroupSettingCard({
                 {aiRow.model_use_name}
               </Typography>
 
-              {/* init_token */}
+              {/* init_token (✅ รวม = token ตั้งต้น * จำนวนผู้ใช้งาน) */}
               <Typography variant="caption" color="text.secondary">
                 {t("settoken")}
               </Typography>
@@ -130,6 +139,10 @@ export default function UserGroupSettingCard({
 
                   onGroupAiChange?.(idx, "init_token", parseCommaToNumber(raw));
                 }}
+                helperText={renderTotalText(aiRow?.init_token ?? 0, "")}
+                FormHelperTextProps={{
+                  sx: { color: "text.secondary", textAlign: "right", m: 0, mt: 0.5 },
+                }}
                 inputProps={{
                   inputMode: "numeric",
                   style: { textAlign: "right" },
@@ -141,7 +154,7 @@ export default function UserGroupSettingCard({
                 }}
               />
 
-              {/* plus_token */}
+              {/* plus_token (✅ รวม = ใส่ - หน้าเลข, สีแดง) */}
               <Typography variant="caption" color="text.secondary">
                 {t("plustoken")}
               </Typography>
@@ -152,8 +165,12 @@ export default function UserGroupSettingCard({
                 value={formatComma(aiRow?.plus_token ?? 0)}
                 onChange={(e) => {
                   const raw = e.target.value;
-                  if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                  if (!/^[0-9,]*$/.test(raw)) return;
                   onGroupAiChange?.(idx, "plus_token", parseCommaToNumber(raw));
+                }}
+                helperText={renderTotalText(aiRow?.plus_token ?? 0, "-")}
+                FormHelperTextProps={{
+                  sx: { color: "error.main", textAlign: "right", m: 0, mt: 0.5 },
                 }}
                 inputProps={{
                   inputMode: "numeric",
@@ -166,7 +183,7 @@ export default function UserGroupSettingCard({
                 }}
               />
 
-              {/* minus_token */}
+              {/* minus_token (✅ รวม = ใส่ + หน้าเลข, สีแดง) */}
               <Typography variant="caption" color="text.secondary">
                 {t("minustoken")}
               </Typography>
@@ -177,8 +194,12 @@ export default function UserGroupSettingCard({
                 value={formatComma(aiRow?.minus_token ?? 0)}
                 onChange={(e) => {
                   const raw = e.target.value;
-                  if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                  if (!/^[0-9,]*$/.test(raw)) return;
                   onGroupAiChange?.(idx, "minus_token", parseCommaToNumber(raw));
+                }}
+                helperText={renderTotalText(aiRow?.minus_token ?? 0, "+")}
+                FormHelperTextProps={{
+                  sx: { color: "error.main", textAlign: "right", m: 0, mt: 0.5 },
                 }}
                 inputProps={{
                   inputMode: "numeric",
@@ -189,7 +210,7 @@ export default function UserGroupSettingCard({
                   "& .MuiInputBase-input": { textAlign: "right" },
                 }}
               />
-            </Card>
+            </InnerCard>
           ))}
         </Stack>
       </CardContent>

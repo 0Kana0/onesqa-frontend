@@ -108,7 +108,7 @@ const MessagePage = () => {
     },
     fetchPolicy: "network-only",
   });
-  console.log("chatData", chatData);
+  // console.log("chatData", chatData);
 
   const {
     refetch: chatsRefresh,
@@ -194,7 +194,7 @@ const MessagePage = () => {
   }, [messagesData?.messages.length, scrollToBottom, answer, messages]);
 
   const handleMessageInitSubmit = async () => {
-    console.log("initAttachments", initAttachments);
+    // console.log("initAttachments", initAttachments);
 
     setAnswer([
       {
@@ -229,7 +229,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageImage);
+        // console.log("✅ Create success:", data.createMessageImage);
         //chatsRefresh();
         await client.refetchQueries({
           include: [GET_CHATS],
@@ -248,7 +248,7 @@ const MessagePage = () => {
             id: id,
           },
         });
-        console.log("✅ Delete success:", data.deleteChat);
+        // console.log("✅ Delete success:", data.deleteChat);
         router.replace("/onesqa/chat");
       }
     } else if (initMessageType === "VIDEO") {
@@ -265,7 +265,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageVideo);
+        // console.log("✅ Create success:", data.createMessageVideo);
         //chatsRefresh();
         await client.refetchQueries({
           include: [GET_CHATS],
@@ -284,7 +284,7 @@ const MessagePage = () => {
             id: id,
           },
         });
-        console.log("✅ Delete success:", data.deleteChat);
+        // console.log("✅ Delete success:", data.deleteChat);
         router.replace("/onesqa/chat");
       }
     } else if (initMessageType === "DOC") {
@@ -301,7 +301,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageDoc);
+        // console.log("✅ Create success:", data.createMessageDoc);
         //chatsRefresh();
         await client.refetchQueries({
           include: [GET_CHATS],
@@ -320,7 +320,7 @@ const MessagePage = () => {
             id: id,
           },
         });
-        console.log("✅ Delete success:", data.deleteChat);
+        // console.log("✅ Delete success:", data.deleteChat);
         router.replace("/onesqa/chat");
       }
     } else {
@@ -337,7 +337,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessage);
+        // console.log("✅ Create success:", data.createMessage);
         //chatsRefresh();
         await client.refetchQueries({
           include: [GET_CHATS],
@@ -356,7 +356,7 @@ const MessagePage = () => {
             id: id,
           },
         });
-        console.log("✅ Delete success:", data.deleteChat);
+        // console.log("✅ Delete success:", data.deleteChat);
         router.replace("/onesqa/chat");
       }
     }
@@ -369,7 +369,7 @@ const MessagePage = () => {
 
     ranOnceRef.current = true;
 
-    console.log("isNew", isNew);
+    // console.log("isNew", isNew);
     handleMessageInitSubmit();
     setInitText("");
     setInitAttachments([]);
@@ -412,8 +412,8 @@ const MessagePage = () => {
   //     </Typography>
   //   );
 
-  console.log(messages);
-  console.log("attachments", attachments);
+  // console.log(messages);
+  // console.log("attachments", attachments);
 
   const onClear = () => setAttachments([]);
   const handleSubmitFile = async () => {
@@ -426,7 +426,7 @@ const MessagePage = () => {
           user_id: user?.id,
         },
       });
-      console.log(data?.multipleUpload);
+      // console.log(data?.multipleUpload);
       //onClear();
       handleMessageSubmitFile(data?.multipleUpload);
     } catch (error) {
@@ -447,7 +447,7 @@ const MessagePage = () => {
       }))
       .filter((x) => x.id != null && x.filename); // กันของที่ยังไม่มี id/ชื่อไฟล์
 
-    console.log(fileMessageList);
+    // console.log(fileMessageList);
 
     // เก็บค่าเดิมไว้เผื่อ restore ตอน error
     const sendText = text;
@@ -487,7 +487,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageImage);
+        // console.log("✅ Create success:", data.createMessageImage);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -521,7 +521,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageVideo);
+        // console.log("✅ Create success:", data.createMessageVideo);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -555,7 +555,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageDoc);
+        // console.log("✅ Create success:", data.createMessageDoc);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -589,7 +589,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessage);
+        // console.log("✅ Create success:", data.createMessage);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -662,7 +662,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageImage);
+        // console.log("✅ Create success:", data.createMessageImage);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -696,7 +696,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageVideo);
+        // console.log("✅ Create success:", data.createMessageVideo);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -730,7 +730,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessageDoc);
+        // console.log("✅ Create success:", data.createMessageDoc);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -764,7 +764,7 @@ const MessagePage = () => {
           },
         });
 
-        console.log("✅ Create success:", data.createMessage);
+        // console.log("✅ Create success:", data.createMessage);
         await client.refetchQueries({
           include: [GET_CHATS],
         });
@@ -788,13 +788,13 @@ const MessagePage = () => {
   };
 
   const handleMessageEdit = async (edit_id, edit_text) => {
-    console.log(edit_id, edit_text);
+    // console.log(edit_id, edit_text);
     if (!edit_text.trim() || editSending) return; // กันกดซ้ำ / กันข้อความว่าง
 
     const edit_message = messages.filter(
       (m) => Number(m.id) === Number(edit_id)
     );
-    console.log("edit_message", edit_message);
+    // console.log("edit_message", edit_message);
 
     // ถ้าไม่เจอข้อความที่จะ edit ก็ไม่ต้องทำต่อ
     if (!edit_message[0]) return;
@@ -810,7 +810,7 @@ const MessagePage = () => {
     // 🔹 backup ไว้เผื่อ rollback ตอน error
     const prevMessages = messages;
 
-    console.log(messages);
+    // console.log(messages);
 
     // เริ่มส่งแล้ว กันกดซ้ำ
     setSending(true);
@@ -844,7 +844,7 @@ const MessagePage = () => {
         },
       });
 
-      console.log("✅ Update success:", data.updateMessage);
+      // console.log("✅ Update success:", data.updateMessage);
       await client.refetchQueries({
         include: [GET_CHATS],
       });
@@ -1098,7 +1098,7 @@ const MessagePage = () => {
                 }
                 // setInitText(""); // ล้างอินพุตหลังส่ง (ถ้าต้องการ)
               } catch (err) {
-                console.log(err);
+                // console.log(err);
               }
               // setText(""); // ล้างหลังส่ง
               // setAttachments([]);
@@ -1122,7 +1122,7 @@ const MessagePage = () => {
             onAttachClick={() => console.log("attach menu")}
             onFilesSelected={(fileList) => {
               const files = Array.from(fileList); // FileList -> File[]
-              console.log("selected files:", files);
+              // console.log("selected files:", files);
             }}
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4"
             sx={{

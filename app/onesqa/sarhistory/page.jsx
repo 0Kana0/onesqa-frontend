@@ -209,9 +209,9 @@ const SarHistoryPage = () => {
           try {
             // ✅ เรียก mutation ไป backend
             const { data } = await deleteSarHistorys();
-            console.log("✅ Delete success:", data.deleteSarHistorys);
+            // console.log("✅ Delete success:", data.deleteSarHistorys);
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
     
           Swal.fire({
@@ -249,9 +249,9 @@ const SarHistoryPage = () => {
           try {
             // ✅ เรียก mutation ไป backend
             const { data } = await deleteSarHistorys();
-            console.log("✅ Delete success:", data.deleteSarHistorys);
+            // console.log("✅ Delete success:", data.deleteSarHistorys);
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
     
           Swal.fire({

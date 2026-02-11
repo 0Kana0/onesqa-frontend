@@ -137,7 +137,7 @@ export default function LoginPage() {
         return;
       }
 
-      console.log("Login data:", { role, form, citizenId, channel });
+      // console.log("Login data:", { role, form, citizenId, channel });
 
       try {
         // Step 1: Login
@@ -151,8 +151,8 @@ export default function LoginPage() {
           },
         });
 
-        console.log(loginResult?.data?.signin?.user);
-        console.log(loginResult?.data?.signin?.token);
+        // console.log(loginResult?.data?.signin?.user);
+        // console.log(loginResult?.data?.signin?.token);
 
         // Step 2: บันทึก token
         accessTokenContext(loginResult?.data?.signin?.token || null);
@@ -197,7 +197,7 @@ export default function LoginPage() {
             const mm = parseInt(match[1], 10);
             const ss = parseInt(match[2], 10);
             const totalSeconds = mm * 60 + ss;
-            console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
+            // console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
             setLockRemaining(totalSeconds);
           }
         } else {
@@ -217,11 +217,11 @@ export default function LoginPage() {
         return;
       }
 
-      console.log("Login data:", { role, form, citizenId, channel });
+      // console.log("Login data:", { role, form, citizenId, channel });
 
       // ✅ เก็บเฉพาะตัวเลข
       const onlyDigits = citizenId.replace(/\D/g, "");
-      console.log("🔄 ส่งเลขปปช", onlyDigits);
+      // console.log("🔄 ส่งเลขปปช", onlyDigits);
 
       try {
         // Step 1: Login
@@ -235,7 +235,7 @@ export default function LoginPage() {
           },
         });
 
-        console.log(sendResult);
+        // console.log(sendResult);
       
         // แสดงช่องกรอก OTP
         setShowOTP(true);
@@ -265,7 +265,7 @@ export default function LoginPage() {
             const mm = parseInt(match[1], 10);
             const ss = parseInt(match[2], 10);
             const totalSeconds = mm * 60 + ss;
-            console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
+            // console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
             setLockRemaining(totalSeconds);
           }
         } else {
@@ -292,7 +292,7 @@ export default function LoginPage() {
     // ✅ เก็บเฉพาะตัวเลข
     const onlyDigits = citizenId.replace(/\D/g, "");
 
-    console.log("🔄 ส่ง OTP ใหม่", onlyDigits);
+    // console.log("🔄 ส่ง OTP ใหม่", onlyDigits);
 
     // TODO: call API ส่ง OTP ใหม่ พร้อมส่ง onlyDigits ไป
     // api.sendOtp({ citizenId: onlyDigits })
@@ -308,7 +308,7 @@ export default function LoginPage() {
         },
       });
 
-      console.log(resendResult);
+      // console.log(resendResult);
 
       await showSuccessAlert({
         title: t("recheck3"),
@@ -339,7 +339,7 @@ export default function LoginPage() {
           const mm = parseInt(match[1], 10);
           const ss = parseInt(match[2], 10);
           const totalSeconds = mm * 60 + ss;
-          console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
+          // console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
           setLockRemaining(totalSeconds);
         }
       } else {
@@ -364,8 +364,8 @@ export default function LoginPage() {
     
     // ✅ เก็บเฉพาะตัวเลข
     const onlyDigits = citizenId.replace(/\D/g, "");
-    console.log("🔄 ตรวจสอบบัตรปปช", onlyDigits);
-    console.log("ตรวจสอบ OTP:", otp);
+    // console.log("🔄 ตรวจสอบบัตรปปช", onlyDigits);
+    // console.log("ตรวจสอบ OTP:", otp);
     // TODO: เรียก API ตรวจสอบ OTP ที่นี่
 
     try {
@@ -380,8 +380,8 @@ export default function LoginPage() {
         },
       });
 
-      console.log(loginResult?.data?.verifySigninWithIdennumber?.user);
-      console.log(loginResult?.data?.verifySigninWithIdennumber?.token);
+      // console.log(loginResult?.data?.verifySigninWithIdennumber?.user);
+      // console.log(loginResult?.data?.verifySigninWithIdennumber?.token);
 
       // Step 2: บันทึก token
       accessTokenContext(loginResult?.data?.verifySigninWithIdennumber?.token || null);
@@ -427,7 +427,7 @@ export default function LoginPage() {
           const mm = parseInt(match[1], 10);
           const ss = parseInt(match[2], 10);
           const totalSeconds = mm * 60 + ss;
-          console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
+          // console.log("⏱ ตั้ง lockRemaining =", totalSeconds);
           setLockRemaining(totalSeconds);
         }
       } else {

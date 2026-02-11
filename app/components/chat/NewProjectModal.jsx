@@ -28,7 +28,7 @@ export default function NewProjectModal({
   placeholder,
   confirmLabel = "สร้างกลุ่ม",
 }) {
-  const { toggle } = useSidebar();
+  const { open: sidebarOpen, toggle } = useSidebar();
 
   const tChatSidebar = useTranslations("ChatSidebar");
 
@@ -48,7 +48,7 @@ export default function NewProjectModal({
     onCreate?.(n);
 
     // ปิด sidebar บนจอเล็ก
-    if (isTablet) toggle();
+    if (isTablet && sidebarOpen) toggle(); // ✅ จะไม่เปิดขึ้นมาเอง
   };
 
   return (

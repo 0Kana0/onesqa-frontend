@@ -135,7 +135,7 @@ const AcademyPage = () => {
     try {
       showLoading(t("syncacademy1"), theme);
       const { data } = await syncAcademyFromApi();
-      console.log("✅ Create success:", data?.syncAcademyFromApi);
+      // console.log("✅ Create success:", data?.syncAcademyFromApi);
 
       // ✅ เคลียร์ทั้ง input และผลลัพธ์
       setSearchInput("");
@@ -272,7 +272,7 @@ const AcademyPage = () => {
           ...swalBase,
         });
       } catch (err) {
-        console.log(err);
+        // console.log(err);
       }
     });
   };

@@ -84,7 +84,7 @@ export default function DetailPage() {
     }
   }, [userData, locale]);
 
-  console.log(userCard);
+  // console.log(userCard);
 
   if (userLoading)
     return (

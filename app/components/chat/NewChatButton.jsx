@@ -111,7 +111,7 @@ export default function ChatQuickActions({
           open={openSearch}
           onClose={() => setOpenSearch(false)}
           onSelect={(item) => {
-            console.log("เลือก:", item);
+            // console.log("เลือก:", item);
             // ตัวอย่าง: ไปหน้าแชตของ item.id
             // router.push(`/chat/${item.id}`);
             setOpenSearch(false);

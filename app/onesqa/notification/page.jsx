@@ -65,7 +65,7 @@ const NotificationPage = () => {
     fetchPolicy: "network-only",
   });
 
-  console.log(data);
+  // console.log(data);
 
   const [updateThemeAndLocale] = useMutation(UPDATE_THEME_AND_LOCALE);
   const [updateSetting] = useMutation(UPDATE_SETTING);
@@ -120,10 +120,10 @@ const NotificationPage = () => {
 
         if (!cancelled) {
           localStorage.removeItem("alert");
-          console.log("✅ Update success:", data?.updateThemeAndLocale);
+          // console.log("✅ Update success:", data?.updateThemeAndLocale);
         }
       } catch (err) {
-        console.log("❌ Update theme/locale failed:", err);
+        // console.log("❌ Update theme/locale failed:", err);
       }
     };
 
@@ -213,7 +213,7 @@ const NotificationPage = () => {
   ];
 
   //console.log(settingsData?.settings);
-  console.log(JSON.stringify(settingsData?.settings, null, 2));
+  // console.log(JSON.stringify(settingsData?.settings, null, 2));
 
   const renderContent = () => {
     switch (selected) {
@@ -311,7 +311,7 @@ const NotificationPage = () => {
                       //   `✅ Updated ${setting.setting_name} to ${newValue}`
                       // );
                     } catch (err) {
-                      console.log("❌ Error updating setting:", err);
+                      // console.log("❌ Error updating setting:", err);
                     }
                   }}
                 />

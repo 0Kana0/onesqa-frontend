@@ -9,8 +9,8 @@ function getOrigin(request) {
 }
 
 export async function POST(request) {
-  console.log("HIT /auth/aqa/callback");  // ✅ ถ้าไม่ขึ้น log = ไม่ถึง handler
-  console.log("request", request);
+  // console.log("HIT /auth/aqa/callback");  // ✅ ถ้าไม่ขึ้น log = ไม่ถึง handler
+  // console.log("request", request);
 
   try {
     const form = await request.formData();
@@ -22,7 +22,7 @@ export async function POST(request) {
     }
 
     const endpoint = process.env.GRAPHQL_ENDPOINT_INTERNAL;
-    console.log("GRAPHQL endpoint =", endpoint);
+    // console.log("GRAPHQL endpoint =", endpoint);
     if (!endpoint) return NextResponse.redirect(new URL("/auth/login", request.url), 303);
 
     const gqlRes = await fetch(endpoint, {
@@ -72,7 +72,7 @@ export async function POST(request) {
 
     const target = isAdmin ? "/onesqa/dashboard" : "/onesqa/chat";
 
-    console.log(gqlRes.headers);
+    // console.log(gqlRes.headers);
     
     // ✅ 1) forward Set-Cookie (refreshToken) จาก GraphQL -> Browser
     const setCookies =
@@ -80,7 +80,7 @@ export async function POST(request) {
         ? gqlRes.headers.getSetCookie()
         : (gqlRes.headers.get("set-cookie") ? [gqlRes.headers.get("set-cookie")] : []);
 
-    console.log("setCookies", setCookies);
+    // console.log("setCookies", setCookies);
 
     const origin = getOrigin(request);
 
@@ -90,7 +90,7 @@ export async function POST(request) {
 
     const res = NextResponse.redirect(bridgeUrl, 303);
 
-    console.log("res", res);
+    // console.log("res", res);
 
     // ส่ง Set-Cookie ให้ browser
     for (const c of setCookies) {
@@ -117,7 +117,7 @@ export async function POST(request) {
     return res;
 
   } catch (e) {
-    console.error(e);
+    // console.error(e);
     return NextResponse.redirect(new URL("/auth/login", request.url), 303);
   }
 }

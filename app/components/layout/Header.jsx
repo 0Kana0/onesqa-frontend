@@ -49,7 +49,7 @@ export default function Header() {
   const [hasNotification, setHasNotification] = useState(false);
   const { id } = params;
 
-  console.log(user);
+  // console.log(user);
   const t = useTranslations("LogoutAlert");
   const th = useTranslations("Header");
 
@@ -57,7 +57,7 @@ export default function Header() {
   const isTablet = useMediaQuery("(max-width:1200px)"); // < md คือจอเล็ก
 
   const pathname = usePathname(); // ✅ ได้ path ปัจจุบัน เช่น "/login", "/dashboard"
-  console.log("📍 current path:", pathname);
+  // console.log("📍 current path:", pathname);
   const isOnNotificationPage = pathname?.includes("/onesqa/notification"); // รองรับ /onesqa/notification/... และกรณีมี prefix
 
   const [logout] = useMutation(LOGOUT);
@@ -106,20 +106,20 @@ export default function Header() {
   const handleClose = () => setAnchorEl(null);
 
   const handleProfile = () => {
-    console.log("👤 ไปที่โปรไฟล์");
+    // console.log("👤 ไปที่โปรไฟล์");
     router.push(`/onesqa/detail`);
     handleClose();
   };
 
   const handleNotification = () => {
-    console.log("👤 ไปที่เเจ้งเตือน");
+    // console.log("👤 ไปที่เเจ้งเตือน");
     setHasNotification(false);
     localStorage.removeItem("alert");
     router.push(`/onesqa/notification`);
   };
 
   const handleThemeToggle = async () => {
-    console.log("🌓 เปลี่ยนธีม");
+    // console.log("🌓 เปลี่ยนธีม");
     try {
       // ✅ เรียก mutation ไป backend
       const { data } = await updateThemeAndLocale({
@@ -131,11 +131,11 @@ export default function Header() {
         },
       });
 
-      console.log("✅ Update success:", data?.updateThemeAndLocale);
+      // console.log("✅ Update success:", data?.updateThemeAndLocale);
       setTheme(theme === "dark" ? "light" : "dark");
       handleClose();
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
   const handleLocaleToggle = async (locale) => {
@@ -150,15 +150,15 @@ export default function Header() {
         },
       });
 
-      console.log("✅ Update success:", data?.updateThemeAndLocale);
+      // console.log("✅ Update success:", data?.updateThemeAndLocale);
       handleLanguageChange(locale)
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   }
 
   const handleLogout = async () => {
-    console.log(theme);
+    // console.log(theme);
 
     handleClose();
     try {
@@ -187,14 +187,14 @@ export default function Header() {
           try {
             // ✅ เรียก API logout
             const logoutResult = await logout();
-            console.log(logoutResult);
+            // console.log(logoutResult);
 
             setLoggingOut(true); // ✅ เปิด FullScreenLoading
 
             logoutContext();
-            console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+            // console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
         }
       } else {
@@ -218,19 +218,19 @@ export default function Header() {
           // ✅ เรียก API logout
           try {
             const logoutResult = await logout();
-            console.log(logoutResult);
+            // console.log(logoutResult);
 
             setLoggingOut(true); // ✅ เปิด FullScreenLoading
 
             logoutContext();
-            console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
+            // console.log("🚪 ผู้ใช้ออกจากระบบแล้ว");
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
         }
       }
     } catch (error) {
-      console.log("❌ Logout failed:", error);
+      // console.log("❌ Logout failed:", error);
     }
   };
 
@@ -280,13 +280,27 @@ export default function Header() {
             {/* ด้านซ้าย: ชื่อหน้า */}
             {
               isTablet ? (
-                <IconButton 
-                  onClick={toggle} // ✅ ใช้ฟังก์ชันจาก Context
-                  color="inherit" 
-                  aria-label="open sidebar"
-                >
-                  <MenuIcon sx={{ fontSize: 28 }} />
-                </IconButton>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <IconButton
+                    onClick={toggle}
+                    color="inherit"
+                    aria-label="open sidebar"
+                    sx={{ p: 0.5 }}   // ✅ ลด padding ให้ชิด Avatar มากขึ้น
+                  >
+                    <MenuIcon sx={{ fontSize: 28 }} />
+                  </IconButton>
+
+                  {pathname.startsWith("/onesqa/chat") && !pathname.startsWith("/onesqa/chat/group") && id !== undefined && (
+                    <Avatar
+                      src={getAiLogo(chatData?.chat?.ai)}
+                      alt={chatData?.chat?.ai?.model_type ?? "AI"}
+                      sx={{ bgcolor: "grey.200", color: "text.secondary", width: 25, height: 25 }}
+                      imgProps={{
+                        onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
+                      }}
+                    />
+                  )}
+                </Box>
               ) : (
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                   {pathname.startsWith("/onesqa/chat") && !pathname.startsWith("/onesqa/chat/group") && id !== undefined ? (
@@ -304,7 +318,7 @@ export default function Header() {
                         imgProps={{
                           onError: (e) => (e.currentTarget.src = AI_LOGOS.default),
                         }}
-                    />
+                      />
                     </Box>
                   ) : (
                     <>

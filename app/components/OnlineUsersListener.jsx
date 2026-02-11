@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 export default function OnlineUsersListener({online, refetch}) {
   const WS_ENDPOINT = process.env.NEXT_PUBLIC_WS_ENDPOINT;
-  console.log(online);
+  // console.log(online);
 
   useEffect(() => {
     const client = createClient({
@@ -30,7 +30,7 @@ export default function OnlineUsersListener({online, refetch}) {
       {
         next: ({ data }) => {
           refetch()
-          console.log("login check", data);
+          // console.log("login check", data);
           
           const u = data?.userStatusChanged;
           if (!u) return;

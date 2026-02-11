@@ -45,7 +45,7 @@ export default function ProjectSearchModal({
   group_id
 }) {
   const { user } = useAuth();
-  const { toggle } = useSidebar(); // ✅ ดึงจาก Context
+  const { open: sidebarOpen, toggle } = useSidebar(); // ✅ ดึงจาก Context
   
   const tChatSidebar = useTranslations("ChatSidebar");
 
@@ -75,8 +75,8 @@ export default function ProjectSearchModal({
     skip: !open || !user?.id, // ❗ รอให้ modal เปิดและมี user.id ก่อนค่อยยิง
   });
 
-  console.log("data modal", chatgroupsData?.chatgroups?.edges);
-  console.log(q, first);
+  // console.log("data modal", chatgroupsData?.chatgroups?.edges);
+  // console.log(q, first);
 
   useEffect(() => {
     if (!open) setQ("");
@@ -104,7 +104,7 @@ export default function ProjectSearchModal({
     chatgroup_name: edge.node.chatgroup_name,
   }));
 
-  console.log(sections);
+  // console.log(sections);
 
   // // filter แบบง่าย
   // const filter = (text) => text.toLowerCase().includes(q.toLowerCase());
@@ -177,7 +177,7 @@ export default function ProjectSearchModal({
       >
         <List
           disablePadding
-          onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
+          //onClick={isTablet ? toggle : undefined} // ✅ toggle เฉพาะใน mobile
           sx={{
             px: 2.5,
             py: 1,
@@ -197,12 +197,15 @@ export default function ProjectSearchModal({
               style={{ textDecoration: "none", color: "inherit" }}
             >
               <ListItemButton
-              key={it.id}
-              onClick={() => {
-                onSelect?.(it);
-                onClose?.();
-              }}
-            >
+                key={it.id}
+                onClick={() => {
+                  onSelect?.(it);
+                  onClose?.();
+
+                  // ✅ ปิดเฉพาะตอน sidebar "เปิดอยู่"
+                  if (isTablet && sidebarOpen) toggle();
+                }}
+              >
               <ListItemIcon>
                 <FolderOutlined fontSize="small" />
               </ListItemIcon>

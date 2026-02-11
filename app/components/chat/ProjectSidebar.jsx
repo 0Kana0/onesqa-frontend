@@ -64,8 +64,8 @@ export default function ProjectSidebar() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
-  console.log("find id", id);
-  console.log("pathname", pathname);
+  // console.log("find id", id);
+  // console.log("pathname", pathname);
 
   // state ไว้เก็บ chatgroupId ที่ครอบ chat id ปัจจุบัน
   const [currentGroupId, setCurrentGroupId] = useState(null);
@@ -108,8 +108,8 @@ export default function ProjectSidebar() {
   const [updateChatgroup] = useMutation(UPDATE_CHATGROUP);
   const [deleteChatgroup] = useMutation(DELETE_CHATGROUP);
 
-  console.log(user?.id);
-  console.log(chatgroupsData?.chatgroups?.edges);
+  // console.log(user?.id);
+  // console.log(chatgroupsData?.chatgroups?.edges);
 
   useEffect(() => {
     // รอจนกว่าจะมีโครง usersData ก่อน ค่อยประมวลผล
@@ -151,7 +151,7 @@ export default function ProjectSidebar() {
     setCurrentGroupId(foundGroupId); // ถ้าไม่เจอจะเป็น null
   }, [chatgroupsData, id]);
 
-  console.log(selected);
+  // console.log(selected);
 
   if (chatgroupsLoading)
     return (
@@ -188,7 +188,7 @@ export default function ProjectSidebar() {
 
   // ตัวอย่าง action (เปลี่ยนชื่อ / ลบ)
   const handleRename = () => {
-    console.log("rename:", selected?.label);
+    // console.log("rename:", selected?.label);
     setRename(selected);
     setNewOpen(true);
     handleCloseMenu();
@@ -227,7 +227,7 @@ export default function ProjectSidebar() {
                 id: selected?.id,
               },
             });
-            console.log("✅ Delete success:", data.deleteChatgroup);
+            // console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
             //chatsRefresh();
             await client.refetchQueries({
@@ -237,7 +237,7 @@ export default function ProjectSidebar() {
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
               router.replace("/onesqa/chat");
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -276,7 +276,7 @@ export default function ProjectSidebar() {
                 id: selected?.id,
               },
             });
-            console.log("✅ Delete success:", data.deleteChatgroup);
+            // console.log("✅ Delete success:", data.deleteChatgroup);
             refetch();
             //chatsRefresh();
             await client.refetchQueries({
@@ -286,7 +286,7 @@ export default function ProjectSidebar() {
             if (id === selected?.id && pathname === `/onesqa/chat/group/${id}`)
               router.replace("/onesqa/chat");
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -312,7 +312,7 @@ export default function ProjectSidebar() {
 
   const handleCreateProject = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
-    console.log("สร้างกลุ่ม:", name);
+    // console.log("สร้างกลุ่ม:", name);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -324,16 +324,16 @@ export default function ProjectSidebar() {
           },
         },
       });
-      console.log("✅ Create success:", data.createChatgroup);
+      // console.log("✅ Create success:", data.createChatgroup);
       refetch();
       setNewOpen(false);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
   const handleUpdateproject = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
-    console.log("เเก้ไขชื่อกลุ่ม:", name);
+    // console.log("เเก้ไขชื่อกลุ่ม:", name);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -346,12 +346,12 @@ export default function ProjectSidebar() {
           },
         },
       });
-      console.log("✅ Create success:", data.updateChatgroup);
+      // console.log("✅ Create success:", data.updateChatgroup);
       refetch();
       setNewOpen(false);
       setRename(null);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
 

@@ -376,7 +376,7 @@ export default function ChatInputBar({
       };
 
       recorder.onerror = (e) => {
-        console.log("MediaRecorder error:", e);
+        // console.log("MediaRecorder error:", e);
         if (theme === "dark") {
           Swal.fire({
             icon: "error",
@@ -430,15 +430,15 @@ export default function ChatInputBar({
           // 2. ภาษาอังกฤษของข้อความนี้: "Transcribe speech from this file"
           if (onChange) {
             if (locale === "th") {
-              onChange("ตอบคำถามจากเสียงในไฟล์แบบละเอียด ทำตามเสียงในไฟล์");
+              onChange("แชตใหม่จากเสียง");
             } else {
-              onChange("Answer the questions from the audio in the file in detail, following the audio exactly.");
+              onChange("new chat from mic");
             }
           }
 
           addFiles([file]);
         } catch (err) {
-          console.log(err);
+          // console.log(err);
           if (theme === "dark") {
             Swal.fire({
               icon: "error",
@@ -463,7 +463,7 @@ export default function ChatInputBar({
       recorder.start();
       setIsRecording(true);
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       if (theme === "dark") {
         Swal.fire({
           icon: "error",
@@ -492,7 +492,7 @@ export default function ChatInputBar({
         setIsRecording(false);
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       setIsRecording(false);
     }
   };

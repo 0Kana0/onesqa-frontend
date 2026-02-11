@@ -258,7 +258,7 @@ const LogPage = () => {
       </Box>
     );
 
-  console.log(logsError);
+  // console.log(logsError);
   
   if (logsError)
     return (
@@ -303,7 +303,7 @@ const LogPage = () => {
     setStartDate(d.startOf("day").format("YYYY-MM-DD"));
     setEndDate(d.endOf("day").format("YYYY-MM-DD"));
     setPage(1);
-    console.log("🧹 ล้างตัวกรองเรียบร้อย");
+    // console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
   // ✅ ฟังก์ชันลบทั้งหมดพร้อม SweetAlert2
@@ -335,9 +335,9 @@ const LogPage = () => {
           try {
             // ✅ เรียก mutation ไป backend
             const { data } = await deleteLogs();
-            console.log("✅ Delete success:", data.deleteLogs);
+            // console.log("✅ Delete success:", data.deleteLogs);
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -375,9 +375,9 @@ const LogPage = () => {
           try {
             // ✅ เรียก mutation ไป backend
             const { data } = await deleteLogs();
-            console.log("✅ Delete success:", data.deleteLogs);
+            // console.log("✅ Delete success:", data.deleteLogs);
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({

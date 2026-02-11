@@ -79,7 +79,7 @@ export default function UserDetailPage() {
     },
   });
 
-  console.log(userData?.user);
+  // console.log(userData?.user);
 
   const [updateUser] = useMutation(UPDATE_USER);
 
@@ -146,7 +146,7 @@ export default function UserDetailPage() {
     }
   }, [userLoading, userData, router]);
 
-  console.log(userCardTable);
+  // console.log(userCardTable);
 
   // const userTable = [
   //   {
@@ -191,7 +191,7 @@ export default function UserDetailPage() {
 
   const handleViewChange = (mode) => {
     setViewMode(mode);
-    console.log("🟢 เปลี่ยนโหมดเป็น:", mode);
+    // console.log("🟢 เปลี่ยนโหมดเป็น:", mode);
   };
 
   // ✅ ฟังก์ชันแยก: handleTokenChange
@@ -250,7 +250,7 @@ export default function UserDetailPage() {
         },
       });
 
-      console.log("✅ Update success:", data?.updateUser);
+      // console.log("✅ Update success:", data?.updateUser);
 
       closeLoading();
       await showSuccessAlert({

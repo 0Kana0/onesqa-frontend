@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
       // const userData = getCookie("user");
       const userData = localStorage.getItem("user");
       const parseUserData = JSON.parse(userData);
-      console.log("parseUserData", parseUserData);
+      // console.log("parseUserData", parseUserData);
       
 
       if (userData) {
@@ -57,9 +57,9 @@ export function AuthProvider({ children }) {
               },
             });
 
-            console.log("✅ Update success:", data.setUserOnline);
+            // console.log("✅ Update success:", data.setUserOnline);
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           // // ❌ แจ้งว่าออฟไลน์เมื่อปิดแท็บหรือออก
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
           //   handleBeforeUnload();
           // };
         } catch (error) {
-          console.log("Error parsing user data:", error);
+          // console.log("Error parsing user data:", error);
           deleteCookie("user");
         }
       }
@@ -92,11 +92,11 @@ export function AuthProvider({ children }) {
   };
 
   const userContext = async (userData) => {
-    console.log("userData", userData);
+    // console.log("userData", userData);
 
     try {
       // ✅ เรียก mutation ไป backend
-      console.log("userData.id", userData.id);
+      // console.log("userData.id", userData.id);
       
       const { data } = await setUserOnline({
         variables: {
@@ -104,9 +104,9 @@ export function AuthProvider({ children }) {
         },
       });
 
-      console.log("✅ Update success:", data.setUserOnline);
+      // console.log("✅ Update success:", data.setUserOnline);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
 
     setUser(userData);
@@ -132,10 +132,10 @@ export function AuthProvider({ children }) {
           fetchPolicy: "no-cache",
         });
 
-        console.log("✅ Update success:", data?.setUserOffline);
+        // console.log("✅ Update success:", data?.setUserOffline);
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     } finally {
       setUser(null);
       deleteCookie("accessToken", { path: "/" });

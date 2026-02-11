@@ -225,7 +225,7 @@ export default function UserPage() {
           prev.map((u) => (u.id === id ? { ...u, aiAccess: serverValue } : u))
         );
       } catch (err) {
-        console.log("Update failed:", err);
+        // console.log("Update failed:", err);
         // 5) rollback ถ้ามี error
         setUsers((prev) =>
           prev.map((u) => (u.id === id ? { ...u, aiAccess: prevChecked } : u))
@@ -281,7 +281,7 @@ export default function UserPage() {
       const nextRole = getRoleByName(nextRoleName);
 
       if (!nextRole?.id) {
-        console.log("ไม่พบ role:", nextRoleName);
+        // console.log("ไม่พบ role:", nextRoleName);
         return;
       }
 
@@ -312,7 +312,7 @@ export default function UserPage() {
           },
         });
       } catch (err) {
-        console.log("Update role failed:", err);
+        // console.log("Update role failed:", err);
 
         // rollback
         setUsers((prev) =>
@@ -390,7 +390,7 @@ export default function UserPage() {
     setTotalCount(usersData.users.totalCount ?? formattedData.length);
   }, [usersData, locale]);
 
-  console.log(users);
+  // console.log(users);
 
   const { allowed, loading, user } = useRequireRole({
     roles: ["ผู้ดูแลระบบ", "superadmin"],
@@ -400,7 +400,7 @@ export default function UserPage() {
   if (loading) return null; // หรือใส่ Skeleton ก็ได้
   if (!allowed) return null; // ระหว่างกำลัง redirect กันไม่ให้แสดงหน้า
 
-  console.log("usersError", usersError);
+  // console.log("usersError", usersError);
 
   // โชว์โหลดเฉพาะ "ครั้งแรกจริง ๆ" (ยังไม่มี data)
   const isInitialLoading =
@@ -434,7 +434,7 @@ export default function UserPage() {
 
       const { data } = await syncUsersFromApi();
 
-      console.log("✅ Create success:", data?.syncUsersFromApi);
+      // console.log("✅ Create success:", data?.syncUsersFromApi);
       usersRefetch();
       groupWithUserCountRefetch();
 
@@ -536,7 +536,7 @@ export default function UserPage() {
     setRoleFilter("ทั้งหมด");
     setStatusFilter("ทั้งหมด");
     setPage(1);
-    console.log("🧹 ล้างตัวกรองเรียบร้อย");
+    // console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
   const handleClick = (id) => {

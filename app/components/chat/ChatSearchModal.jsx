@@ -97,8 +97,8 @@ export default function ChatSearchModal({
     skip: !open || !user?.id, // ❗ รอให้ modal เปิดและมี user.id ก่อนค่อยยิง
   });
 
-  console.log("data modal", chatsData?.chats?.edges);
-  console.log(q, first);
+  // console.log("data modal", chatsData?.chats?.edges);
+  // console.log(q, first);
 
   useEffect(() => {
     if (!open) setQ("");
@@ -113,7 +113,7 @@ export default function ChatSearchModal({
       </Box>
     );
   
-  console.log("chatsError", chatsError);
+  // console.log("chatsError", chatsError);
   
   // ----- สถานะโหลด/ผิดพลาดรวมสองฝั่ง -----
   if (chatsError)
@@ -129,7 +129,7 @@ export default function ChatSearchModal({
     model_type: edge.node.ai.model_type,
   }));
 
-  console.log(sections);
+  // console.log(sections);
 
   // // filter แบบง่าย
   // const filter = (text) => text.toLowerCase().includes(q.toLowerCase());

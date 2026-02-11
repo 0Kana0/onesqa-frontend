@@ -227,9 +227,9 @@ const HistoryPage = () => {
           try {
             // ✅ เรียก mutation ไป backend
             const { data } = await deleteLoginHistorys();
-            console.log("✅ Delete success:", data.deleteLoginHistorys);
+            // console.log("✅ Delete success:", data.deleteLoginHistorys);
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
   
           Swal.fire({
@@ -267,9 +267,9 @@ const HistoryPage = () => {
           try {
             // ✅ เรียก mutation ไป backend
             const { data } = await deleteLoginHistorys();
-            console.log("✅ Delete success:", data.deleteLoginHistorys);
+            // console.log("✅ Delete success:", data.deleteLoginHistorys);
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
   
           Swal.fire({

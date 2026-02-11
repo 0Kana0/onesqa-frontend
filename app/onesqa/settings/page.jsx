@@ -206,7 +206,7 @@ const SettingPage = () => {
     },
   });
 
-  console.log(groupsData?.groups);
+  // console.log(groupsData?.groups);
 
   const [updateAi] = useMutation(UPDATE_AI);
 
@@ -356,7 +356,7 @@ const SettingPage = () => {
       </Box>
     );
 
-  console.log(groupsError);
+  // console.log(groupsError);
 
   if (aisError || promptsError || groupsError || aiTypeError)
     return (
@@ -379,12 +379,20 @@ const SettingPage = () => {
     groupsData?.groups?.pageInfo?.totalPages ||
     Math.max(1, Math.ceil(totalItems / rowsPerPage));
 
-  console.log("groups", groups);
+  // console.log("groups", groups);
 
   // ด้านบนใน component
   const LIMIT = 5;
   const totalCount = (persistedEdits?.length || 0) + (newPrompts?.length || 0);
   const canAdd = totalCount < LIMIT;
+
+  const toNumber = (v) => Number(v || 0);
+
+  const renderTotalText = (tokenValue, userCount, sign = "") => {
+    const users = toNumber(userCount);
+    const total = toNumber(tokenValue) * users;
+    return `× ${users.toLocaleString("en-US")} = ${sign}${formatComma(total)}`;
+  };
 
   const handleAddNewPrompt = () => {
     if (!canAdd) return; // ป้องกันระดับโค้ด
@@ -444,10 +452,10 @@ const SettingPage = () => {
                 id: id,
               },
             });
-            console.log("✅ Delete success:", data.deletePrompt);
+            // console.log("✅ Delete success:", data.deletePrompt);
             await promptsRefetch();
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -486,10 +494,10 @@ const SettingPage = () => {
                 id: id,
               },
             });
-            console.log("✅ Delete success:", data.deletePrompt);
+            // console.log("✅ Delete success:", data.deletePrompt);
             await promptsRefetch();
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -601,7 +609,7 @@ const SettingPage = () => {
 
   const handleViewChange = (mode) => {
     setViewMode(mode);
-    console.log("🟢 เปลี่ยนโหมดเป็น:", mode);
+    // console.log("🟢 เปลี่ยนโหมดเป็น:", mode);
   };
 
   const handleReset = () => {
@@ -613,12 +621,12 @@ const SettingPage = () => {
     setSearch("");
     setAiFilter("โมเดลทั้งหมด");
     setPage(1)
-    console.log("🧹 ล้างตัวกรองเรียบร้อย");
+    // console.log("🧹 ล้างตัวกรองเรียบร้อย");
   };
 
   const handleSubmit = async () => {
     if (selected === "AI") {
-      console.log("selected", selected);
+      // console.log("selected", selected);
 
       // เเก้ไขข้อมูลที่มีอยุ่แล้ว
       // helper เช็กช่องว่าง/null
@@ -648,7 +656,7 @@ const SettingPage = () => {
           })
         );
 
-        console.log("✅ Update success:", results);
+        // console.log("✅ Update success:", results);
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tsettingerror('error1'),
@@ -679,7 +687,7 @@ const SettingPage = () => {
           })
         );
 
-        console.log("✅ Create success:", results);
+        // console.log("✅ Create success:", results);
       } catch (error) {
         showErrorAlert(error, theme, {
           title: tsettingerror('error1'),
@@ -717,7 +725,7 @@ const SettingPage = () => {
           })
         );
 
-        console.log("✅ Update success:", results);
+        // console.log("✅ Update success:", results);
 
         closeLoading();
         await showSuccessAlert({
@@ -780,7 +788,7 @@ const SettingPage = () => {
           })
         );
 
-        console.log("✅ Update success:", results);
+        // console.log("✅ Update success:", results);
 
         closeLoading();
         await showSuccessAlert({
@@ -1304,8 +1312,12 @@ const SettingPage = () => {
                                     value={formatComma(aiRow?.init_token ?? 0)}
                                     onChange={(e) => {
                                       const raw = e.target.value;
-                                      if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                                      if (!/^[0-9,]*$/.test(raw)) return;
                                       upsertGroupAiField(group.id, model, "init_token", parseCommaToNumberSafe(raw));
+                                    }}
+                                    helperText={renderTotalText(aiRow?.init_token ?? 0, group.user_count, "")}
+                                    FormHelperTextProps={{
+                                      sx: { color: "text.secondary", textAlign: "right", m: 0, mt: 0.5 },
                                     }}
                                     inputProps={{
                                       inputMode: "numeric",
@@ -1330,8 +1342,12 @@ const SettingPage = () => {
                                     value={formatComma(aiRow?.plus_token ?? 0)}
                                     onChange={(e) => {
                                       const raw = e.target.value;
-                                      if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                                      if (!/^[0-9,]*$/.test(raw)) return;
                                       upsertGroupAiField(group.id, model, "plus_token", parseCommaToNumberSafe(raw));
+                                    }}
+                                    helperText={renderTotalText(aiRow?.plus_token ?? 0, group.user_count, "-")}
+                                    FormHelperTextProps={{
+                                      sx: { color: "error.main", textAlign: "right", m: 0, mt: 0.5 },
                                     }}
                                     inputProps={{
                                       inputMode: "numeric",
@@ -1356,8 +1372,12 @@ const SettingPage = () => {
                                     value={formatComma(aiRow?.minus_token ?? 0)}
                                     onChange={(e) => {
                                       const raw = e.target.value;
-                                      if (!/^[0-9,]*$/.test(raw)) return; // ✅ รับเฉพาะเลข + comma
+                                      if (!/^[0-9,]*$/.test(raw)) return;
                                       upsertGroupAiField(group.id, model, "minus_token", parseCommaToNumberSafe(raw));
+                                    }}
+                                    helperText={renderTotalText(aiRow?.minus_token ?? 0, group.user_count, "+")}
+                                    FormHelperTextProps={{
+                                      sx: { color: "error.main", textAlign: "right", m: 0, mt: 0.5 },
                                     }}
                                     inputProps={{
                                       inputMode: "numeric",

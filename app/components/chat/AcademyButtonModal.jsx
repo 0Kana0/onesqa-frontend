@@ -40,7 +40,7 @@ export default function AcademySearchModal({
   initialQuery = "",
   placeholder,
 }) {
-  const { toggle } = useSidebar();
+  const { open: sidebarOpen, toggle } = useSidebar();
   const tChatSidebar = useTranslations("ChatSidebar");
   const tInit = useTranslations("Init");
 
@@ -104,7 +104,7 @@ export default function AcademySearchModal({
 
     onSearch?.(q);
 
-    if (isTablet) toggle();
+    if (isTablet && sidebarOpen) toggle(); // ✅ จะไม่เปิดขึ้นมาเอง
     // ❌ ไม่ปิด modal เพื่อแสดงผลลัพธ์ใน modal
   };
 

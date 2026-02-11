@@ -62,8 +62,8 @@ export default function ChatSidebar() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
-  console.log("find id", id);
-  console.log("pathname", pathname);
+  // console.log("find id", id);
+  // console.log("pathname", pathname);
 
   // const items = [
   //   { label: "แชต ONESQA", href: "#" },
@@ -248,7 +248,7 @@ export default function ChatSidebar() {
 
   // ตัวอย่าง action (เปลี่ยนชื่อ / ลบ)
   const handleRename = () => {
-    console.log("rename:", selected?.label);
+    // console.log("rename:", selected?.label);
     setRename(selected);
     setNewOpen(true);
     handleCloseMenu();
@@ -287,13 +287,13 @@ export default function ChatSidebar() {
                 id: selected?.id,
               },
             });
-            console.log("✅ Delete success:", data.deleteChat);
+            // console.log("✅ Delete success:", data.deleteChat);
             refetch();
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/${id}`)
               router.replace("/onesqa/chat");
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -332,13 +332,13 @@ export default function ChatSidebar() {
                 id: selected?.id,
               },
             });
-            console.log("✅ Delete success:", data.deleteChat);
+            // console.log("✅ Delete success:", data.deleteChat);
             refetch();
             handleCloseMenu();
             if (id === selected?.id && pathname === `/onesqa/chat/${id}`)
               router.replace("/onesqa/chat");
           } catch (error) {
-            console.log(error);
+            // console.log(error);
           }
 
           Swal.fire({
@@ -357,7 +357,7 @@ export default function ChatSidebar() {
     handleCloseMenu();
   };
   const handleUpdateGroupData = async (item) => {
-    console.log("rename", rename);
+    // console.log("rename", rename);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -369,7 +369,7 @@ export default function ChatSidebar() {
           },
         },
       });
-      console.log("✅ Update success:", data.updateChat);
+      // console.log("✅ Update success:", data.updateChat);
       // refetch();
       // if (id === item.id && pathname === `/onesqa/chat/group/${id}`)
       //   chatgroupsRefresh();
@@ -377,7 +377,7 @@ export default function ChatSidebar() {
         include: [GET_CHATS],
       });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
 
@@ -392,7 +392,7 @@ export default function ChatSidebar() {
   };
   const handleUpdateChat = async (name) => {
     // TODO: เรียก API / mutation สร้างโครงการ
-    console.log("เเก้ไขชื่อเเชต:", name);
+    // console.log("เเก้ไขชื่อเเชต:", name);
 
     try {
       // ✅ เรียก mutation ไป backend
@@ -405,12 +405,12 @@ export default function ChatSidebar() {
           },
         },
       });
-      console.log("✅ Create success:", data.updateChat);
+      // console.log("✅ Create success:", data.updateChat);
       refetch();
       setNewOpen(false);
       setRename(null);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
 
@@ -588,7 +588,7 @@ export default function ChatSidebar() {
           onClose={() => setOpenSearch(false)}
           onSelect={(item) => {
             // ทำอะไรก็ได้เมื่อเลือกผลลัพธ์
-            console.log("เลือก:", item);
+            // console.log("เลือก:", item);
             handleUpdateGroupData(item);
             // ตัวอย่าง: ไปหน้าแชตของ item.id
             // router.push(`/chat/${item.id}`);

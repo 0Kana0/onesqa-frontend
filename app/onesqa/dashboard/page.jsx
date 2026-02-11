@@ -432,13 +432,13 @@ const DashboardPage = () => {
   const userCountSeries = mapUserCountChart(userCountChartData?.chartUserCountReports);
 
   const handleDetail = () => {
-    console.log("🟠 เปิดรายละเอียดการใช้งาน Token");
+    // console.log("🟠 เปิดรายละเอียดการใช้งาน Token");
   };
 
-  console.log("chartData?.chartReports", chartData?.chartReports);
-  console.log("output", output);
-  console.log("periodChartData?.periodChartReports", periodChartData?.periodChartReports);
-  console.log("aiGraph", aiGraph);
+  // console.log("chartData?.chartReports", chartData?.chartReports);
+  // console.log("output", output);
+  // console.log("periodChartData?.periodChartReports", periodChartData?.periodChartReports);
+  // console.log("aiGraph", aiGraph);
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>

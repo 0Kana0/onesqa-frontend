@@ -11,8 +11,8 @@ import {
   Tooltip,
   InputBase,
   Link as MuiLink,           // ⭐ NEW
+  useMediaQuery,
 } from "@mui/material";
-import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -68,7 +68,7 @@ function CodeBlock({ children, ...props }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {
-      console.log("Copy failed", e);
+      // console.log("Copy failed", e);
     }
   };
 
@@ -187,7 +187,34 @@ function GeminiMarkdown({ content }) {
   const text = normalizeGeminiText(rawText); // ถ้ามี normalize อยู่แล้ว
 
   if (!text) return null;
-  console.log(text);
+  // console.log(text);
+
+  // ✅ NEW: wrapper สำหรับ table ให้เลื่อนซ้าย-ขวาได้
+  const MarkdownTable = ({ node, children, ...props }) => (
+    <Box
+      sx={{
+        width: "100%",
+        overflowX: "auto",
+        overflowY: "hidden",
+        WebkitOverflowScrolling: "touch",
+        my: 1,
+        // ช่วยให้ลากนิ้วแนวนอนง่ายขึ้นบนมือถือ
+        touchAction: "pan-x",
+      }}
+    >
+      <Box
+        component="table"
+        {...props}
+        sx={{
+          borderCollapse: "collapse",
+          width: "max-content", // ✅ ให้ table กินความกว้างตามเนื้อหา
+          minWidth: "100%",     // ✅ แต่ถ้าเล็กกว่า container ให้เต็มกว้าง
+        }}
+      >
+        {children}
+      </Box>
+    </Box>
+  );
 
   return (
     <Box
@@ -198,7 +225,6 @@ function GeminiMarkdown({ content }) {
         "& h1, & h2, & h3, & h4": { mt: 1, mb: 0.5, fontWeight: 700 },
         "& table": {
           borderCollapse: "collapse",
-          width: "100%",
           my: 1,
         },
         "& th, & td": {
@@ -206,6 +232,9 @@ function GeminiMarkdown({ content }) {
           px: 1,
           py: 0.5,
           fontSize: "0.875rem",
+          verticalAlign: "top",
+          whiteSpace: "normal",
+          width: "10px"
         },
         "& th": {
           fontWeight: 600,
@@ -337,9 +366,7 @@ function GeminiMarkdown({ content }) {
             return <CodeBlock className={className} {...props}>{children}</CodeBlock>;
           },
 
-          table: ({ node, ...props }) => (
-            <Box component="table" {...props} />
-          ),
+          table: MarkdownTable,
           thead: ({ node, ...props }) => (
             <Box component="thead" {...props} />
           ),
@@ -389,6 +416,8 @@ export default function ChatBubble({
   const tChatSidebar = useTranslations("ChatSidebar");
   const tPlusAttachButton = useTranslations("PlusAttachButton");
 
+  const isMobile = useMediaQuery("(max-width:600px)"); // < md คือจอเล็ก
+
   // ====== Edit state ======
   const initialPlain = toPlainString(text);
   const [isEditing, setIsEditing] = useState(false);
@@ -405,8 +434,8 @@ export default function ChatBubble({
   }, [sending]);
 
   const HIDDEN_USER_TEXTS = new Set([
-    "ตอบคำถามจากเสียงในไฟล์แบบละเอียด ทำตามเสียงในไฟล์",
-    "Answer the questions from the audio in the file in detail, following the audio exactly.",
+    "แชตใหม่จากเสียง",
+    "new chat from mic",
   ]);
 
   const trimmedText = (text ?? "").trim();
@@ -454,6 +483,8 @@ export default function ChatBubble({
     borderTopLeftRadius: isUser ? 2 : 0,
     borderTopRightRadius: isUser ? 0 : 2,
     mt: 1,
+
+    minWidth: 0,            // ✅ เพิ่มบรรทัดนี้
   };
 
   const avatar = isUser ? (
@@ -481,17 +512,21 @@ export default function ChatBubble({
   return (
     <Stack
       direction={isUser ? "row-reverse" : "row"}
-      spacing={1.5}
+      spacing={{ xs: 0, sm: 1.5 }}
       alignItems="flex-start"
       sx={{ width: "100%" }}
     >
-      {showAvatar ? avatar : <Box width={40} />}
+      <Box sx={{ display: { xs: "none", sm: "block" } }}>
+        {showAvatar ? avatar : <Box width={40} />}
+      </Box>
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
           alignItems: isUser ? "flex-end" : "flex-start",
           width: "100%",
+
+          minWidth: 0,            // ✅ เพิ่มบรรทัดนี้
         }}
       >
         {typeLabel && (
