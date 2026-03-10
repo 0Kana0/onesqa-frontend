@@ -859,7 +859,7 @@ const ReportPage = () => {
               {/* ด้านขวา: Tokens */}
               <Box textAlign="right">
                 <Typography fontWeight="bold">
-                  {user.tokens.toLocaleString()}
+                  {Number(user.tokens || 0).toLocaleString()}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Tokens

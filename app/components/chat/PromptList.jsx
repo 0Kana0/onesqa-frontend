@@ -5,15 +5,9 @@ import React, { useEffect } from "react";
 import { Box, Stack, ButtonBase, Typography } from "@mui/material";
 import { useLanguage } from "@/app/context/LanguageContext";
 
-const PromptList = ({
-  steps = [],
-  activeIndex = null,
-  onChange,
-  onTextChange,
-}) => {
+const PromptList = ({ steps = [], activeIndex = null, onChange, onTextChange }) => {
   const { locale } = useLanguage();
 
-  // ✅ reset เมื่อเปลี่ยนภาษา
   useEffect(() => {
     onChange?.(null);
     onTextChange?.("");
@@ -23,6 +17,7 @@ const PromptList = ({
     <Stack
       direction="row"
       spacing={2}
+      useFlexGap
       sx={{
         flexWrap: "wrap",
         width: "100%",
@@ -34,11 +29,9 @@ const PromptList = ({
 
         const handleClick = () => {
           if (selected) {
-            // กดซ้ำ → reset
             onChange?.(null);
             onTextChange?.("");
           } else {
-            // เลือกใหม่
             onChange?.(index);
             onTextChange?.(step.prompt_detail);
           }
@@ -57,10 +50,9 @@ const PromptList = ({
               py: 0.5,
               display: "flex",
               alignItems: "center",
-              mb: 1,
+              // ✅ ลบ mb ออก เพราะ spacing + useFlexGap จะเว้นระยะให้เองทุกบรรทัด
             }}
           >
-            {/* วงกลมตัวเลข */}
             <Box
               sx={{
                 width: 28,
@@ -86,7 +78,6 @@ const PromptList = ({
               </Typography>
             </Box>
 
-            {/* ข้อความ */}
             <Typography
               variant="body2"
               sx={{

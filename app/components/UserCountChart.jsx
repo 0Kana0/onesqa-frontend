@@ -31,6 +31,11 @@ export default function UserCountChart({
     return new Intl.DateTimeFormat(intlLocale, { month: "short" }); // ม.ค. / Jan
   }, [locale]);
 
+  const numberFmt = useMemo(() => {
+    const intlLocale = String(locale).startsWith("th") ? "th-TH" : "en-US";
+    return new Intl.NumberFormat(intlLocale);
+  }, [locale]);
+
   // แปลง tick เช่น "30 Oct 2025" -> "30 ต.ค." หรือ "30 Oct"
   const formatDateLabel = (v, { showYear = false } = {}) => {
     if (typeof v !== "string") return v;
@@ -78,7 +83,11 @@ export default function UserCountChart({
             tickFormatter={(label) => formatDateLabel(label, { showYear: false })}
           />
 
-          <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            allowDecimals={false}
+            tickFormatter={(v) => numberFmt.format(Number(v || 0))}
+          />
 
           <Tooltip
             contentStyle={{

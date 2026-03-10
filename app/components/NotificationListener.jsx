@@ -1,7 +1,7 @@
 "use client";
 import { createClient } from "graphql-ws";
-import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useEffect, useRef } from "react";
+import { useQuery } from "@apollo/client/react";
 import { MY_NOTIFICATIONS } from "@/graphql/notification/queries";
 import Badge from "@mui/material/Badge";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
@@ -19,31 +19,23 @@ export default function NotificationListener({
   const { locale } = useLanguage();
   const t = useTranslations("Toast");
   const WS_ENDPOINT = process.env.NEXT_PUBLIC_WS_ENDPOINT;
-
-  const alert = localStorage.getItem("alert");
   const router = useRouter();
 
-  const {
-    refetch,
-  } = useQuery(MY_NOTIFICATIONS, {
-    variables: {
-      locale: locale,
-      user_id: user_id,
-      first: 4,
-      after: null,
-    },
+  const toastIdRef = useRef("notification-toast"); // ✅ ใช้ id เดิมตลอด
+
+  const { refetch } = useQuery(MY_NOTIFICATIONS, {
+    variables: { locale, user_id, first: 4, after: null },
     skip: !user_id,
-    notifyOnNetworkStatusChange: true, // ให้รู้สถานะระหว่าง fetchMore/refetch
+    notifyOnNetworkStatusChange: true,
     fetchPolicy: "network-only",
   });
 
   useEffect(() => {
-    const client = createClient({
-      url: WS_ENDPOINT,
-    });
+    if (!user_id || !WS_ENDPOINT) return;
 
-    // ✅ Subscribe ฟัง notificationAdded
-    const unsubscribe = client.subscribe(
+    const wsClient = createClient({ url: WS_ENDPOINT });
+
+    const unsubscribe = wsClient.subscribe(
       {
         query: `
           subscription notificationAdded($user_id: ID!) {
@@ -63,45 +55,52 @@ export default function NotificationListener({
       {
         next: ({ data }) => {
           const n = data?.notificationAdded;
-          if (n) {
-            // console.log("📩 New notification:", n);
-            // console.log(isOnNotificationPage);
+          if (!n) return;
 
-            // ✅ มีข้อมูลใหม่เข้ามา → เปลี่ยนสถานะ
-            // ใน subscription callback
-            if (!isOnNotificationPage) {
-              setHasNotification(true);
-              localStorage.setItem("alert", true); // เก็บเป็นสตริงเสมอ
-              // อย่าพึ่งอิง log ของ hasNotification ที่นี่ เพราะจะเป็นค่าเก่าจาก closure
-            } else {
-              refetch()
-            }
+          if (!isOnNotificationPage) {
+            setHasNotification(true);
+            localStorage.setItem("alert", "true");
+          } else {
+            refetch();
+          }
 
-            // ✅ แสดง Toast แจ้งเตือน
-            toast.info(
-              <div>
-                <p>{t("title1")}</p>
-              </div>,
-              {
-                //position: "bottom-right",
-                autoClose: 4000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                //theme: "light",
-                onClick: () => {
-                  setHasNotification(false)
-                  localStorage.removeItem("alert");
-                  if (isOnNotificationPage) {
-                    // ปิด toast ที่กำลังแสดงอยู่ทั้งหมดทันทีเมื่อเข้าหน้านี้
-                    toast.dismiss();
-                  } else {
-                    router.push(`/onesqa/notification`); // 👈 หน้าเป้าหมาย
-                  }
-                },
+          const content = (
+            <div>
+              <p>{t("title1")}</p>
+            </div>
+          );
+
+          const commonOptions = {
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            onClick: () => {
+              setHasNotification(false);
+              localStorage.removeItem("alert");
+
+              // ✅ ปิด toast อันนี้โดยเฉพาะ
+              toast.dismiss(toastIdRef.current);
+
+              if (!isOnNotificationPage) {
+                router.push(`/onesqa/notification`);
               }
-            );
+            },
+          };
+
+          // ✅ ถ้ามี toast นี้อยู่แล้ว -> อัปเดตแทน (ไม่ซ้อน)
+          if (toast.isActive(toastIdRef.current)) {
+            toast.update(toastIdRef.current, {
+              render: content,
+              type: "info",
+              ...commonOptions,
+            });
+          } else {
+            toast.info(content, {
+              toastId: toastIdRef.current,
+              ...commonOptions,
+            });
           }
         },
         error: (err) => console.log("Subscription error:", err),
@@ -109,19 +108,20 @@ export default function NotificationListener({
       }
     );
 
-    return () => unsubscribe(); // cleanup
-  }, [user_id, WS_ENDPOINT, t, isOnNotificationPage, refetch]);
+    return () => unsubscribe();
+  }, [user_id, WS_ENDPOINT, t, isOnNotificationPage, refetch, router, setHasNotification]);
+
+  const alert = typeof window !== "undefined" ? localStorage.getItem("alert") : null;
 
   return (
     <div>
       {hasNotification || alert ? (
-        // ✅ ถ้ามี notification → แสดง Badge สีแดง
         <Badge
           variant="dot"
           overlap="circular"
           sx={{
             "& .MuiBadge-dot": {
-              backgroundColor: "#E53935", // 🔴 สีแดง
+              backgroundColor: "#E53935",
               width: 10,
               height: 10,
               borderRadius: "50%",
@@ -133,7 +133,6 @@ export default function NotificationListener({
           <NotificationsNoneIcon />
         </Badge>
       ) : (
-        // ❌ ถ้าไม่มี notification → แสดงเฉพาะ icon
         <NotificationsNoneIcon />
       )}
     </div>

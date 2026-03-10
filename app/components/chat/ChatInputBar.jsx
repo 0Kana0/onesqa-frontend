@@ -192,11 +192,11 @@ export default function ChatInputBar({
 
     for (const f of list) {
       if (!matchAccept(f)) {
-        errors.push(`ชนิดไฟล์ไม่ตรงเงื่อนไข: ${f.name}`);
+        errors.push(`${tChatInputError("title8")} ${f.name}`);
         continue;
       }
       if (!isMicFile(f) && f.size > maxSizeBytes) {
-        errors.push(`ไฟล์ ${f.name} เกิน ${maxSizeMB}MB`);
+        errors.push(`${tChatInputError("title91")} "${f.name}" ${tChatInputError("title92")} ${maxSizeMB} ${tChatInputError("title93")} ${maxSizeMB} MB`);
         continue;
       }
       nextNew.push(f);

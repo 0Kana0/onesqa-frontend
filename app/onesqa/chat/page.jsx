@@ -442,50 +442,48 @@ const ChatPage = () => {
           ))}
         </Select>
 
-        {user?.role_name_th === "ผู้ประเมินภายนอก" && (
-          <>
-            <Button
-              variant="contained"
-              onClick={handleOpen}
-              sx={{
-                width: isMobile ? "100%" : "auto",
-                bgcolor: "#1976D2",
-                color: "white",
-                "&:hover": { bgcolor: "#1565C0" },
-              }}
-            >
-              {tChatSidebar("academy")}
-            </Button>
+        <>
+          <Button
+            variant="contained"
+            onClick={handleOpen}
+            sx={{
+              width: isMobile ? "100%" : "auto",
+              bgcolor: "#1976D2",
+              color: "white",
+              "&:hover": { bgcolor: "#1565C0" },
+            }}
+          >
+            {tChatSidebar("academy")}
+          </Button>
 
-            <AcademySearchModal
-              open={open}
-              onClose={() => setOpen(false)}
-              onUpload={async ({ selectedUrls }) => {
-                try {
-                  // ✅ กันเกิน maxFiles
-                  const remain = MAX_FILES - (initAttachments?.length ?? 0);
-                  if (remain <= 0) return;
+          <AcademySearchModal
+            open={open}
+            onClose={() => setOpen(false)}
+            onUpload={async ({ selectedUrls }) => {
+              try {
+                // ✅ กันเกิน maxFiles
+                const remain = MAX_FILES - (initAttachments?.length ?? 0);
+                if (remain <= 0) return;
 
-                  const urls = selectedUrls.slice(0, remain);
+                const urls = selectedUrls.slice(0, remain);
 
-                  // ✅ download -> File[]
-                  const files = await Promise.all(urls.map(urlToFile));
+                // ✅ download -> File[]
+                const files = await Promise.all(urls.map(urlToFile));
 
-                  // ✅ ใส่เข้า attachments ของ ChatInputBar
-                  setInitAttachments((prev = []) => mergeDedup(prev, files));
+                // ✅ ใส่เข้า attachments ของ ChatInputBar
+                setInitAttachments((prev = []) => mergeDedup(prev, files));
 
-                  // ปิด modal หลังเลือกเสร็จ (ถ้าต้องการ)
-                  setOpen(false);
-                } catch (err) {
-                  showErrorAlert(err, theme, { 
-                    title: tAcademyError("error2"),
-                    t: tError
-                  });
-                }
-              }}
-            />
-          </>
-        )}
+                // ปิด modal หลังเลือกเสร็จ (ถ้าต้องการ)
+                setOpen(false);
+              } catch (err) {
+                showErrorAlert(err, theme, { 
+                  title: tAcademyError("error2"),
+                  t: tError
+                });
+              }
+            }}
+          />
+        </>
 
       </Box>
       <Container
@@ -573,6 +571,19 @@ const ChatPage = () => {
           />
         </Box>
 
+        {/* ✅ ข้อความสีแดงคั่นกลาง */}
+        <Typography
+          sx={{
+            width: "100%",
+            textAlign: "center",
+            color: "error.main",
+            fontSize: 13, // ✅ ลดขนาด (ลอง 11/12/13 ได้)
+            lineHeight: 1.4,
+          }}
+        >
+          {tChatSidebar("policy")}
+        </Typography>
+
         <Box
           sx={{
             width: "100%",
@@ -580,7 +591,7 @@ const ChatPage = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            mb: 1,
+            my: 1,
           }}
         >
           <PromptList

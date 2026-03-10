@@ -162,6 +162,11 @@ export default function PeriodReportChart({
     return aggregateToChartData({ period, events, locale, aiGraph });
   }, [period, events, locale, aiGraph]);
 
+  const numberFmt = useMemo(() => {
+    const intlLocale = String(locale).startsWith("th") ? "th-TH" : "en-US";
+    return new Intl.NumberFormat(intlLocale);
+  }, [locale]);
+
   const rotate = period?.mode === "daily" ? -45 : 0;
 
   // สีเส้นแบบเรียง index (คุมให้สวยและอ่านง่าย)
@@ -201,7 +206,11 @@ export default function PeriodReportChart({
             tick={{ fontSize: 12 }}
           />
 
-          <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            allowDecimals={false}
+            tickFormatter={(v) => numberFmt.format(Number(v || 0))}
+          />
 
           <Tooltip
             contentStyle={{

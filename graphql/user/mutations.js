@@ -37,6 +37,26 @@ export const UPDATE_USER = gql`
   }
 `;
 
+export const UPDATE_USERS = gql`
+  mutation updateUsers($input: [UpdateUsersTokenRowInput!]!) {
+    updateUsers(input: $input) {
+      id
+      firstname
+      lastname
+      group_name
+      ai_access
+      user_ai {
+        ai_id
+        token_count
+        ai {
+          model_use_name
+          model_name
+        }
+      }
+    }
+  }
+`;
+
 export const UPDATE_THEME_AND_LOCALE = gql`
   mutation updateThemeAndLocale($id: ID!, $input: ThemeAndLocaleInput!) {
     updateThemeAndLocale(id: $id, input: $input) {

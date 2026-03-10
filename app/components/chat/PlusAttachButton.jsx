@@ -9,12 +9,20 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Box,
+  Typography,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import ImageRoundedIcon from "@mui/icons-material/ImageRounded";
 import MovieRoundedIcon from "@mui/icons-material/MovieRounded";
-import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import { useTranslations } from "next-intl";
 
 // ✅ ปรับ path ให้ตรงโปรเจกต์คุณ
@@ -32,6 +40,9 @@ export default function PlusAttachButton({
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  // ✅ เพิ่ม state สำหรับ modal
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
   const handleButtonClick = (e) => {
     if (!disabled) setAnchorEl(e.currentTarget);
   };
@@ -41,6 +52,15 @@ export default function PlusAttachButton({
     handleClose();
 
     setTimeout(() => triggerFile?.(), 0);
+  };
+
+  const handleOpenUploadModal = (e) => {
+    // ✅ สำคัญ: กันไม่ให้ไป trigger MenuItem (upload)
+    e.stopPropagation();
+    e.preventDefault();
+
+    handleClose();              // ปิดเมนูก่อน
+    setUploadModalOpen(true);   // เปิด modal
   };
 
   const handleDriveClick = (type) => {
@@ -106,20 +126,106 @@ export default function PlusAttachButton({
           <ListItemText primary={tPlusAttachButton("createVideo")} />
         </MenuItem>
 
-        <MenuItem onClick={() => handleDriveClick("doc")}>
-          <ListItemIcon>
-            <DescriptionRoundedIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary={tPlusAttachButton("createDoc")} />
-        </MenuItem>
-
-        <MenuItem onClick={handleUploadClick}>
+        {/* ✅ แก้ MenuItem Upload: ใส่ปุ่มเล็กๆ ท้ายรายการ */}
+        <MenuItem onClick={handleUploadClick} sx={{ pr: 1 }}>
           <ListItemIcon>
             <AttachFileRoundedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary={tChatSidebar("uploadfile")} />
+
+          <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+            <ListItemText
+              primary={tChatSidebar("uploadfile")}
+              sx={{ mr: 1 }}
+            />
+
+            <Tooltip title={tPlusAttachButton("requirement")}>
+              <IconButton
+                size="small"
+                edge="end"
+                onClick={handleOpenUploadModal}
+                aria-label="open upload modal"
+                sx={{ ml: "auto" }}
+              >
+                <InfoOutlinedIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </MenuItem>
       </Menu>
+
+      {/* ✅ Modal ที่เปิดจากปุ่มเล็ก */}
+      <Dialog
+        open={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{ sx: { borderRadius: 3, p: 0.5 } }}
+      >
+        <DialogTitle sx={{ position: "relative" }}>
+          <Typography sx={{ fontSize: 16 }}>
+            {tPlusAttachButton("uploadModalTitle")}
+          </Typography>
+
+          <IconButton
+            onClick={() => setUploadModalOpen(false)}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+            aria-label={tPlusAttachButton("close")}
+          >
+            <CloseRounded />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent
+          dividers
+          sx={{
+            py: 2,
+            maxHeight: "70vh",
+            overflowY: "auto",
+          }}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+              {tPlusAttachButton("uploadRules")}
+            </Typography>
+
+            <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+              <Box component="li">
+                <Typography variant="body2">
+                  {tPlusAttachButton("uploadRule1")}
+                </Typography>
+              </Box>
+              <Box component="li">
+                <Typography variant="body2">
+                  {tPlusAttachButton("uploadRule2")}
+                </Typography>
+              </Box>
+              <Box component="li">
+                <Typography variant="body2">
+                  {tPlusAttachButton("uploadRule3")}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ pt: 0.5 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                {tPlusAttachButton("usageGuideTitle")}
+              </Typography>
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                <Box component="li">
+                  <Typography variant="body2">
+                    {tPlusAttachButton("usageGuide1")}
+                  </Typography>
+                </Box>
+                <Box component="li">
+                  <Typography variant="body2">
+                    {tPlusAttachButton("usageGuide2")}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

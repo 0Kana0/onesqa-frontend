@@ -1007,50 +1007,48 @@ const MessagePage = () => {
         p: 0,
       }}
     >
-      {user?.role_name_th === "ผู้ประเมินภายนอก" && (
-        <>
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
-            <Button
-              variant="contained"
-              onClick={handleOpen}
-              sx={{
-                display: "flex",
-                flexDirection: "column-reverse",
-                width: isMobile ? "100%" : "105px",
-                bgcolor: "#1976D2",
-                color: "white",
-                "&:hover": { bgcolor: "#1565C0" },
-                mb: 1,
-              }}
-            >
-              {tChatSidebar("academy")}
-            </Button>
-          </Box>
-
-          <AcademySearchModal
-            open={open}
-            onClose={() => setOpen(false)}
-            onUpload={async ({ selectedUrls }) => {
-              try {
-                const remain = MAX_FILES - (initAttachments?.length ?? 0);
-                if (remain <= 0) return;
-
-                const urls = selectedUrls.slice(0, remain);
-                const files = await Promise.all(urls.map(urlToFile));
-                setAttachments((prev = []) => mergeDedup(prev, files));
-                setOpen(false);
-              } catch (err) {
-                showErrorAlert(err, theme, { 
-                  title: tAcademyError("error2"),
-                  t: tError
-                });
-              }
+      <>
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            variant="contained"
+            onClick={handleOpen}
+            sx={{
+              display: "flex",
+              flexDirection: "column-reverse",
+              width: isMobile ? "100%" : "auto",
+              bgcolor: "#1976D2",
+              color: "white",
+              "&:hover": { bgcolor: "#1565C0" },
+              mb: 1,
             }}
-          />
+          >
+            {tChatSidebar("academy")}
+          </Button>
+        </Box>
 
-          <Divider sx={{ mb: 1 }} />
-        </>
-      )}
+        <AcademySearchModal
+          open={open}
+          onClose={() => setOpen(false)}
+          onUpload={async ({ selectedUrls }) => {
+            try {
+              const remain = MAX_FILES - (initAttachments?.length ?? 0);
+              if (remain <= 0) return;
+
+              const urls = selectedUrls.slice(0, remain);
+              const files = await Promise.all(urls.map(urlToFile));
+              setAttachments((prev = []) => mergeDedup(prev, files));
+              setOpen(false);
+            } catch (err) {
+              showErrorAlert(err, theme, { 
+                title: tAcademyError("error2"),
+                t: tError
+              });
+            }
+          }}
+        />
+
+        <Divider sx={{ mb: 1 }} />
+      </>
 
       {/* โซนข้อความ: เลื่อนเฉพาะส่วนนี้ */}
       <ChatThread
@@ -1138,23 +1136,38 @@ const MessagePage = () => {
         {/* กันรอยบาก/แถบล่างมือถือ */}
         <Box sx={{ height: "env(safe-area-inset-bottom)" }} />
       </Box>
+
+      {/* ✅ ข้อความสีแดงคั่นกลาง */}
+      <Typography
+        sx={{
+          width: "100%",
+          textAlign: "center",
+          color: "error.main",
+          mb: 2,
+          fontSize: 13, // ✅ ลดขนาด (ลอง 11/12/13 ได้)
+          lineHeight: 1.4,
+        }}
+      >
+        {tChatSidebar("policy")}
+      </Typography>
+
       <Box
-          sx={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            mb: 1,
-          }}
-        >
-          <PromptList
-            steps={promptsData.prompts}
-            activeIndex={active}
-            onChange={setActive}
-            onTextChange={setText}
-          />
-        </Box>
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          my: 1,
+        }}
+      >
+        <PromptList
+          steps={promptsData.prompts}
+          activeIndex={active}
+          onChange={setActive}
+          onTextChange={setText}
+        />
+      </Box>
     </Container>
   );
 };

@@ -8,6 +8,7 @@ import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import GridViewIcon from "@mui/icons-material/GridView";
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, useParams } from "next/navigation";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 export default function ActionBar({
   onSubmit,
@@ -139,6 +140,22 @@ export default function ActionBar({
       ) : (
         <Box></Box>
       )}
+
+      {/* {pathname.startsWith("/onesqa/settings") && settingMode === "Model" && (
+        <Button
+          variant="contained"
+          startIcon={<SettingsIcon />}
+          onClick={() => onSubmit()}
+          sx={{
+            bgcolor: "#FFC107", // ✅ เหลือง (amber)
+            color: "white",
+            px: 2.5,
+            "&:hover": { bgcolor: "#FFB300" }, // ✅ เหลืองเข้มตอน hover
+          }}
+        >
+          model
+        </Button>
+      )} */}
     </Box>
   );
 }

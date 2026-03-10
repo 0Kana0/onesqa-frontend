@@ -25,20 +25,27 @@ import {
   CircularProgress,
   useMediaQuery,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Stack,
+  Alert,
 } from "@mui/material";
 import { GET_USERS } from "@/graphql/user/queries";
 import { GET_ROLES } from "@/graphql/role/queries";
-import { UPDATE_USER, SYNC_USERS } from "@/graphql/user/mutations";
+import { UPDATE_USER, UPDATE_USERS, SYNC_USERS } from "@/graphql/user/mutations";
 import { useTheme } from "next-themes";
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionIcon from "@mui/icons-material/Description";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import UserTableToolbar from "@/app/components/UserTableToolbar";
 import { useTranslations } from "next-intl";
 import { exportUsersToExcel } from "@/util/exportToExcel";
 import { useRequireRole } from "@/hook/useRequireRole";
 import SmartPagination from "@/app/components/SmartPagination";
 import HistoryIcon from "@mui/icons-material/History";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import {
   closeLoading,
   showLoading,
@@ -47,6 +54,7 @@ import {
 import { showErrorAlert } from "@/util/errorAlert";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { GET_GROUP_WITH_USER_COUNT } from "@/graphql/group/queries";
+import ImportToolbar from "@/app/components/ImportToolbar";
 
 const normalize = (v) => (v === "ทั้งหมด" || v === "" || v == null ? null : v);
 const normalizeText = (v) => {
@@ -81,6 +89,15 @@ export default function UserPage() {
 
   const [pendingIds, setPendingIds] = useState(new Set());
   const isPending = useCallback((id) => pendingIds.has(id), [pendingIds]);
+
+  // ✅ Import Excel modal states
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importErrorMsg, setImportErrorMsg] = useState(null);
+
+  // ✅ เก็บข้อมูลคอลัมน์ A,B,F,J-O (ข้ามแถวแรก)
+  const [importedRowsABFWithModelTokens, setImportedRowsABFWithModelTokens] = useState([]);
 
   const {
     data: usersData,
@@ -121,71 +138,8 @@ export default function UserPage() {
 
   //console.log(usersData);
 
-  // ✅ state ของ users (เก็บค่า aiAccess แบบ toggle ได้)
-  // const [users, setUsers] = useState([
-  //   {
-  //     id: 1,
-  //     name: "John Doe",
-  //     email: "john.doe@gmail.com",
-  //     role: "ผู้ดูแลระบบ",
-  //     department: "เทคโนโลยีสารสนเทศ",
-  //     status: "ใช้งานอยู่",
-  //     aiAccess: true,
-  //     lastLogin: "2024-01-15 14:30",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Jane Smith",
-  //     email: "jane.smith@gmail.com",
-  //     role: "ผู้ประเมินภายนอก",
-  //     department: "การประเมินคุณภาพ",
-  //     status: "ใช้งานอยู่",
-  //     aiAccess: false,
-  //     lastLogin: "2024-01-16 09:20",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Alex Ray",
-  //     email: "alex.ray@gmail.com",
-  //     role: "เจ้าหน้าที่",
-  //     department: "บริหารงานทั่วไป",
-  //     status: "ไม่ใช้งาน",
-  //     aiAccess: false,
-  //     lastLogin: "2024-01-10 15:45",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Emma Watson",
-  //     email: "emma.watson@gmail.com",
-  //     role: "เจ้าหน้าที่",
-  //     department: "ประเมินคุณภาพ",
-  //     status: "ใช้งานอยู่",
-  //     aiAccess: true,
-  //     lastLogin: "2024-02-02 10:00",
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "Robert Brown",
-  //     email: "robert.brown@gmail.com",
-  //     role: "เจ้าหน้าที่",
-  //     department: "บริหารงานทั่วไป",
-  //     status: "ไม่ใช้งาน",
-  //     aiAccess: false,
-  //     lastLogin: "2024-02-01 08:45",
-  //   },
-  //   {
-  //     id: 6,
-  //     name: "Lisa Johnson",
-  //     email: "lisa.johnson@gmail.com",
-  //     role: "เจ้าหน้าที่",
-  //     department: "การเงิน",
-  //     status: "ใช้งานอยู่",
-  //     aiAccess: true,
-  //     lastLogin: "2024-02-03 13:10",
-  //   },
-  // ]);
-
   const [updateUser] = useMutation(UPDATE_USER);
+  const [updateUsers] = useMutation(UPDATE_USERS);
   const [syncUsersFromApi, { loading: syncUsersFromApiSending }] = useMutation(SYNC_USERS);
 
   // ✅ เมื่อ toggle ปุ่ม
@@ -514,17 +468,175 @@ export default function UserPage() {
     exportUsersToExcel(transformed, locale);
   };
 
-  // 🔹 ฟังก์ชันกรองข้อมูล
-  // const filteredUsers = users.filter((user) => {
-  //   const matchesSearch =
-  //     user.name.toLowerCase().includes(search.toLowerCase()) ||
-  //     user.email.toLowerCase().includes(search.toLowerCase());
-  //   const matchesRole = roleFilter === "ทั้งหมด" || user.role === roleFilter;
-  //   const matchesStatus =
-  //     statusFilter === "ทั้งหมด" || user.status === statusFilter;
+  // ✅ เปิด modal import
+  const handleImportExcel = async () => {
+    setImportErrorMsg(null);
+    setImportFile(null);
+    setImportedRowsABFWithModelTokens([]);
+    setImportModalOpen(true);
+  };
 
-  //   return matchesSearch && matchesRole && matchesStatus;
-  // });
+  // ✅ Import: ใช้แถวแรกเป็น header เพื่อรู้ว่า J-O คือ model ไหน
+  const handleConfirmImportExcel = async () => {
+    if (!importFile) {
+      setImportErrorMsg("กรุณาเลือกไฟล์ Excel ก่อน");
+      return;
+    }
+
+    setImporting(true);
+    setImportErrorMsg(null);
+
+    const parseToken = (v) => {
+      if (v === null || v === undefined) return null;
+      if (typeof v === "number") return Number.isFinite(v) ? Math.trunc(v) : null;
+
+      const s = String(v).trim();
+      if (!s) return null;
+
+      const n = Number(s.replace(/,/g, ""));
+      return Number.isFinite(n) ? Math.trunc(n) : null;
+    };
+
+    const hasValue = (v) =>
+      v !== null && v !== undefined && String(v).trim() !== "";
+
+    const parseAiAccess = (v) => {
+      if (!hasValue(v)) return null;
+
+      const s = String(v).trim().toLowerCase();
+
+      if (["active", "อนุญาติ"].includes(s)) return true;
+      if (["inactive", "ไม่อนุญาติ"].includes(s)) return false;
+
+      return null;
+    };
+
+    try {
+      const XLSXModule = await import("xlsx");
+      const XLSX = XLSXModule.default ?? XLSXModule;
+
+      const arrayBuffer = await importFile.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+      const sheetName = workbook.SheetNames?.[0];
+      if (!sheetName) throw new Error("ไม่พบชีทในไฟล์ Excel");
+
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: null,
+        blankrows: false,
+      });
+
+      if (!rows?.length) throw new Error("ไฟล์ว่างหรืออ่านไม่สำเร็จ");
+
+      const headerRow = rows[0] || [];
+      const dataRows = rows.slice(1);
+
+      const modelCols = [
+        { idx: 9, letter: "J" },
+        { idx: 10, letter: "K" },
+        { idx: 11, letter: "L" },
+        { idx: 12, letter: "M" },
+        { idx: 13, letter: "N" },
+        { idx: 14, letter: "O" },
+      ];
+
+      const getModelNameFromHeader = (idx, letter) => {
+        const raw = headerRow?.[idx];
+        let name = (raw ?? "").toString().trim();
+
+        name = name.replace(/^\s*token\s*[:\-_/ ]*\s*/i, "").trim();
+
+        return name || `MODEL_${letter}`;
+      };
+
+      const extracted = dataRows
+        .map((r, i) => {
+          const modelTokens = modelCols
+            .map((c) => ({
+              column: c.letter,
+              model: getModelNameFromHeader(c.idx, c.letter),
+              token: parseToken(r?.[c.idx] ?? null),
+            }))
+            .filter((x) => x.token !== null);
+
+          return {
+            rowNumber: i + 2,
+            colA: r?.[0] ?? null, // name
+            colF: r?.[5] ?? null, // group_name
+            colH: r?.[7] ?? null, // ai_access
+            ai_access: parseAiAccess(r?.[7]),
+            modelTokens,
+          };
+        })
+        .filter(
+          (x) =>
+            hasValue(x.colA) ||
+            hasValue(x.colF) ||
+            hasValue(x.colH) ||
+            x.modelTokens.length > 0
+        );
+
+      setImportedRowsABFWithModelTokens(extracted);
+
+      const payload = extracted
+        .map((r) => ({
+          name: String(r.colA ?? "").trim(),
+          group_name: String(r.colF ?? "").trim(),
+          ai_access: r.ai_access,
+          models: (r.modelTokens || [])
+            .filter((mt) => hasValue(mt.model) && mt.token !== null)
+            .map((mt) => ({
+              model: String(mt.model).trim(),
+              token_count: Number(mt.token),
+            })),
+        }))
+        .filter(
+          (r) =>
+            hasValue(r.name) &&
+            hasValue(r.group_name) &&
+            r.ai_access !== null &&
+            r.models.length > 0
+        );
+
+      if (!payload.length) {
+        throw new Error(
+          "ไม่พบข้อมูลที่ส่งได้ (ต้องมี name, group_name, ai_access และ token อย่างน้อย 1 model)"
+        );
+      }
+
+      console.log(
+        "✅ Sent to updateUsers:\n",
+        JSON.stringify(payload, null, 2)
+      );
+
+      await updateUsers({
+        variables: { input: payload },
+      });
+
+      setImportModalOpen(false);
+      setImportFile(null);
+
+      await showSuccessAlert({
+        title: t("syncuser2"),
+        text: t("syncuser3"),
+        theme,
+      });
+    } catch (error) {
+      setImportErrorMsg(error?.message || "Import ไม่สำเร็จ");
+
+      setImportModalOpen(false);
+      setImportFile(null);
+
+      showErrorAlert(error, theme, {
+        title: tusererror("error3"),
+        t: tError,
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
 
   // ✅ เมื่อเปลี่ยนหน้า
   const handleChangePage = (event, value) => {
@@ -545,6 +657,10 @@ export default function UserPage() {
 
   return (
     <Box sx={{ p: isMobile ? 0 : 3 }}>
+      <ImportToolbar
+        onimport={() => handleImportExcel()}
+      />
+
       <UserTableToolbar
         onRefresh={() => handleSyncUsers()}
         onExport={() => handleExportExcel()}
@@ -919,6 +1035,78 @@ export default function UserPage() {
           </TableContainer>
         </Box>
       </Box>
+
+      {/* ✅ Import Excel Modal */}
+      <Dialog
+        open={importModalOpen}
+        onClose={() => (importing ? null : setImportModalOpen(false))}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, position: "relative" }}>
+          {t("modal1")}
+
+          <IconButton
+            onClick={() => setImportModalOpen(false)}
+            disabled={importing}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+            aria-label="close"
+          >
+            <CloseRounded />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 1 }}>
+          {importErrorMsg && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {importErrorMsg}
+            </Alert>
+          )}
+
+          <Stack spacing={2}>
+            <Button
+              component="label"
+              variant="outlined"
+              startIcon={<UploadFileIcon />}
+              disabled={importing}
+              sx={(theme) => ({
+                justifyContent: "flex-start",
+                color: theme.palette.mode === "dark" ? theme.palette.grey[300] : theme.palette.grey[800],
+                borderColor: theme.palette.mode === "dark" ? theme.palette.grey[600] : theme.palette.grey[400],
+                "&:hover": {
+                  borderColor: theme.palette.mode === "dark" ? theme.palette.grey[400] : theme.palette.grey[700],
+                  backgroundColor: theme.palette.action.hover,
+                },
+              })}
+            >
+              {importFile
+                ? `${t("modal2")} ${importFile.name}`
+                : t("modal3")}
+              <input
+                hidden
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setImportErrorMsg(null);
+                  setImportFile(f);
+                }}
+              />
+            </Button>
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleConfirmImportExcel}
+            disabled={importing || !importFile}
+            variant="contained"
+          >
+            {importing ? t("modal4") : t("modal5")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

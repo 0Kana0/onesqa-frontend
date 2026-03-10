@@ -34,6 +34,7 @@ function ToastContainerWithTheme() {
     <ToastContainer
       theme={theme === "dark" ? "dark" : "light"}
       newestOnTop
+      limit={1} // ✅ แสดงได้ครั้งละ 1 อัน
     />
   );
 }

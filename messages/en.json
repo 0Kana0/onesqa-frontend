@@ -152,6 +152,11 @@
     "syncuser1": "Syncing user data...",
     "syncuser2": "Success",
     "syncuser3": "Completed",
+    "modal1": "Import Excel",
+    "modal2": "Selected:",
+    "modal3": "Select an Excel file (.xlsx/.xls)",
+    "modal4": "Importing...",
+    "modal5": "Import",
     "notfound": "No Users Found",
     "notfound1": "No User Groups Found"
   },
@@ -273,6 +278,7 @@
   "UserTableToolbar": {
     "sync": "Sync data user",
     "export": "Export",
+    "import": "Import",
     "clear": "Clear filter"
   },
   "AcademyToolbar": {
@@ -385,7 +391,7 @@
     "chatsearch": "Search chat...",
     "chatnotfound": "No chat found.",
     "academyclose": "close",
-    "academytitle": "Search academy",
+    "academytitle": "Search SAR Educational",
     "academysearch": "Input academy code",
     "academyupload": "Upload",
     "academyuploading": "Uploading...",
@@ -410,7 +416,8 @@
     "uploadfile": "Upload File",
     "uploadtooltip": "Add attachment",
     "deepresearch": "Deep Research",
-    "academy": "Academy",
+    "academy": "Search SAR Educational",
+    "policy": "**ONESQA reserves the right to restrict usage to assessment-related purposes only and to impose limits on the number of AI Chatbot uses, in accordance with ONESQA’s policies**",
     "notfound": "no group",
     "notfound1": "no chat"
   },
@@ -428,7 +435,8 @@
   },
   "UserError": {
     "error1": "Unable to synchronize user data",
-    "error2": "Unable to configure the user's token allocation"
+    "error2": "Unable to configure the user's token allocation",
+    "error3": "Failed to update user information via Excel"
   },
   "AcademyError": {
     "error1": "Unable to synchronize academy data",
@@ -446,7 +454,11 @@
     "title5": "An error occurred while recording audio",
     "title6": "Unable to create the audio file",
     "title7": "Unable to access the microphone",
-    "text7": "Please check your browser's microphone permissions"
+    "text7": "Please check your browser's microphone permissions",
+    "title8": "Invalid file type:",
+    "title91": "File",
+    "title92": "exceeds the maximum allowed size of",
+    "title93": "MB. Please select a file that is no larger than"
   },
   "DatePicker": {
     "date": "Date",
@@ -466,7 +478,17 @@
     "createDoc": "Create Document",
     "image": "Image",
     "video": "Video",
-    "doc": "Document"
+    "doc": "Document",
+    "requirement": "Requirement and guidance",
+    "uploadModalTitle": "File Upload Requirements and Usage Guidance",
+    "uploadRules": "Upload Requirements",
+    "uploadRule1": "You may upload up to a maximum of 10 files.",
+    "uploadRule2": "The total combined size of all uploaded files must not exceed 100 MB.",
+    "uploadRule3": "Each individual file must not exceed 20 MB.",
+    "usageGuideTitle": "Usage Guidance",
+    "usageGuide1": "For high-level, summary questions, we recommend using Gemini.",
+    "usageGuide2": "For specific, detailed questions, we recommend using ChatGPT.",
+    "close": "Close"
   },
   "TokenSummaryModalButton": {
     "button": "Token Allocation Summary",
